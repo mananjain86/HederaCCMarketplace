@@ -10,10 +10,9 @@ import {
   TokenMintTransaction,
   TransferTransaction,
   TokenCreateTransaction,
-  TokenAssociateTransaction,
 } from "@hashgraph/sdk";
 
-import { createForestAreaNFTMetadata } from './ipfs.js';
+import { createNFTMetadata } from './ipfs.js';
 
 // Operator credentials
 const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
@@ -34,57 +33,75 @@ const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 // Forest NFT Collection Configuration
 const FOREST_NFT_CONFIG = {
   name: "Forest Area Certificates",
-  symbol: "FOREST",
+  symbol: "FAC",
   maxSupply: 10000,
   treasuryId: operatorId, // Using operator as treasury for simplicity
-  supplyKey: operatorKey  // Using operator key as supply key
+  supplyKey: operatorKey,
+  tokenId: null  
 };
 
-let forestTokenId = null;
+const CARBON_NFT_CONFIG = {
+  name: "Carbon Credits",
+  symbol: "CC",
+  maxSupply: 10000,
+  treasuryId: operatorId, // Using operator as treasury for simplicity
+  supplyKey: operatorKey,
+  tokenId: null  
+}
 
 // Create the Forest NFT Collection (call once)
-async function createForestNFTCollection() {
+async function createtNFTCollection(type) {
+  if (type == "forest") {
+    config = FOREST_NFT_CONFIG;
+  } else {
+    config = CARBON_NFT_CONFIG;
+  }
   try {
     console.log("Creating Forest NFT Collection...");
     
     const nftCreate = new TokenCreateTransaction()
-      .setTokenName(FOREST_NFT_CONFIG.name)
-      .setTokenSymbol(FOREST_NFT_CONFIG.symbol)
+      .setTokenName(config.name)
+      .setTokenSymbol(config.symbol)
       .setTokenType(TokenType.NonFungibleUnique)
       .setDecimals(0)
       .setInitialSupply(0)
-      .setTreasuryAccountId(FOREST_NFT_CONFIG.treasuryId)
+      .setTreasuryAccountId(config.treasuryId)
       .setSupplyType(TokenSupplyType.Finite)
-      .setMaxSupply(FOREST_NFT_CONFIG.maxSupply)
-      .setSupplyKey(FOREST_NFT_CONFIG.supplyKey)
+      .setMaxSupply(config.maxSupply)
+      .setSupplyKey(config.supplyKey)
       .freezeWith(client);
 
     // Submit the transaction
-    const nftCreateTxSign = await nftCreate.sign(treasuryKey);
+    const nftCreateTxSign = await nftCreate.sign(config.supplyKey);
     const nftCreateSubmit = await nftCreateTxSign.execute(client);
     const nftCreateRx = await nftCreateSubmit.getReceipt(client);
-    forestTokenId = nftCreateRx.tokenId;
+    config.tokenId = nftCreateRx.tokenId;
     
-    console.log(`✅ Forest NFT Collection created with token ID: ${forestTokenId}`);
-    return forestTokenId;
+    console.log(`✅ ${config.name} NFT Collection created with token ID: ${tokenId}`);
+    return tokenId;
   } catch (error) {
-    throw new Error(`Failed to create Forest NFT collection: ${error.message}`);
+    throw new Error(`Failed to create ${config.name} NFT collection: ${error.message}`);
   }
 }
 
 // Mint Forest Area NFT for a specific buyer
-async function mintForestAreaNFT(buyerAccountId, areaId, location, area, totalPrice) {
+async function mintNFT(data, type) {
+  if (type == "forest") {
+    config = FOREST_NFT_CONFIG;
+  } else {
+    config = CARBON_NFT_CONFIG;
+  }
   try {
-    console.log(`\n🌲 Minting Forest Area NFT for area ${areaId}...`);
+    console.log(`\n🌲 Minting NFT for ${type}...`);
     
     // Ensure we have a forest NFT collection
-    if (!forestTokenId) {
-      forestTokenId = await createForestNFTCollection();
+    if (config.tokenId == null) {
+      forestTokenId = await createtNFTCollection(type);
     }
     
     // Generate metadata and upload to IPFS
     console.log("📄 Creating metadata and uploading to IPFS...");
-    const metadataResult = await createForestAreaNFTMetadata(areaId, location, area, buyerAccountId, totalPrice);
+    const metadataResult = await createNFTMetadata(type, data);
     
     if (!metadataResult.success) {
       throw new Error("Failed to create metadata");
@@ -96,7 +113,7 @@ async function mintForestAreaNFT(buyerAccountId, areaId, location, area, totalPr
     // Mint the NFT
     console.log("🔨 Minting NFT on Hedera...");
     const mintTx = await new TokenMintTransaction()
-      .setTokenId(forestTokenId)
+      .setTokenId(config.tokenId)
       .setMetadata([metadataCID])
       .freezeWith(client);
 
@@ -107,17 +124,12 @@ async function mintForestAreaNFT(buyerAccountId, areaId, location, area, totalPr
     
     console.log(`✅ NFT minted! Serial number: ${serialNumber}`);
     
-    // Associate token with buyer's account
-    console.log(`🔗 Associating NFT with buyer's account...`);
-    // Note: In a real implementation, you would need the buyer's private key to sign this
-    // For now, we'll assume the association is handled separately or the buyer has pre-associated
-    
     // Transfer NFT from treasury to buyer
     console.log(`📤 Transferring NFT to buyer...`);
     const transferTx = await new TransferTransaction()
-      .addNftTransfer(forestTokenId, serialNumber, FOREST_NFT_CONFIG.treasuryId, buyerAccountId)
+      .addNftTransfer(config.tokenId, serialNumber, config.treasuryId, buyerAccountId)
       .freezeWith(client);
-``    .sign(treasuryKey);
+``    .sign(operatorKey);
 
     const transferSubmit = await transferTx.execute(client);
     const transferRx = await transferSubmit.getReceipt(client);
@@ -128,7 +140,7 @@ async function mintForestAreaNFT(buyerAccountId, areaId, location, area, totalPr
     
     return {
       success: true,
-      tokenId: forestTokenId.toString(),
+      tokenId: config.tokenId.toString(),
       serialNumber: serialNumber.toString(),
       metadataUrl: metadataResult.metadataUrl,
       metadataCid: metadataResult.metadataCid
@@ -140,7 +152,4 @@ async function mintForestAreaNFT(buyerAccountId, areaId, location, area, totalPr
   }
 }
 
-export {
-  createForestNFTCollection,
-  mintForestAreaNFT
-};
+export { mintNFT };

@@ -85,46 +85,86 @@ const listDataByName = async (req,res) => {
 }
 
 // Generate forest area NFT metadata and upload to IPFS
-async function createForestAreaNFTMetadata(areaId, location, area, buyer, totalPrice) {
+async function createNFTMetadata(type, data) {
   try {
-    // Create forest area NFT metadata
-    const metadata = {
-      name: `Forest Area #${areaId}`,
-      description: `Certificate of forest area ownership in ${location}. This NFT represents ownership rights to ${area} of forest land.`,
-      attributes: [
-        {
-          trait_type: "Area ID",
-          value: areaId
-        },
-        {
-          trait_type: "Location",
-          value: location
-        },
-        {
-          trait_type: "Area Size",
-          value: area
-        },
-        {
-          trait_type: "Purchase Price",
-          display_type: "number",
-          value: totalPrice
-        },
-        {
-          trait_type: "Owner",
-          value: buyer
-        },
-        {
-          trait_type: "Asset Type",
-          value: "Forest Area Certificate"
-        },
-        {
-          trait_type: "Sustainability Rating",
-          value: "A+"
-        }
-      ],
-      type: "nft",
-      category: "environmental"
-    };
+    if(type == forest) {
+      const metadata = {
+        name: `Forest Area #${areaId}`,
+        description: `Certificate of forest area ownership in ${location}. This NFT represents ownership rights to ${area} of forest land.`,
+        attributes: [
+          {
+            trait_type: "Area ID",
+            value: data.areaId
+          },
+          {
+            trait_type: "Location",
+            value: data.location
+          },
+          {
+            trait_type: "Area Size",
+            value: data.area
+          },
+          {
+            trait_type: "Purchase Price",
+            display_type: "number",
+            value: data.totalPrice
+          },
+          {
+            trait_type: "Owner",
+            value: data.buyer
+          },
+          {
+            trait_type: "Asset Type",
+            value: "Forest Area Certificate"
+          },
+          {
+            trait_type: "Sustainability Rating",
+            value: "A+"
+          }
+        ],
+        type: "nft",
+        category: "forest"
+      };
+    } else {
+      const metadata = {
+        name: `Carbon Credit #${areaId}`,
+        description: `Tradable carbon credit for offsetting emissions. Represents verified reduction of CO2 equivalent in ${location}.`,
+        attributes: [
+          {
+            trait_type: "Credit ID",
+            value: data.id
+          },
+          {
+            trait_type: "CO2 Offset Amount (tons)",
+            display_type: "number",
+            value: data.amount
+          },
+          {
+            trait_type: "Purchase Price",
+            display_type: "number",
+            value: data.totalPrice
+          },
+          {
+            trait_type: "Owner",
+            value: data.buyer
+          },
+          {
+            trait_type: "Asset Type",
+            value: "Carbon Credit"
+          },
+          {
+            trait_type: "Certification Standard",
+            value: "Verified Carbon Standard (VCS)"
+          },
+          {
+            trait_type: "Vintage Year",
+            value: new Date().getFullYear()
+          }
+        ],
+        type: "nft",
+        category: "carbon-credit"
+      };
+    }
 
     // Upload metadata to IPFS
     const result = await uploadMetadataToIPFS(metadata);
@@ -138,5 +178,5 @@ export {
   uploadImageToIPFS,
   getDataByCid,
   listDataByName,
-  createForestAreaNFTMetadata
+  createNFTMetadata
 };
