@@ -34,7 +34,6 @@ const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 const FOREST_NFT_CONFIG = {
   name: "Forest Area Certificates",
   symbol: "FAC",
-  maxSupply: 10000,
   treasuryId: operatorId, // Using operator as treasury for simplicity
   supplyKey: operatorKey,
   tokenId: null  
@@ -43,7 +42,6 @@ const FOREST_NFT_CONFIG = {
 const CARBON_NFT_CONFIG = {
   name: "Carbon Credits",
   symbol: "CC",
-  maxSupply: 10000,
   treasuryId: operatorId, // Using operator as treasury for simplicity
   supplyKey: operatorKey,
   tokenId: null  
@@ -67,7 +65,6 @@ async function createtNFTCollection(type) {
       .setInitialSupply(0)
       .setTreasuryAccountId(config.treasuryId)
       .setSupplyType(TokenSupplyType.Finite)
-      .setMaxSupply(config.maxSupply)
       .setSupplyKey(config.supplyKey)
       .freezeWith(client);
 
