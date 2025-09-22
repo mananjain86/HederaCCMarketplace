@@ -11,12 +11,45 @@ contract CarbonCreditsMarketplace {
     
     // Structs
     struct Company {
+        // Basic info
         string name;
         string companyType; // "buyer", "seller", or "both"
         bool isRegistered;
         uint256 carbonCreditsOwned;
         uint256 totalPurchases;
         uint256 totalSales;
+        
+        // KYC/KYB Information
+        string legalEntityName;
+        string registrationNumber;
+        string jurisdiction;
+        string registeredAddress;
+        string principalBusinessAddress;
+        string localPartners;
+        string contactName;
+        string contactEmail;
+        string contactPhone;
+        string website;
+        string socialProfiles;
+        string industry;
+        string businessActivities;
+        string keyIndividualsProof;
+        
+        // Financial and Compliance
+        string bankAccountDetails;
+        string taxId;
+        bool amlCompliance;
+        
+        // Carbon Emissions Data
+        uint256 scope1Emissions; // Direct emissions
+        uint256 scope2Emissions; // Indirect energy emissions
+        uint256 scope3Emissions; // Value chain emissions
+        string emissionsCalculationMethod;
+        bool emissionsVerified;
+        string verificationStatement;
+        string decarbonizationStrategy;
+        string climatePledges;
+        uint256 registrationTimestamp;
     }
     
     struct CarbonCreditListing {
@@ -67,8 +100,33 @@ contract CarbonCreditsMarketplace {
     
     // Company registration functions
     function registerCompany(
-        string memory _name, 
-        string memory _companyType
+        string memory _name,
+        string memory _companyType,
+        string memory _legalEntityName,
+        string memory _registrationNumber,
+        string memory _jurisdiction,
+        string memory _registeredAddress,
+        string memory _principalBusinessAddress,
+        string memory _localPartners,
+        string memory _contactName,
+        string memory _contactEmail,
+        string memory _contactPhone,
+        string memory _website,
+        string memory _socialProfiles,
+        string memory _industry,
+        string memory _businessActivities,
+        string memory _keyIndividualsProof,
+        string memory _bankAccountDetails,
+        string memory _taxId,
+        bool _amlCompliance,
+        uint256 _scope1Emissions,
+        uint256 _scope2Emissions,
+        uint256 _scope3Emissions,
+        string memory _emissionsCalculationMethod,
+        bool _emissionsVerified,
+        string memory _verificationStatement,
+        string memory _decarbonizationStrategy,
+        string memory _climatePledges
     ) external {
         require(!companies[msg.sender].isRegistered, "Company already registered");
         require(
@@ -77,6 +135,10 @@ contract CarbonCreditsMarketplace {
             keccak256(bytes(_companyType)) == keccak256(bytes("both")),
             "Invalid company type. Must be 'buyer', 'seller', or 'both'"
         );
+        require(bytes(_legalEntityName).length > 0, "Legal entity name required");
+        require(bytes(_registrationNumber).length > 0, "Registration number required");
+        require(bytes(_contactEmail).length > 0, "Contact email required");
+        require(_amlCompliance, "AML compliance declaration required");
         
         companies[msg.sender] = Company({
             name: _name,
@@ -84,7 +146,33 @@ contract CarbonCreditsMarketplace {
             isRegistered: true,
             carbonCreditsOwned: 0,
             totalPurchases: 0,
-            totalSales: 0
+            totalSales: 0,
+            legalEntityName: _legalEntityName,
+            registrationNumber: _registrationNumber,
+            jurisdiction: _jurisdiction,
+            registeredAddress: _registeredAddress,
+            principalBusinessAddress: _principalBusinessAddress,
+            localPartners: _localPartners,
+            contactName: _contactName,
+            contactEmail: _contactEmail,
+            contactPhone: _contactPhone,
+            website: _website,
+            socialProfiles: _socialProfiles,
+            industry: _industry,
+            businessActivities: _businessActivities,
+            keyIndividualsProof: _keyIndividualsProof,
+            bankAccountDetails: _bankAccountDetails,
+            taxId: _taxId,
+            amlCompliance: _amlCompliance,
+            scope1Emissions: _scope1Emissions,
+            scope2Emissions: _scope2Emissions,
+            scope3Emissions: _scope3Emissions,
+            emissionsCalculationMethod: _emissionsCalculationMethod,
+            emissionsVerified: _emissionsVerified,
+            verificationStatement: _verificationStatement,
+            decarbonizationStrategy: _decarbonizationStrategy,
+            climatePledges: _climatePledges,
+            registrationTimestamp: block.timestamp
         });
         
         registeredCompanies.push(msg.sender);
@@ -245,6 +333,79 @@ contract CarbonCreditsMarketplace {
             company.carbonCreditsOwned,
             company.totalPurchases,
             company.totalSales
+        );
+    }
+    
+    function getCompanyKYCDetails(address _company) external view returns (
+        string memory legalEntityName,
+        string memory registrationNumber,
+        string memory jurisdiction,
+        string memory registeredAddress,
+        string memory principalBusinessAddress,
+        string memory localPartners,
+        string memory contactName,
+        string memory contactEmail,
+        string memory contactPhone,
+        string memory website,
+        string memory socialProfiles,
+        string memory industry,
+        string memory businessActivities,
+        string memory keyIndividualsProof
+    ) {
+        Company memory company = companies[_company];
+        return (
+            company.legalEntityName,
+            company.registrationNumber,
+            company.jurisdiction,
+            company.registeredAddress,
+            company.principalBusinessAddress,
+            company.localPartners,
+            company.contactName,
+            company.contactEmail,
+            company.contactPhone,
+            company.website,
+            company.socialProfiles,
+            company.industry,
+            company.businessActivities,
+            company.keyIndividualsProof
+        );
+    }
+    
+    function getCompanyFinancialDetails(address _company) external view returns (
+        string memory bankAccountDetails,
+        string memory taxId,
+        bool amlCompliance
+    ) {
+        Company memory company = companies[_company];
+        return (
+            company.bankAccountDetails,
+            company.taxId,
+            company.amlCompliance
+        );
+    }
+    
+    function getCompanyEmissionsDetails(address _company) external view returns (
+        uint256 scope1Emissions,
+        uint256 scope2Emissions,
+        uint256 scope3Emissions,
+        string memory emissionsCalculationMethod,
+        bool emissionsVerified,
+        string memory verificationStatement,
+        string memory decarbonizationStrategy,
+        string memory climatePledges,
+        uint256 registrationTimestamp
+    ) {
+        Company memory company = companies[_company];
+        return (
+            company.scope1Emissions,
+            company.scope2Emissions,
+            company.scope3Emissions,
+            company.emissionsCalculationMethod,
+            company.emissionsVerified,
+            company.verificationStatement,
+            company.decarbonizationStrategy,
+            company.climatePledges,
+            company.registrationTimestamp
         );
     }
     
