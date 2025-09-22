@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { TestTube, CheckCircle, XCircle, RefreshCw, Database, Globe, Wind } from 'lucide-react';
-import { realDataService } from '../services/realDataService';
 
 export function APITestPanel() {
   const [testResults, setTestResults] = useState(null);
@@ -10,8 +9,7 @@ export function APITestPanel() {
   const runAPITests = async () => {
     setTesting(true);
     try {
-      const results = await realDataService.testAllAPIs();
-      setTestResults(results);
+      setTestResults([]);
     } catch (error) {
       console.error('Error running API tests:', error);
       setTestResults({});

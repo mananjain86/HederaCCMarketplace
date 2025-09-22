@@ -1,9 +1,7 @@
 import React from 'react';
 import { TrendingUp, Shield, Globe } from 'lucide-react';
-import { useMarketAnalytics } from '../hooks/useRealData';
 
-export function Hero() {
-  const { analytics } = useMarketAnalytics();
+export function Hero({ analytics }) {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 to-emerald-900 py-16">

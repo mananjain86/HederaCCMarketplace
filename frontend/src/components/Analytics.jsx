@@ -1,15 +1,8 @@
 import React from 'react';
 import { TrendingUp, Users, DollarSign, Globe, BarChart3, PieChart } from 'lucide-react';
-import { useMarketAnalytics, useRealData } from '../hooks/useRealData';
 import { LoadingSpinner } from './LoadingSpinner';
 
-export function Analytics() {
-  const { analytics, loading } = useMarketAnalytics();
-  const { forestData, emissionsData } = useRealData();
-
-  if (loading) {
-    return <LoadingSpinner message="Loading market analytics..." />;
-  }
+export function Analytics({ analytics }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,16 +1,12 @@
 import React from 'react';
 import { ArrowLeft, MapPin, Calendar, TrendingDown, TrendingUp, Award, AlertCircle, CheckCircle } from 'lucide-react';
-import { useRealData } from '../hooks/useRealData';
 import { PricingEngine } from './PricingEngine';
 import { LoadingSpinner } from './LoadingSpinner';
 
-export function CompanyProfile({ companyId, onBack }) {
-  const { companies, loading } = useRealData();
+export function CompanyProfile({ companies, companyId, onBack }) {
   const company = companies.find(c => c.id === companyId);
   
-  if (loading) {
-    return <LoadingSpinner message="Loading company data..." />;
-  }
+   
 
   if (!company) {
     return (

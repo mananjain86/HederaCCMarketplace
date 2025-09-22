@@ -1,23 +1,12 @@
 import React, { useState } from 'react';
 import { Search, Filter, Star, TreePine, Factory } from 'lucide-react';
 import { CreditCard } from './CreditCard';
-import { useRealData, useMarketAnalytics } from '../hooks/useRealData';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 
-export function Marketplace({ onViewCompany }) {
+function Marketplace({ carbonCredits, analytics, onViewCompany }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const { carbonCredits, loading, error } = useRealData();
-  const { analytics } = useMarketAnalytics();
-
-  if (loading) {
-    return <LoadingSpinner message="Loading real environmental data..." />;
-  }
-
-  if (error) {
-    return <ErrorMessage message={error} />;
-  }
 
   const filteredCredits = carbonCredits.filter(credit => {
     const matchesSearch = credit.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,3 +107,5 @@ export function Marketplace({ onViewCompany }) {
     </div>
   );
 }
+
+export {Marketplace};
