@@ -2,6 +2,7 @@ console.clear();
 import "dotenv/config";
 
 import {
+  Hbar,
   Client,
   AccountId,
   PrivateKey,
@@ -12,12 +13,9 @@ import {
   TokenCreateTransaction,
 } from "@hashgraph/sdk";
 
-import { createNFTMetadata } from './ipfs.js';
+import { createNFTMetadata } from "./ipfs.js"; // must return { success, metadataCid, metadataUrl }
 
-// Operator credentials
-const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
-
-// Flexible private key parser
+// Parse operator credentials (supports ECDSA or ED25519)
 function parsePrivateKey(str) {
   try {
     return PrivateKey.fromStringECDSA(str);
@@ -25,128 +23,128 @@ function parsePrivateKey(str) {
     return PrivateKey.fromStringED25519(str);
   }
 }
+
+const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = parsePrivateKey(process.env.OPERATOR_KEY);
 
 // Initialize Hedera client
 const client = Client.forTestnet().setOperator(operatorId, operatorKey);
+client.setDefaultMaxTransactionFee(new Hbar(20));
 
-// Forest NFT Collection Configuration
-const FOREST_NFT_CONFIG = {
-  name: "Forest Area Certificates",
-  symbol: "FAC",
-  treasuryId: operatorId, // Using operator as treasury for simplicity
-  supplyKey: operatorKey,
-  tokenId: null  
-};
+// Create the NFT collection (Non-Fungible, Finite supply)
+async function createNFTCollection(type, config) {
+  console.log(`Creating ${config.name} NFT Collection...`);
 
-const CARBON_NFT_CONFIG = {
-  name: "Carbon Credits",
-  symbol: "CC",
-  treasuryId: operatorId, // Using operator as treasury for simplicity
-  supplyKey: operatorKey,
-  tokenId: null  
+  const nftCreate = new TokenCreateTransaction()
+    .setTokenName(config.name)
+    .setTokenSymbol(config.symbol)
+    .setTokenType(TokenType.NonFungibleUnique)
+    .setDecimals(0)
+    .setInitialSupply(0)
+    .setTreasuryAccountId(config.treasuryId)
+    .setSupplyType(TokenSupplyType.Finite)
+    .setMaxSupply(1000)
+    .setSupplyKey(config.supplyKey) // supply key required to mint/burn
+    .freezeWith(client);
+
+  // Sign with the treasury key (here treasuryKey = operatorKey)
+  const nftCreateTxSign = await nftCreate.sign(config.treasuryKey);
+
+  const nftCreateSubmit = await nftCreateTxSign.execute(client);
+  const nftCreateRx = await nftCreateSubmit.getReceipt(client);
+
+  config.tokenId = nftCreateRx.tokenId;
+
+  console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
+  return config.tokenId;
 }
 
-// Create the Forest NFT Collection (call once)
-async function createtNFTCollection(type) {
-  if (type == "forest") {
-    config = FOREST_NFT_CONFIG;
-  } else {
-    config = CARBON_NFT_CONFIG;
-  }
+// Mint one NFT and transfer it to buyer
+// data: arbitrary data passed to createNFTMetadata
+// type: "forest" or other
+// buyerAccountId: AccountId string like "0.0.x" or AccountId object
+export async function mintNFT(data, type, buyerAccountId) {
   try {
-    console.log("Creating Forest NFT Collection...");
-    
-    const nftCreate = new TokenCreateTransaction()
-      .setTokenName(config.name)
-      .setTokenSymbol(config.symbol)
-      .setTokenType(TokenType.NonFungibleUnique)
-      .setDecimals(0)
-      .setInitialSupply(0)
-      .setTreasuryAccountId(config.treasuryId)
-      .setSupplyType(TokenSupplyType.Finite)
-      .setSupplyKey(config.supplyKey)
-      .freezeWith(client);
+    // Configure collection; using operator as both treasury and supply key for simplicity
+    const config =
+      type == "forest"
+        ? {
+            name: "Forest Area Certificates",
+            symbol: "FAC",
+            treasuryId: operatorId,
+            treasuryKey: operatorKey,
+            supplyKey: operatorKey,
+            tokenId: null,
+          }
+        : {
+            name: "Carbon Credits",
+            symbol: "CC",
+            treasuryId: operatorId,
+            treasuryKey: operatorKey,
+            supplyKey: operatorKey,
+            tokenId: null,
+          };
 
-    // Submit the transaction
-    const nftCreateTxSign = await nftCreate.sign(config.supplyKey);
-    const nftCreateSubmit = await nftCreateTxSign.execute(client);
-    const nftCreateRx = await nftCreateSubmit.getReceipt(client);
-    config.tokenId = nftCreateRx.tokenId;
-    
-    console.log(`✅ ${config.name} NFT Collection created with token ID: ${tokenId}`);
-    return tokenId;
-  } catch (error) {
-    throw new Error(`Failed to create ${config.name} NFT collection: ${error.message}`);
-  }
-}
+    if (!buyerAccountId) {
+      throw new Error("buyerAccountId is required");
+    }
 
-// Mint Forest Area NFT for a specific buyer
-async function mintNFT(data, type) {
-  if (type == "forest") {
-    config = FOREST_NFT_CONFIG;
-  } else {
-    config = CARBON_NFT_CONFIG;
-  }
-  try {
-    console.log(`\n🌲 Minting NFT for ${type}...`);
-    
-    // Ensure we have a forest NFT collection
+    // Create the NFT collection once (if not yet created in this run)
     if (config.tokenId == null) {
-      forestTokenId = await createtNFTCollection(type);
+      await createNFTCollection(type, config);
     }
-    
-    // Generate metadata and upload to IPFS
+
+    console.log(`\n🌲 Minting NFT for ${type}...`);
     console.log("📄 Creating metadata and uploading to IPFS...");
+
+    // Create metadata and upload to IPFS
     const metadataResult = await createNFTMetadata(type, data);
-    
-    if (!metadataResult.success) {
-      throw new Error("Failed to create metadata");
+    if (!metadataResult?.success || !metadataResult.metadataCid) {
+      throw new Error("Failed to create metadata or missing CID");
     }
-    
-    // Create metadata CID buffer
+
+    // Prepare metadata buffer (HIP-412-style: ipfs://CID)
     const metadataCID = Buffer.from(`ipfs://${metadataResult.metadataCid}`);
-    
-    // Mint the NFT
-    console.log("🔨 Minting NFT on Hedera...");
+
+    // Mint NFT (signed by supply key)
     const mintTx = await new TokenMintTransaction()
       .setTokenId(config.tokenId)
-      .setMetadata([metadataCID])
-      .freezeWith(client);
+      .setMetadata([metadataCID]) // up to 10 entries per tx
+      .freezeWith(client)
+      .sign(config.supplyKey);
 
-    const mintTxSign = await mintTx.sign(operatorKey);
-    const mintTxSubmit = await mintTxSign.execute(client);
+    const mintTxSubmit = await mintTx.execute(client);
     const mintRx = await mintTxSubmit.getReceipt(client);
     const serialNumber = mintRx.serials[0];
-    
-    console.log(`✅ NFT minted! Serial number: ${serialNumber}`);
-    
-    // Transfer NFT from treasury to buyer
+    console.log(`✅ NFT minted! Serial number: ${serialNumber}`); // Minting requires supply key. [[Mint NFT](https://docs.hedera.com/hedera/readme/tutorials/token/create-and-transfer-your-first-nft#id-2.-mint-a-new-nft)]
+
+    // Transfer NFT from treasury to buyer (signed by treasury key)
     console.log(`📤 Transferring NFT to buyer...`);
     const transferTx = await new TransferTransaction()
       .addNftTransfer(config.tokenId, serialNumber, config.treasuryId, buyerAccountId)
-      .freezeWith(client);
-``    .sign(operatorKey);
+      .freezeWith(client)
+      .sign(config.treasuryKey);
 
     const transferSubmit = await transferTx.execute(client);
     const transferRx = await transferSubmit.getReceipt(client);
-    
-    if (transferRx.status.toString() === "SUCCESS") {
-      console.log(`✅ NFT successfully transferred to buyer!`);
-    }
-    
+    console.log(`Transfer status: ${transferRx.status}`); // Sender signs transfer. [[Transfer NFT](https://docs.hedera.com/hedera/readme/tutorials/token/create-and-transfer-your-first-nft#id-4.-transfer-the-nft)]
+
     return {
-      success: true,
+      success: transferRx.status.toString() === "SUCCESS",
       tokenId: config.tokenId.toString(),
       serialNumber: serialNumber.toString(),
       metadataUrl: metadataResult.metadataUrl,
-      metadataCid: metadataResult.metadataCid
+      metadataCid: metadataResult.metadataCid,
     };
-    
   } catch (error) {
-    console.error(`❌ Error minting Forest Area NFT:`, error);
+    console.error(`❌ Error minting NFT:`, error);
     throw error;
   }
 }
 
-export { mintNFT };
+
+(async () => {
+  const buyer = "0.0.6842639"; // replace with a real account
+  const result = await mintNFT({ area: "Plot-42" }, "forest", buyer);
+  console.log(result);
+})();

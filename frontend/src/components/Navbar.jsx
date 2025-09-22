@@ -30,12 +30,12 @@ export function Navbar({ currentView, onViewChange }) {
   setMintResult(null);
 
   try {
-    const res = await fetch("/api/mint", {
+    const res = await fetch("http://localhost:5000/api/mint", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        type: "forest",
-        data: { buyer: account },
+        data: { id: 1, amount:10, totalPrice:15, buyer: account },
+        type: "carbon",
       }),
     });
 

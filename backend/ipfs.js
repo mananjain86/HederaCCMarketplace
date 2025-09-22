@@ -87,10 +87,11 @@ const listDataByName = async (req,res) => {
 // Generate forest area NFT metadata and upload to IPFS
 async function createNFTMetadata(type, data) {
   try {
-    if(type == forest) {
-      const metadata = {
-        name: `Forest Area #${areaId}`,
-        description: `Certificate of forest area ownership in ${location}. This NFT represents ownership rights to ${area} of forest land.`,
+    let metadata;
+    if(type == "forest") {
+      metadata = {
+        name: `Forest Area #${data.areaId}`,
+        description: `Certificate of forest area ownership in ${data.location}. This NFT represents ownership rights to ${data.area} of forest land.`,
         attributes: [
           {
             trait_type: "Area ID",
@@ -126,9 +127,9 @@ async function createNFTMetadata(type, data) {
         category: "forest"
       };
     } else {
-      const metadata = {
-        name: `Carbon Credit #${areaId}`,
-        description: `Tradable carbon credit for offsetting emissions. Represents verified reduction of CO2 equivalent in ${location}.`,
+      metadata = {
+        name: `Carbon Credit #${0}`,
+        description: `Tradable carbon credit for offsetting emissions. Represents verified reduction of CO2 equivalent in ${data.location}.`,
         attributes: [
           {
             trait_type: "Credit ID",
