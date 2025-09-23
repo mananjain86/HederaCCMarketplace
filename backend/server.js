@@ -41,15 +41,15 @@ app.post("/api/mint", async (req, res) => {
 // ----------------- Consensus APIs -----------------
 
 // 1️⃣ Create a new topic
-app.post("/api/consensus/createTopic", async (req, res) => {
-  try {
-    const topicId = await createTopic();
-    res.status(200).json({ success: true, topicId });
-  } catch (err) {
-    console.error("❌ createTopic Error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// app.post("/api/consensus/createTopic", async (req, res) => {
+//   try {
+//     const topicId = await createTopic();
+//     res.status(200).json({ success: true, topicId });
+//   } catch (err) {
+//     console.error("❌ createTopic Error:", err);
+//     res.status(500).json({ success: false, error: err.message });
+//   }
+// });
 
 // 2️⃣ Submit a message to a topic
 app.post("/api/consensus/submitMessage", async (req, res) => {
@@ -101,20 +101,4 @@ app.get(
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${PORT}`);
-  // ----------------- Test call -----------------
-  (async () => {
-    console.log("\n🌐 Testing consensus.js functions...");
-    try {
-      const topicId = await createTopic();
-      console.log("Created topic:", topicId);
-
-      await submitMessage(topicId, "Hello Hedera Consensus!");
-      console.log("Submitted test message to topic.");
-
-      const messages = await queryTopic(topicId);
-      console.log("Queried topic messages:", messages);
-    } catch (err) {
-      console.error("❌ Test call failed:", err);
-    }
-  })();
 });

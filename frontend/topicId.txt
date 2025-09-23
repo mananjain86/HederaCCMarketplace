@@ -1,0 +1,3 @@
+for selling transaction, topicId = 0.0.6886616
+for buying transaction, topicId = 0.0.6886610
+for verification transaction, topicId = 0.0.6886609

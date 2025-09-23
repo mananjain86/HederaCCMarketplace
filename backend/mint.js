@@ -32,32 +32,32 @@ const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 client.setDefaultMaxTransactionFee(new Hbar(20));
 
 // Create the NFT collection (Non-Fungible, Finite supply)
-async function createNFTCollection(type, config) {
-  console.log(`Creating ${config.name} NFT Collection...`);
+// async function createNFTCollection(type, config) {
+//   console.log(`Creating ${config.name} NFT Collection...`);
 
-  const nftCreate = new TokenCreateTransaction()
-    .setTokenName(config.name)
-    .setTokenSymbol(config.symbol)
-    .setTokenType(TokenType.NonFungibleUnique)
-    .setDecimals(0)
-    .setInitialSupply(0)
-    .setTreasuryAccountId(config.treasuryId)
-    .setSupplyType(TokenSupplyType.Finite)
-    .setMaxSupply(1000)
-    .setSupplyKey(config.supplyKey) // supply key required to mint/burn
-    .freezeWith(client);
+//   const nftCreate = new TokenCreateTransaction()
+//     .setTokenName(config.name)
+//     .setTokenSymbol(config.symbol)
+//     .setTokenType(TokenType.NonFungibleUnique)
+//     .setDecimals(0)
+//     .setInitialSupply(0)
+//     .setTreasuryAccountId(config.treasuryId)
+//     .setSupplyType(TokenSupplyType.Finite)
+//     .setMaxSupply(1000)
+//     .setSupplyKey(config.supplyKey) // supply key required to mint/burn
+//     .freezeWith(client);
 
-  // Sign with the treasury key (here treasuryKey = operatorKey)
-  const nftCreateTxSign = await nftCreate.sign(config.treasuryKey);
+//   // Sign with the treasury key (here treasuryKey = operatorKey)
+//   const nftCreateTxSign = await nftCreate.sign(config.treasuryKey);
 
-  const nftCreateSubmit = await nftCreateTxSign.execute(client);
-  const nftCreateRx = await nftCreateSubmit.getReceipt(client);
+//   const nftCreateSubmit = await nftCreateTxSign.execute(client);
+//   const nftCreateRx = await nftCreateSubmit.getReceipt(client);
 
-  config.tokenId = nftCreateRx.tokenId;
+//   config.tokenId = nftCreateRx.tokenId;
 
-  console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
-  return config.tokenId;
-}
+//   console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
+//   return config.tokenId;
+// }
 
 // Mint one NFT and transfer it to buyer
 // data: arbitrary data passed to createNFTMetadata
@@ -74,7 +74,7 @@ export async function mintNFT(data, type, buyerAccountId) {
             treasuryId: operatorId,
             treasuryKey: operatorKey,
             supplyKey: operatorKey,
-            tokenId: null,
+            tokenId: "0.0.6886481",
           }
         : {
             name: "Carbon Credits",
@@ -82,16 +82,11 @@ export async function mintNFT(data, type, buyerAccountId) {
             treasuryId: operatorId,
             treasuryKey: operatorKey,
             supplyKey: operatorKey,
-            tokenId: null,
+            tokenId: "0.0.6886497",
           };
 
     if (!buyerAccountId) {
       throw new Error("buyerAccountId is required");
-    }
-
-    // Create the NFT collection once (if not yet created in this run)
-    if (config.tokenId == null) {
-      await createNFTCollection(type, config);
     }
 
     console.log(`\n🌲 Minting NFT for ${type}...`);
@@ -141,10 +136,3 @@ export async function mintNFT(data, type, buyerAccountId) {
     throw error;
   }
 }
-
-
-(async () => {
-  const buyer = "0.0.6842639"; // replace with a real account
-  const result = await mintNFT({ area: "Plot-42" }, "forest", buyer);
-  console.log(result);
-})();

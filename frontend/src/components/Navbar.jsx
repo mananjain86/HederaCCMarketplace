@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef }, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Leaf, BarChart3, Building2, Wallet, ChevronDown, TreePine, Users, Sparkles } from "lucide-react";
 
 export function Navbar({ currentView, onViewChange }) {
@@ -34,7 +34,7 @@ export function Navbar({ currentView, onViewChange }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        data: { id: 1, amount:10, totalPrice:15, buyer: account },
+        data: { id: 2, amount:20, totalPrice:28, buyer: '0.0.6842639' },
         type: "carbon",
       }),
     });
