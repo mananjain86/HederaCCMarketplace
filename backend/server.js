@@ -4,7 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { mintNFT } from "./mint.js";
 import {
-  createTopic,
+  // createTopic,
   submitMessage,
   queryTopic,
   queryTopicWithSequenceNumber,

@@ -179,15 +179,6 @@ export function Navbar({ currentView, onViewChange }) {
                 <span>Connect Wallet</span>
               </button>
             )}
-
-            <button
-              onClick={handleMint}
-              disabled={isMinting}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-all flex items-center space-x-2 disabled:opacity-50"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>{isMinting ? "Minting..." : "Mint NFT"}</span>
-            </button>
           </div>
         </div>
       </div>

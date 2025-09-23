@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CompanyAbi from './Company.json';
 import { 
   Building2, 
   CheckCircle, 
@@ -14,11 +15,16 @@ import {
   MapPin,
   Users,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Hash
 } from 'lucide-react';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { validateStep1, validateStep2, validateStep3 } from '../utils/validation';
+import { BrowserProvider, Contract } from 'ethers';
+
+const COMPANY_ABI = CompanyAbi.abi;
+const COMPANY_ADDRESS = '0x5c63A32e0F537FfAedC4aDDb4b78a32dbC2f6B5f';
 
 export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,6 +34,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [formData, setFormData] = useState({
     // Basic Info
     name: '',
+    hederaAccountId: '', // Added Hedera account ID
     
     // KYC/KYB Information
     legalEntityName: '',
@@ -46,7 +53,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     keyIndividualsProof: '',
     
     // Financial and Compliance
-    bankAccountDetails: '',
+    walletAddress: '',
     taxId: '',
     amlCompliance: false,
     
@@ -72,7 +79,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
       id: 2,
       title: 'Financial & Compliance',
       icon: DollarSign,
-      description: 'Banking details and regulatory compliance'
+      description: 'Wallet details and regulatory compliance'
     },
     {
       id: 3,
@@ -139,7 +146,8 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleRegister = async () => {
+    // Validate final step before submission
     const validation = validateStep(3);
     if (!validation.isValid) {
       setError('Please correct all errors before submitting.');
@@ -150,19 +158,98 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     setError('');
 
     try {
-      // Simulate registration process for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Check if wallet is connected
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+      
+      const accounts = await window.ethereum.request({
+        method: 'eth_accounts'
+      });
+      
+      if (accounts.length === 0) {
+        throw new Error("No wallet connected");
+      }
+      
+      const walletAddress = accounts[0];
+      
+      // Initialize contract
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new Contract(COMPANY_ADDRESS, COMPANY_ABI, signer);
+      
+      // Prepare parameters for smart contract
+      const contractParams = [
+        formData.name || '',
+        formData.hederaAccountId || '',
+        formData.legalEntityName || '',
+        formData.registrationNumber || '',
+        formData.jurisdiction || '',
+        formData.registeredAddress || '',
+        formData.principalBusinessAddress || '',
+        formData.localPartners || '',
+        formData.contactName || '',
+        formData.contactEmail || '',
+        formData.contactPhone || '',
+        formData.website || '',
+        formData.socialProfiles || '',
+        formData.industry || '',
+        formData.businessActivities || '',
+        formData.keyIndividualsProof || '',
+        formData.walletAddress || walletAddress, // Use connected wallet if not provided
+        formData.taxId || '',
+        formData.amlCompliance || false,
+        parseInt(formData.scope1Emissions) || 0,
+        parseInt(formData.scope2Emissions) || 0,
+        parseInt(formData.scope3Emissions) || 0,
+        formData.emissionsCalculationMethod || '',
+        formData.emissionsVerified || false,
+        formData.verificationStatement || '',
+        formData.decarbonizationStrategy || '',
+        formData.climatePledges || ''
+      ];
+      
+      console.log('Registering company with params:', contractParams);
+      
+      // Call smart contract function
+      const tx = await contract.registerCompany(...contractParams);
+      
+      console.log('Transaction sent:', tx.hash);
+      
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      
+      console.log('Transaction confirmed:', receipt);
       
       // Registration successful - pass company data
       onRegistrationComplete?.({
         message: 'Company registration submitted successfully!',
         companyData: formData,
         showSellerOption: true, // Always show seller option as an upgrade path
-        transactionHash: `0x${Math.random().toString(16).slice(2, 10)}`
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString()
       });
+      
     } catch (err) {
-      setError('Registration failed. Please try again.');
       console.error('Registration error:', err);
+      
+      // Handle specific error types
+      if (err.code === 4001) {
+        setError('Transaction was rejected by user.');
+      } else if (err.code === -32603) {
+        setError('Internal JSON-RPC error. Please try again.');
+      } else if (err.message.includes('insufficient funds')) {
+        setError('Insufficient funds for gas fees.');
+      } else if (err.message.includes('user rejected')) {
+        setError('Transaction was rejected by user.');
+      } else if (err.message.includes('already registered')) {
+        setError('This wallet address is already registered.');
+      } else if (err.message.includes('Hedera account ID already registered')) {
+        setError('This Hedera account ID is already registered.');
+      } else {
+        setError(`Registration failed: ${err.message || 'Please try again.'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -230,6 +317,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
 
       <div className="grid md:grid-cols-2 gap-6">
         {renderInputWithError('name', 'Display Name', 'text', 'CarbonTech Solutions')}
+        {renderInputWithError('hederaAccountId', 'Hedera Account ID', 'text', '0.0.123456', true, Hash)}
         {renderInputWithError('legalEntityName', 'Legal Entity Name', 'text', 'CarbonTech Solutions LLC', true)}
         {renderInputWithError('registrationNumber', 'Company Registration Number', 'text', '123456789', true)}
         {renderInputWithError('jurisdiction', 'Jurisdiction', 'text', 'Delaware, USA', true)}
@@ -301,7 +389,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold text-white mb-2">Financial & Compliance Information</h3>
-        <p className="text-slate-400">Banking details and regulatory compliance requirements</p>
+        <p className="text-slate-400">Wallet details and regulatory compliance requirements</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -320,14 +408,14 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
 
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-emerald-300 mb-2">
-            Bank Account Details
+            Wallet Address
           </label>
           <textarea
-            value={formData.bankAccountDetails}
-            onChange={(e) => handleInputChange('bankAccountDetails', e.target.value)}
-            rows={3}
+            value={formData.walletAddress}
+            onChange={(e) => handleInputChange('walletAddress', e.target.value)}
+            rows={1}
             className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            placeholder="Bank name, account type, and relevant details for transactions"
+            placeholder="0x00.."
           />
         </div>
       </div>
@@ -561,7 +649,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
               </button>
             ) : (
               <button
-                onClick={handleSubmit}
+                onClick={handleRegister}
                 disabled={isSubmitting}
                 className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -5,9 +5,19 @@ contract CarbonCreditsMarketplace {
     
     // Events
     event CompanyRegistered(address indexed company, string name, string companyType);
+    event CompanyVerified(address indexed company, address indexed verifier, uint256 timestamp);
+    event CompanyRejected(address indexed company, address indexed verifier, string reason, uint256 timestamp);
     event CarbonCreditsListed(uint256 indexed listingId, address indexed seller, uint256 amount, uint256 pricePerCredit);
     event CarbonCreditsPurchased(uint256 indexed listingId, address indexed buyer, uint256 amount, uint256 totalPrice);
     event ForestAreaPurchased(address indexed buyer, uint256 area, uint256 estimatedCredits, uint256 price);
+    
+    // Enums
+    enum VerificationStatus {
+        Pending,     // Default status after registration
+        Verified,    // Approved by admin/verifier
+        Rejected,    // Rejected by admin/verifier
+        Suspended    // Temporarily suspended
+    }
     
     // Structs
     struct Company {
@@ -15,6 +25,7 @@ contract CarbonCreditsMarketplace {
         string name;
         string companyType; // "buyer", "seller", or "both"
         bool isRegistered;
+        VerificationStatus verificationStatus;
         uint256 carbonCreditsOwned;
         uint256 totalPurchases;
         uint256 totalSales;
@@ -36,7 +47,7 @@ contract CarbonCreditsMarketplace {
         string keyIndividualsProof;
         
         // Financial and Compliance
-        string bankAccountDetails;
+        string walletAddress; // Changed from bankAccountDetails to match frontend
         string taxId;
         bool amlCompliance;
         
@@ -50,6 +61,8 @@ contract CarbonCreditsMarketplace {
         string decarbonizationStrategy;
         string climatePledges;
         uint256 registrationTimestamp;
+        uint256 verificationTimestamp;
+        string rejectionReason;
     }
     
     struct CarbonCreditListing {
@@ -75,8 +88,10 @@ contract CarbonCreditsMarketplace {
     mapping(address => Company) public companies;
     mapping(uint256 => CarbonCreditListing) public carbonCreditListings;
     mapping(uint256 => ForestArea) public forestAreas;
+    mapping(address => bool) public verifiers; // Authorized verifiers
     
     address[] public registeredCompanies;
+    address[] public pendingVerificationCompanies;
     uint256 public nextListingId = 1;
     uint256 public nextForestAreaId = 1;
     
@@ -94,8 +109,31 @@ contract CarbonCreditsMarketplace {
         _;
     }
     
+    modifier onlyVerifiedCompany() {
+        require(companies[msg.sender].isRegistered, "Company must be registered");
+        require(companies[msg.sender].verificationStatus == VerificationStatus.Verified, "Company must be verified");
+        _;
+    }
+    
+    modifier onlyVerifier() {
+        require(verifiers[msg.sender] || msg.sender == owner, "Only authorized verifiers can call this function");
+        _;
+    }
+    
     constructor() {
         owner = msg.sender;
+        verifiers[msg.sender] = true; // Owner is default verifier
+    }
+    
+    // Verifier management functions
+    function addVerifier(address _verifier) external onlyOwner {
+        require(_verifier != address(0), "Invalid verifier address");
+        verifiers[_verifier] = true;
+    }
+    
+    function removeVerifier(address _verifier) external onlyOwner {
+        require(_verifier != owner, "Cannot remove owner as verifier");
+        verifiers[_verifier] = false;
     }
     
     // Company registration functions
@@ -116,7 +154,7 @@ contract CarbonCreditsMarketplace {
         string memory _industry,
         string memory _businessActivities,
         string memory _keyIndividualsProof,
-        string memory _bankAccountDetails,
+        string memory _walletAddress, // Changed from _bankAccountDetails
         string memory _taxId,
         bool _amlCompliance,
         uint256 _scope1Emissions,
@@ -144,6 +182,7 @@ contract CarbonCreditsMarketplace {
             name: _name,
             companyType: _companyType,
             isRegistered: true,
+            verificationStatus: VerificationStatus.Pending, // Default to pending
             carbonCreditsOwned: 0,
             totalPurchases: 0,
             totalSales: 0,
@@ -161,7 +200,7 @@ contract CarbonCreditsMarketplace {
             industry: _industry,
             businessActivities: _businessActivities,
             keyIndividualsProof: _keyIndividualsProof,
-            bankAccountDetails: _bankAccountDetails,
+            walletAddress: _walletAddress, // Changed field name
             taxId: _taxId,
             amlCompliance: _amlCompliance,
             scope1Emissions: _scope1Emissions,
@@ -172,22 +211,65 @@ contract CarbonCreditsMarketplace {
             verificationStatement: _verificationStatement,
             decarbonizationStrategy: _decarbonizationStrategy,
             climatePledges: _climatePledges,
-            registrationTimestamp: block.timestamp
+            registrationTimestamp: block.timestamp,
+            verificationTimestamp: 0,
+            rejectionReason: ""
         });
         
         registeredCompanies.push(msg.sender);
+        pendingVerificationCompanies.push(msg.sender);
         
         emit CompanyRegistered(msg.sender, _name, _companyType);
     }
     
-    // Carbon credits listing functions
+    // Company verification functions
+    function verifyCompany(address _company) external onlyVerifier {
+        require(companies[_company].isRegistered, "Company not registered");
+        require(companies[_company].verificationStatus == VerificationStatus.Pending, "Company not in pending status");
+        
+        companies[_company].verificationStatus = VerificationStatus.Verified;
+        companies[_company].verificationTimestamp = block.timestamp;
+        companies[_company].rejectionReason = ""; // Clear any previous rejection reason
+        
+        // Remove from pending list
+        _removeFromPendingList(_company);
+        
+        emit CompanyVerified(_company, msg.sender, block.timestamp);
+    }
+    
+    function rejectCompany(address _company, string memory _reason) external onlyVerifier {
+        require(companies[_company].isRegistered, "Company not registered");
+        require(companies[_company].verificationStatus == VerificationStatus.Pending, "Company not in pending status");
+        require(bytes(_reason).length > 0, "Rejection reason required");
+        
+        companies[_company].verificationStatus = VerificationStatus.Rejected;
+        companies[_company].rejectionReason = _reason;
+        
+        // Remove from pending list
+        _removeFromPendingList(_company);
+        
+        emit CompanyRejected(_company, msg.sender, _reason, block.timestamp);
+    }
+        
+    // Internal helper function
+    function _removeFromPendingList(address _company) internal {
+        for (uint256 i = 0; i < pendingVerificationCompanies.length; i++) {
+            if (pendingVerificationCompanies[i] == _company) {
+                pendingVerificationCompanies[i] = pendingVerificationCompanies[pendingVerificationCompanies.length - 1];
+                pendingVerificationCompanies.pop();
+                break;
+            }
+        }
+    }
+    
+    // Carbon credits listing functions (now requires verification)
     function listCarbonCredits(
         uint256 _amount,
         uint256 _pricePerCredit,
         string memory _certificationType,
         string memory _projectLocation,
         uint256 _vintage
-    ) external onlyRegisteredCompany {
+    ) external onlyVerifiedCompany { // Changed to require verification
         require(_amount > 0, "Amount must be greater than 0");
         require(_pricePerCredit > 0, "Price must be greater than 0");
         require(companies[msg.sender].carbonCreditsOwned >= _amount, "Insufficient carbon credits");
@@ -217,8 +299,8 @@ contract CarbonCreditsMarketplace {
         nextListingId++;
     }
     
-    // Carbon credits buying functions
-    function buyCarbonCredits(uint256 _listingId, uint256 _amount) external payable onlyRegisteredCompany {
+    // Carbon credits buying functions (now requires verification)
+    function buyCarbonCredits(uint256 _listingId, uint256 _amount) external payable onlyVerifiedCompany { // Changed to require verification
         CarbonCreditListing storage listing = carbonCreditListings[_listingId];
         require(listing.isActive, "Listing not active");
         require(listing.seller != msg.sender, "Cannot buy from yourself");
@@ -261,25 +343,8 @@ contract CarbonCreditsMarketplace {
         emit CarbonCreditsPurchased(_listingId, msg.sender, _amount, totalPrice);
     }
     
-    // Forest area functions (for direct carbon credit generation)
-    function addForestArea(
-        uint256 _area,
-        uint256 _pricePerHectare,
-        uint256 _estimatedCreditsPerHectare,
-        string memory _location
-    ) external onlyOwner {
-        forestAreas[nextForestAreaId] = ForestArea({
-            area: _area,
-            pricePerHectare: _pricePerHectare,
-            estimatedCreditsPerHectare: _estimatedCreditsPerHectare,
-            location: _location,
-            isAvailable: true
-        });
-        
-        nextForestAreaId++;
-    }
-    
-    function buyForestArea(uint256 _forestAreaId, uint256 _areaAmount) external payable onlyRegisteredCompany {
+    // Forest area functions (now requires verification)
+    function buyForestArea(uint256 _forestAreaId, uint256 _areaAmount) external payable onlyVerifiedCompany { // Changed to require verification
         ForestArea storage forestArea = forestAreas[_forestAreaId];
         require(forestArea.isAvailable, "Forest area not available");
         require(_areaAmount > 0 && _areaAmount <= forestArea.area, "Invalid area amount");
@@ -316,26 +381,95 @@ contract CarbonCreditsMarketplace {
         emit ForestAreaPurchased(msg.sender, _areaAmount, estimatedCredits, totalPrice);
     }
     
-    // View functions
+    // Forest area management (unchanged)
+    function addForestArea(
+        uint256 _area,
+        uint256 _pricePerHectare,
+        uint256 _estimatedCreditsPerHectare,
+        string memory _location
+    ) external onlyOwner {
+        forestAreas[nextForestAreaId] = ForestArea({
+            area: _area,
+            pricePerHectare: _pricePerHectare,
+            estimatedCreditsPerHectare: _estimatedCreditsPerHectare,
+            location: _location,
+            isAvailable: true
+        });
+        
+        nextForestAreaId++;
+    }
+    
+    // Enhanced view functions
     function getCompanyDetails(address _company) external view returns (
         string memory name,
         string memory companyType,
         bool isRegistered,
+        VerificationStatus verificationStatus,
         uint256 carbonCreditsOwned,
         uint256 totalPurchases,
-        uint256 totalSales
+        uint256 totalSales,
+        uint256 registrationTimestamp,
+        uint256 verificationTimestamp,
+        string memory rejectionReason
     ) {
         Company memory company = companies[_company];
         return (
             company.name,
             company.companyType,
             company.isRegistered,
+            company.verificationStatus,
             company.carbonCreditsOwned,
             company.totalPurchases,
-            company.totalSales
+            company.totalSales,
+            company.registrationTimestamp,
+            company.verificationTimestamp,
+            company.rejectionReason
         );
     }
     
+    function getCompanyFinancialDetails(address _company) external view returns (
+        string memory walletAddress, // Changed from bankAccountDetails
+        string memory taxId,
+        bool amlCompliance
+    ) {
+        Company memory company = companies[_company];
+        return (
+            company.walletAddress,
+            company.taxId,
+            company.amlCompliance
+        );
+    }
+    
+    // New view functions for verification management
+    function getPendingVerificationCompanies() external view returns (address[] memory) {
+        return pendingVerificationCompanies;
+    }
+    
+    function getVerifiedCompanies() external view returns (address[] memory) {
+        uint256 verifiedCount = 0;
+        for (uint256 i = 0; i < registeredCompanies.length; i++) {
+            if (companies[registeredCompanies[i]].verificationStatus == VerificationStatus.Verified) {
+                verifiedCount++;
+            }
+        }
+        
+        address[] memory verified = new address[](verifiedCount);
+        uint256 index = 0;
+        for (uint256 i = 0; i < registeredCompanies.length; i++) {
+            if (companies[registeredCompanies[i]].verificationStatus == VerificationStatus.Verified) {
+                verified[index] = registeredCompanies[i];
+                index++;
+            }
+        }
+        
+        return verified;
+    }
+    
+    function isVerifier(address _address) external view returns (bool) {
+        return verifiers[_address];
+    }
+    
+    // ... rest of the existing view functions remain the same ...
     function getCompanyKYCDetails(address _company) external view returns (
         string memory legalEntityName,
         string memory registrationNumber,
@@ -368,19 +502,6 @@ contract CarbonCreditsMarketplace {
             company.industry,
             company.businessActivities,
             company.keyIndividualsProof
-        );
-    }
-    
-    function getCompanyFinancialDetails(address _company) external view returns (
-        string memory bankAccountDetails,
-        string memory taxId,
-        bool amlCompliance
-    ) {
-        Company memory company = companies[_company];
-        return (
-            company.bankAccountDetails,
-            company.taxId,
-            company.amlCompliance
         );
     }
     
@@ -433,7 +554,7 @@ contract CarbonCreditsMarketplace {
         return registeredCompanies;
     }
     
-    // Owner functions
+    // Owner functions (unchanged)
     function updatePlatformFee(uint256 _newFeePercentage) external onlyOwner {
         require(_newFeePercentage <= 100, "Fee cannot exceed 10%"); // 100/1000 = 10%
         platformFeePercentage = _newFeePercentage;
@@ -444,7 +565,7 @@ contract CarbonCreditsMarketplace {
         companies[_company].carbonCreditsOwned += _amount;
     }
     
-    // Emergency functions
+    // Emergency functions (unchanged)
     function emergencyWithdraw() external onlyOwner {
         payable(owner).transfer(address(this).balance);
     }
