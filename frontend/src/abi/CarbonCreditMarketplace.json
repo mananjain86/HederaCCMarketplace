@@ -1,0 +1,618 @@
+[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "pricePerCredit",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "projectName",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "projectType",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accreditedRegistry",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "creditVintageYear",
+				"type": "uint256"
+			}
+		],
+		"name": "CarbonCreditsListed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "totalPrice",
+				"type": "uint256"
+			}
+		],
+		"name": "CarbonCreditsPurchased",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_account",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "addCarbonCreditsToAccount",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_listingId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "buyCarbonCredits",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "carbonCreditListings",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "pricePerCredit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isActive",
+				"type": "bool"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "projectName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "projectType",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "projectCountry",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "projectRegion",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "projectAddress",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registryUrl",
+						"type": "string"
+					}
+				],
+				"internalType": "struct CarbonCreditsMarketplace.ProjectInfo",
+				"name": "info",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "accreditedRegistry",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registryStandard",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "hostCountryAuthorization",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "authorizationLetter",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "parisAgreementCompliant",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "projectDocumentation",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "isVerified",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct CarbonCreditsMarketplace.ProjectDocs",
+				"name": "docs",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "creditVintageYear",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "vintageSerialNumbers",
+						"type": "string"
+					}
+				],
+				"internalType": "struct CarbonCreditsMarketplace.CreditDetails",
+				"name": "details",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "carbonCreditsOwned",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "emergencyWithdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getActiveCarbonCreditListings",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_listingId",
+				"type": "uint256"
+			}
+		],
+		"name": "getListingDetails",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "pricePerCredit",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "projectName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectCountry",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectRegion",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectAddress",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registryUrl",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.ProjectInfo",
+						"name": "info",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "accreditedRegistry",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registryStandard",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "hostCountryAuthorization",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "authorizationLetter",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "parisAgreementCompliant",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "projectDocumentation",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "isVerified",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.ProjectDocs",
+						"name": "docs",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "creditVintageYear",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "vintageSerialNumbers",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.CreditDetails",
+						"name": "details",
+						"type": "tuple"
+					}
+				],
+				"internalType": "struct CarbonCreditsMarketplace.CarbonCreditListing",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "pricePerCredit",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "projectName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectCountry",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectRegion",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "projectAddress",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registryUrl",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.ProjectInfo",
+						"name": "info",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "accreditedRegistry",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registryStandard",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "hostCountryAuthorization",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "authorizationLetter",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "parisAgreementCompliant",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "projectDocumentation",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "isVerified",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.ProjectDocs",
+						"name": "docs",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "creditVintageYear",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "vintageSerialNumbers",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CarbonCreditsMarketplace.CreditDetails",
+						"name": "details",
+						"type": "tuple"
+					}
+				],
+				"internalType": "struct CarbonCreditsMarketplace.ListingInput",
+				"name": "input",
+				"type": "tuple"
+			}
+		],
+		"name": "listCarbonCredits",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "nextListingId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "platformFeePercentage",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_newFeePercentage",
+				"type": "uint256"
+			}
+		],
+		"name": "updatePlatformFee",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
