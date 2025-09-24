@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import CompanyAbi from './Company.json';
+import abi from '../abi/HandleCompany.json';
 import { 
   Building2, 
   CheckCircle, 
@@ -23,8 +23,8 @@ import { ErrorMessage } from './ErrorMessage';
 import { validateStep1, validateStep2, validateStep3 } from '../utils/validation';
 import { BrowserProvider, Contract } from 'ethers';
 
-// const COMPANY_ABI = CompanyAbi.abi;
-const COMPANY_ADDRESS = '0x5c63A32e0F537FfAedC4aDDb4b78a32dbC2f6B5f';
+const COMPANY_ABI = abi.abi;
+const COMPANY_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
 export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -146,133 +146,134 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     }
   };
 
-  // const handleRegister = async () => {
-  //   // Validate final step before submission
-  //   const validation = validateStep(3);
-  //   if (!validation.isValid) {
-  //     setError('Please correct all errors before submitting.');
-  //     return;
-  //   }
+  const handleRegister = async () => {
+    console.log("register function called");
+    // Validate final step before submission
+    const validation = validateStep(3);
+    if (!validation.isValid) {
+      setError('Please correct all errors before submitting.');
+      return;
+    }
 
-  //   setIsSubmitting(true);
-  //   setError('');
+    setIsSubmitting(true);
+    setError('');
 
-  //   try {
-  //     // Check if wallet is connected
-  //     if (!window.ethereum) {
-  //       throw new Error("MetaMask is not installed");
-  //     }
+    try {
+      // Check if wallet is connected
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+      console.log("in try block");
+      const accounts = await window.ethereum.request({
+        method: 'eth_accounts'
+      });
+      console.log("accounts:",accounts);
+      if (accounts.length === 0) {
+        throw new Error("No wallet connected");
+      }
       
-  //     const accounts = await window.ethereum.request({
-  //       method: 'eth_accounts'
-  //     });
+      const walletAddress = accounts[0];
       
-  //     if (accounts.length === 0) {
-  //       throw new Error("No wallet connected");
-  //     }
+      // Initialize contract
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new Contract(COMPANY_ADDRESS, COMPANY_ABI, signer);
       
-  //     const walletAddress = accounts[0];
-      
-  //     // Initialize contract
-  //     const provider = new BrowserProvider(window.ethereum);
-  //     const signer = await provider.getSigner();
-  //     const contract = new Contract(COMPANY_ADDRESS, COMPANY_ABI, signer);
-      
-  //     // Prepare structured parameters for smart contract
-  //     const basicInfo = {
-  //       name: formData.name || '',
-  //       hederaAccountId: formData.hederaAccountId || '',
-  //       legalEntityName: formData.legalEntityName || '',
-  //       registrationNumber: formData.registrationNumber || '',
-  //       jurisdiction: formData.jurisdiction || '',
-  //       registeredAddress: formData.registeredAddress || '',
-  //       principalBusinessAddress: formData.principalBusinessAddress || '',
-  //       localPartners: formData.localPartners || ''
-  //     };
+      // Prepare structured parameters for smart contract
+      const basicInfo = {
+        name: formData.name || '',
+        hederaAccountId: formData.hederaAccountId || '',
+        legalEntityName: formData.legalEntityName || '',
+        registrationNumber: formData.registrationNumber || '',
+        jurisdiction: formData.jurisdiction || '',
+        registeredAddress: formData.registeredAddress || '',
+        principalBusinessAddress: formData.principalBusinessAddress || '',
+        localPartners: formData.localPartners || ''
+      };
 
-  //     const contactInfo = {
-  //       contactName: formData.contactName || '',
-  //       contactEmail: formData.contactEmail || '',
-  //       contactPhone: formData.contactPhone || '',
-  //       website: formData.website || '',
-  //       socialProfiles: formData.socialProfiles || '',
-  //       industry: formData.industry || '',
-  //       businessActivities: formData.businessActivities || '',
-  //       keyIndividualsProof: formData.keyIndividualsProof || ''
-  //     };
+      const contactInfo = {
+        contactName: formData.contactName || '',
+        contactEmail: formData.contactEmail || '',
+        contactPhone: formData.contactPhone || '',
+        website: formData.website || '',
+        socialProfiles: formData.socialProfiles || '',
+        industry: formData.industry || '',
+        businessActivities: formData.businessActivities || '',
+        keyIndividualsProof: formData.keyIndividualsProof || ''
+      };
 
-  //     const financialInfo = {
-  //       walletAddress: formData.walletAddress || walletAddress,
-  //       taxId: formData.taxId || '',
-  //       amlCompliance: formData.amlCompliance || false
-  //     };
+      const financialInfo = {
+        walletAddress: formData.walletAddress || walletAddress,
+        taxId: formData.taxId || '',
+        amlCompliance: formData.amlCompliance || false
+      };
 
-  //     const emissionsInfo = {
-  //       scope1Emissions: parseInt(formData.scope1Emissions) || 0,
-  //       scope2Emissions: parseInt(formData.scope2Emissions) || 0,
-  //       scope3Emissions: parseInt(formData.scope3Emissions) || 0,
-  //       emissionsCalculationMethod: formData.emissionsCalculationMethod || '',
-  //       emissionsVerified: formData.emissionsVerified || false,
-  //       verificationStatement: formData.verificationStatement || '',
-  //       decarbonizationStrategy: formData.decarbonizationStrategy || '',
-  //       climatePledges: formData.climatePledges || ''
-  //     };
+      const emissionsInfo = {
+        scope1Emissions: parseInt(formData.scope1Emissions) || 0,
+        scope2Emissions: parseInt(formData.scope2Emissions) || 0,
+        scope3Emissions: parseInt(formData.scope3Emissions) || 0,
+        emissionsCalculationMethod: formData.emissionsCalculationMethod || '',
+        emissionsVerified: formData.emissionsVerified || false,
+        verificationStatement: formData.verificationStatement || '',
+        decarbonizationStrategy: formData.decarbonizationStrategy || '',
+        climatePledges: formData.climatePledges || ''
+      };
       
-  //     console.log('Registering company with structured params:', {
-  //       basicInfo,
-  //       contactInfo,
-  //       financialInfo,
-  //       emissionsInfo
-  //     });
+      console.log('Registering company with structured params:', {
+        basicInfo,
+        contactInfo,
+        financialInfo,
+        emissionsInfo
+      });
       
-  //     // Call smart contract function with structured parameters
-  //     const tx = await contract.registerCompany(
-  //       basicInfo,
-  //       contactInfo,
-  //       financialInfo,
-  //       emissionsInfo
-  //     );
+      // Call smart contract function with structured parameters
+      const tx = await contract.registerCompany(
+        basicInfo,
+        contactInfo,
+        financialInfo,
+        emissionsInfo
+      );
       
-  //     console.log('Transaction sent:', tx.hash);
+      console.log('Transaction sent:', tx.hash);
       
-  //     // Wait for transaction confirmation
-  //     const receipt = await tx.wait();
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
       
-  //     console.log('Transaction confirmed:', receipt);
+      console.log('Transaction confirmed:', receipt);
       
-  //     // Registration successful - pass company data
-  //     onRegistrationComplete?.({
-  //       message: 'Company registration submitted successfully!',
-  //       companyData: formData,
-  //       showSellerOption: true,
-  //       transactionHash: receipt.transactionHash,
-  //       blockNumber: receipt.blockNumber,
-  //       gasUsed: receipt.gasUsed.toString()
-  //     });
+      // Registration successful - pass company data
+      onRegistrationComplete?.({
+        message: 'Company registration submitted successfully!',
+        companyData: formData,
+        showSellerOption: true,
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString()
+      });
       
-  //   } catch (err) {
-  //     console.error('Registration error:', err);
+    } catch (err) {
+      console.error('Registration error:', err);
       
-  //     // Handle specific error types
-  //     if (err.code === 4001) {
-  //       setError('Transaction was rejected by user.');
-  //     } else if (err.code === -32603) {
-  //       setError('Internal JSON-RPC error. Please try again.');
-  //     } else if (err.message.includes('insufficient funds')) {
-  //       setError('Insufficient funds for gas fees.');
-  //     } else if (err.message.includes('user rejected')) {
-  //       setError('Transaction was rejected by user.');
-  //     } else if (err.message.includes('already registered')) {
-  //       setError('This wallet address is already registered.');
-  //     } else if (err.message.includes('Hedera account ID already registered')) {
-  //       setError('This Hedera account ID is already registered.');
-  //     } else {
-  //       setError(`Registration failed: ${err.message || 'Please try again.'}`);
-  //     }
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+      // Handle specific error types
+      if (err.code === 4001) {
+        setError('Transaction was rejected by user.');
+      } else if (err.code === -32603) {
+        setError('Internal JSON-RPC error. Please try again.');
+      } else if (err.message.includes('insufficient funds')) {
+        setError('Insufficient funds for gas fees.');
+      } else if (err.message.includes('user rejected')) {
+        setError('Transaction was rejected by user.');
+      } else if (err.message.includes('already registered')) {
+        setError('This wallet address is already registered.');
+      } else if (err.message.includes('Hedera account ID already registered')) {
+        setError('This Hedera account ID is already registered.');
+      } else {
+        setError(`Registration failed: ${err.message || 'Please try again.'}`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const renderInputWithError = (field, label, type = 'text', placeholder = '', required = false, icon = null) => (
     <div>
