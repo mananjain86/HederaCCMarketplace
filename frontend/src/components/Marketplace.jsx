@@ -48,29 +48,44 @@ function Marketplace({ onViewCompany }) {
           const id = idBN.toString(); // convert BigInt to string
           const listing = await contract.getListingDetails(id);
 
+          // Handle the nested structure properly
+          const basicInfo = listing[5]; // ProjectBasicInfo struct
+          const verificationInfo = listing[6]; // ProjectVerificationInfo struct  
+          const creditInfo = listing[7]; // CreditInfo struct
+
           return {
             id,
-            projectName: listing.projectName,
-            projectType: listing.projectType,
-            projectRegion: listing.projectRegion,
-            projectCountry: listing.projectCountry,
-            projectAddress: listing.projectAddress,
-            registryUrl: listing.registryUrl,
-            accreditedRegistry: listing.accreditedRegistry,
-            registryStandard: listing.registryStandard,
-            hostCountryAuthorization: listing.hostCountryAuthorization,
-            parisAgreementCompliant: listing.parisAgreementCompliant,
-            isVerified: listing.isVerified,
-            creditVintageYear: listing.creditVintageYear.toNumber(),
-            amount: listing.amount.toNumber(),
-            pricePerCredit: parseFloat(ethers.formatEther(listing.pricePerCredit)),
-            seller: listing.seller,
-            type:
-              listing.projectType.toLowerCase().includes('forest') ||
-              listing.projectType.toLowerCase().includes('reforestation') ||
-              listing.projectType.toLowerCase().includes('afforestation')
-                ? 'forest'
-                : 'carbon',
+            // Basic listing info
+            seller: listing[1],
+            amount: Number(listing[2]), // Convert BigInt to Number
+            pricePerCredit: parseFloat(ethers.formatEther(listing[3])),
+            isActive: listing[4],
+            
+            // Project basic info
+            projectName: basicInfo[0] || `Project ${id}`,
+            projectType: basicInfo[1] || 'Carbon Credit',
+            projectRegion: basicInfo[2] || 'Unknown',
+            projectCountry: basicInfo[3] || 'Unknown',
+            projectAddress: basicInfo[4] || '',
+            registryUrl: basicInfo[5] || '',
+            
+            // Verification info
+            accreditedRegistry: verificationInfo[0] || 'Unknown Registry',
+            registryStandard: verificationInfo[1] || '',
+            hostCountryAuthorization: verificationInfo[2] || false,
+            parisAgreementCompliant: verificationInfo[4] || false,
+            isVerified: verificationInfo[6] || false,
+            
+            // Credit info
+            creditVintageYear: Number(creditInfo[0]), // Convert BigInt to Number
+            creditSerialNumber: creditInfo[1] || '',
+            
+            // Determine type based on project type
+            type: (basicInfo[1] && (
+              basicInfo[1].toLowerCase().includes('forest') ||
+              basicInfo[1].toLowerCase().includes('reforestation') ||
+              basicInfo[1].toLowerCase().includes('afforestation')
+            )) ? 'forest' : 'carbon',
           };
         })
       );
@@ -135,6 +150,26 @@ function Marketplace({ onViewCompany }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Analytics Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <div className="text-2xl font-bold text-emerald-400">{analytics.totalCredits.toLocaleString()}</div>
+          <div className="text-slate-400">Total Credits Available</div>
+        </div>
+        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <div className="text-2xl font-bold text-emerald-400">{analytics.activeProjects}</div>
+          <div className="text-slate-400">Active Projects</div>
+        </div>
+        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <div className="text-2xl font-bold text-emerald-400">{analytics.totalValueLocked.toFixed(2)} ETH</div>
+          <div className="text-slate-400">Total Value Locked</div>
+        </div>
+        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <div className="text-2xl font-bold text-emerald-400">{analytics.verificationRate}%</div>
+          <div className="text-slate-400">Verification Rate</div>
+        </div>
+      </div>
+
       {/* Search and Filters */}
       <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 mb-8 border border-slate-700/50">
         <div className="flex flex-col lg:flex-row gap-4">

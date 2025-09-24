@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import { mintNFT } from "./mint.js";
+import mongoose from "mongoose";
 import {
   // createTopic,
   submitMessage,
@@ -11,10 +12,25 @@ import {
 } from "./consensus.js";
 
 dotenv.config();
+const MONGODB_KEY = process.env.MONGODB_KEY;
+mongoose.connect(MONGODB_KEY).then(() => {
+  console.log("Connected to MongoDB");
+}
+).catch(err => {
+  console.error("Error connecting to MongoDB:", err);
+}
+);
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [ "http://localhost:5173"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
+app.use(express.json());
 app.use(bodyParser.json());
+//API routes
+
 
 // ----------------- Mint API -----------------
 app.post("/api/mint", async (req, res) => {

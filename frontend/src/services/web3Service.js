@@ -88,7 +88,7 @@ const contractABI = [
 ];
 
 // Contract address - This would be set after deployment
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1234567890123456789012345678901234567890"; // Replace with actual contract address
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; 
 
 class Web3Service {
   constructor() {

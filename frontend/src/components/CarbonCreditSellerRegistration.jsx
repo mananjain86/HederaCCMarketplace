@@ -84,9 +84,6 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
 
       const contractAddress = "0xA60F239a201391765fF86c21E7F4A3c25e35edBA"; // Replace
       const contract = new ethers.Contract(contractAddress, abi, signer);
-      // Using ethers.js
-      await contract.addCarbonCreditsToAccount("0xcf942c47bc33dB4Fabc1696666058b784F9fa9ef", 1000);
-
 
       // Map form data to contract structs
       const projectInfo = {
