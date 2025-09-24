@@ -138,7 +138,6 @@ async function subscribeToTopic(topicId, callback) {
 export { 
   queryTopic, 
   submitMessage, 
-  createTopic, 
   queryTopicWithSequenceNumber,
   subscribeToTopic 
 };
