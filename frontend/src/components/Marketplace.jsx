@@ -81,17 +81,13 @@ function Marketplace({ onViewCompany }) {
             creditSerialNumber: creditInfo[1] || '',
             
             // Determine type based on project type
-            type: (basicInfo[1] && (
-              basicInfo[1].toLowerCase().includes('forest') ||
-              basicInfo[1].toLowerCase().includes('reforestation') ||
-              basicInfo[1].toLowerCase().includes('afforestation')
-            )) ? 'forest' : 'carbon',
+            type: 'carbon',
           };
         })
       );
 
       setListings(fetchedListings);
-
+      console.log(listings);
       // --- Analytics calculations ---
       const totalCredits = fetchedListings.reduce((sum, l) => sum + l.amount, 0);
       const activeProjects = fetchedListings.length;

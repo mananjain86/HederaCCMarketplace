@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
-import { validateStep1, validateStep2, validateStep3 } from '../utils/validation';
+import { validateStep1, validateStep2 } from '../utils/validation';
 import { BrowserProvider, Contract } from 'ethers';
 
 const COMPANY_ABI = abi.abi;
@@ -35,37 +35,15 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     // Basic Info
     name: '',
     hederaAccountId: '', // Added Hedera account ID
-    
-    // KYC/KYB Information
     legalEntityName: '',
-    registrationNumber: '',
-    jurisdiction: '',
-    registeredAddress: '',
-    principalBusinessAddress: '',
-    localPartners: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    website: '',
-    socialProfiles: '',
-    industry: '',
-    businessActivities: '',
-    keyIndividualsProof: '',
-    
-    // Financial and Compliance
-    walletAddress: '',
+    registrationNumber: '',    
     taxId: '',
     amlCompliance: false,
-    
-    // Carbon Emissions Data
     scope1Emissions: '',
     scope2Emissions: '',
     scope3Emissions: '',
     emissionsCalculationMethod: '',
     emissionsVerified: false,
-    verificationStatement: '',
-    decarbonizationStrategy: '',
-    climatePledges: ''
   });
 
   const steps = [
@@ -77,12 +55,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     },
     {
       id: 2,
-      title: 'Financial & Compliance',
-      icon: DollarSign,
-      description: 'Wallet details and regulatory compliance'
-    },
-    {
-      id: 3,
       title: 'Carbon Emissions & Climate Strategy',
       icon: Leaf,
       description: 'Your emissions data and climate commitments'
@@ -113,9 +85,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
         break;
       case 2:
         validation = validateStep2(formData);
-        break;
-      case 3:
-        validation = validateStep3(formData);
         break;
       default:
         return { isValid: true, errors: {} };
@@ -340,79 +309,8 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
         {renderInputWithError('hederaAccountId', 'Hedera Account ID', 'text', '0.0.123456', true, Hash)}
         {renderInputWithError('legalEntityName', 'Legal Entity Name', 'text', 'CarbonTech Solutions LLC', true)}
         {renderInputWithError('registrationNumber', 'Company Registration Number', 'text', '123456789', true)}
-        {renderInputWithError('jurisdiction', 'Jurisdiction', 'text', 'Delaware, USA', true)}
-        {renderInputWithError('industry', 'Industry', 'text', 'Technology, Manufacturing, etc.')}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Registered Address
-        </label>
-        <textarea
-          value={formData.registeredAddress}
-          onChange={(e) => handleInputChange('registeredAddress', e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="123 Business Ave, City, State, ZIP"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Principal Place of Business
-        </label>
-        <textarea
-          value={formData.principalBusinessAddress}
-          onChange={(e) => handleInputChange('principalBusinessAddress', e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="456 Operations St, City, State, ZIP"
-        />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {renderInputWithError('contactName', 'Primary Contact Name', 'text', 'John Doe', true, Users)}
-        {renderInputWithError('contactEmail', 'Contact Email', 'email', 'john@company.com', true, Mail)}
-        {renderInputWithError('contactPhone', 'Contact Phone', 'tel', '+1 (555) 123-4567', false, Phone)}
-        {renderInputWithError('website', 'Company Website', 'url', 'https://company.com', false, Globe)}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Local Partners/Directors
-        </label>
-        <textarea
-          value={formData.localPartners}
-          onChange={(e) => handleInputChange('localPartners', e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="Key local partners or directors involved in the project"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Business Activities Description
-        </label>
-        <textarea
-          value={formData.businessActivities}
-          onChange={(e) => handleInputChange('businessActivities', e.target.value)}
-          rows={4}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="Describe your core business operations and activities"
-        />
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">Financial & Compliance Information</h3>
-        <p className="text-slate-400">Wallet details and regulatory compliance requirements</p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-emerald-300 mb-2">
             Tax Identification Number (TIN) *
@@ -426,21 +324,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
           />
         </div>
 
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-emerald-300 mb-2">
-            Wallet Address
-          </label>
-          <textarea
-            value={formData.walletAddress}
-            onChange={(e) => handleInputChange('walletAddress', e.target.value)}
-            rows={1}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            placeholder="0x00.."
-          />
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+              <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
         <div className="flex items-start space-x-3">
           <Shield className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
@@ -465,22 +349,10 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Proof of Identity for Key Individuals
-        </label>
-        <textarea
-          value={formData.keyIndividualsProof}
-          onChange={(e) => handleInputChange('keyIndividualsProof', e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="Details about identity verification for primary contact, beneficial owners, and key representatives"
-        />
-      </div>
     </div>
   );
 
-  const renderStep3 = () => (
+  const renderStep2 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold text-white mb-2">Carbon Emissions & Climate Strategy</h3>
@@ -555,61 +427,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
             <option value="Other">Other</option>
           </select>
         </div>
-
-        <div>
-          <div className="flex items-center space-x-3 h-full">
-            <input
-              type="checkbox"
-              checked={formData.emissionsVerified}
-              onChange={(e) => handleInputChange('emissionsVerified', e.target.checked)}
-              className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
-            />
-            <label className="text-white font-medium">
-              Emissions data independently verified
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {formData.emissionsVerified && (
-        <div>
-          <label className="block text-sm font-medium text-emerald-300 mb-2">
-            Verification Statement
-          </label>
-          <textarea
-            value={formData.verificationStatement}
-            onChange={(e) => handleInputChange('verificationStatement', e.target.value)}
-            rows={3}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            placeholder="Details about the third-party verification of your emissions data"
-          />
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Decarbonization Strategy
-        </label>
-        <textarea
-          value={formData.decarbonizationStrategy}
-          onChange={(e) => handleInputChange('decarbonizationStrategy', e.target.value)}
-          rows={4}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="Describe your public plan or strategy for reducing emissions"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-emerald-300 mb-2">
-          Climate-Related Pledges and Targets
-        </label>
-        <textarea
-          value={formData.climatePledges}
-          onChange={(e) => handleInputChange('climatePledges', e.target.value)}
-          rows={4}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          placeholder="Are you part of any climate initiatives? (e.g., Science Based Targets initiative - SBTi, Net Zero commitments, etc.)"
-        />
       </div>
     </div>
   );
@@ -628,7 +445,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
             </button>
             <div className="text-center">
               <h2 className="text-3xl font-bold text-white">Company Registration</h2>
-              <p className="text-slate-400 mt-1">Step {currentStep} of 3</p>
+              <p className="text-slate-400 mt-1">Step {currentStep} of 2</p>
             </div>
             <div className="w-24" /> {/* Spacer for centering */}
           </div>
@@ -642,7 +459,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
           <div className="mb-8">
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
           </div>
 
           <div className="flex justify-between items-center">
@@ -659,7 +475,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
               <span>Previous</span>
             </button>
 
-            {currentStep < 3 ? (
+            {currentStep < 2 ? (
               <button
                 onClick={nextStep}
                 className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all"

@@ -28,9 +28,7 @@ export function CreditCard({ credit, onViewCompany }) {
   };
 
   function getDefaultImage(type) {
-    return type === 'forest' 
-      ? 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
-      : 'https://images.unsplash.com/photo-1497436072909-f5e4be8af9c6?w=400&h=300&fit=crop';
+      return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
   }
 
   const getPriceColor = (change) => {

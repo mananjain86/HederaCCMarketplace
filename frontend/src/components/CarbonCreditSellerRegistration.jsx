@@ -202,7 +202,7 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       <div className="grid md:grid-cols-2 gap-6">
         {renderCheckbox('hostCountryAuthorization','Host Country Authorization')}
         {renderCheckbox('parisAgreementCompliant','Paris Agreement Compliant')}
-        {renderCheckbox('isVerified','Verified by Third Party')}
+        {renderCheckbox('isVerified','Verified by Government')}
       </div>
       <div className="grid md:grid-cols-2 gap-6">
         {renderInput('authorizationLetter','Authorization Letter URL')}
