@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, ShoppingCart, AlertCircle, DollarSign } from 'lucide-react';
+import { ethers } from "ethers";
+import { mintNFT } from "../utils/mint.js";
+import buyCreditAbi from "../abi/BuyCredits.json";
+import companyAbi from "../abi/HandleCompany.json";
+
+const BUY_CREDITS_CONTRACT_ADDRESS = "YOUR_BUY_CREDITS_CONTRACT_ADDRESS"; // Add your deployed contract address
+const COMPANY_CONTRACT_ADDRESS = "0xf1A975549085613B4399931d95b4ab10791887C9";
 
 export function BuyCreditPopup({ 
   isOpen, 
@@ -62,11 +69,95 @@ export function BuyCreditPopup({
     setError('');
 
     try {
-            
-      onClose(); // Close popup on successful purchase
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const buyerAddress = await signer.getAddress();
+
+      // Get buyer's Hedera account ID from company contract
+      const companyContract = new ethers.Contract(
+        COMPANY_CONTRACT_ADDRESS,
+        companyAbi,
+        signer
+      );
+      
+      const buyerHederaAccountId = await companyContract.getAccountId();
+      if (!buyerHederaAccountId) {
+        throw new Error('You must be registered as a company to purchase credits');
+      }
+
+      // Calculate total price in wei
+      const totalPriceWei = ethers.parseEther((quantity * pricePerCredit).toString());
+
+      // Call the buy credits contract
+      const buyCreditsContract = new ethers.Contract(
+        BUY_CREDITS_CONTRACT_ADDRESS,
+        buyCreditAbi,
+        signer
+      );
+
+      // Execute the purchase
+      const tx = await buyCreditsContract.buyCredits(
+        creditData.id, // listing ID
+        quantity,
+        ethers.parseEther(pricePerCredit.toString()),
+        totalPriceWei,
+        buyerAddress,
+        { value: totalPriceWei }
+      );
+
+      console.log('Purchase transaction submitted:', tx.hash);
+      
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      console.log('Purchase confirmed:', receipt);
+
+      // Mint and transfer NFT after successful purchase
+      try {
+        const nftMetadata = {
+          name: `Carbon Credit Certificate - ${creditData.projectName}`,
+          description: `Certificate for ${quantity} carbon credits from project: ${creditData.projectName}`,
+          projectName: creditData.projectName,
+          projectType: creditData.projectType || 'Carbon Offset',
+          location: creditData.location,
+          creditsAmount: quantity,
+          purchaseDate: new Date().toISOString(),
+          vintage: creditData.creditVintageYear,
+          registry: creditData.accreditedRegistry,
+          txHash: receipt.hash
+        };
+
+        console.log('Minting NFT certificate...');
+        const nftResult = await mintNFT(buyerHederaAccountId, nftMetadata);
+        console.log('NFT minted successfully:', nftResult);
+        
+      } catch (nftError) {
+        console.error('NFT minting failed:', nftError);
+        // Don't fail the entire transaction if NFT minting fails
+        setError('Credits purchased successfully, but NFT certificate minting failed. Please contact support.');
+      }
+
+      // Success - close popup
+      alert(`Successfully purchased ${quantity} carbon credits! Transaction: ${tx.hash}`);
+      onClose();
+      
     } catch (err) {
       console.error('Purchase error:', err);
-      setError(err.message || 'Purchase failed. Please try again.');
+      
+      if (err.code === 'ACTION_REJECTED') {
+        setError('Transaction was rejected by user');
+      } else if (err.message.includes('insufficient funds')) {
+        setError('Insufficient funds for this purchase');
+      } else if (err.message.includes('Listing not active')) {
+        setError('This listing is no longer available');
+      } else if (err.message.includes('Insufficient credits available')) {
+        setError('Not enough credits available for this quantity');
+      } else {
+        setError(err.message || 'Purchase failed. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
     }

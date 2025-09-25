@@ -35,6 +35,7 @@ export function Navbar({ currentView, onViewChange }) {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const contract = new ethers.Contract(COMPANY_ADDRESS, COMPANY_ABI, provider);
       const allCompanies = await contract.getAllRegisteredCompanies();
+      console.log(allCompanies)
       setIsRegistered(allCompanies.includes(addr));
     } catch (err) {
       console.error("Failed to fetch registered companies:", err);
