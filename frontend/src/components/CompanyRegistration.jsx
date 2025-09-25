@@ -5,15 +5,8 @@ import {
   CheckCircle, 
   ChevronLeft, 
   ChevronRight, 
-  FileText, 
-  DollarSign, 
   Leaf,
   AlertCircle,
-  Globe,
-  Phone,
-  Mail,
-  MapPin,
-  Users,
   Shield,
   TrendingUp,
   Hash
@@ -21,10 +14,11 @@ import {
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { validateStep1, validateStep2 } from '../utils/validation';
-import { BrowserProvider, Contract } from 'ethers';
+// ✅ ethers v6
+import { ethers } from 'ethers';
 
-const COMPANY_ABI = abi.abi;
-const COMPANY_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const COMPANY_ABI = abi;
+const COMPANY_ADDRESS = '0xf1A975549085613B4399931d95b4ab10791887C9';
 
 export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,9 +26,8 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
-    // Basic Info
     name: '',
-    hederaAccountId: '', // Added Hedera account ID
+    hederaAccountId: '',
     legalEntityName: '',
     registrationNumber: '',    
     taxId: '',
@@ -47,32 +40,14 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   });
 
   const steps = [
-    {
-      id: 1,
-      title: 'General Company Information',
-      icon: Building2,
-      description: 'KYC/KYB and basic company details'
-    },
-    {
-      id: 2,
-      title: 'Carbon Emissions & Climate Strategy',
-      icon: Leaf,
-      description: 'Your emissions data and climate commitments'
-    }
+    { id: 1, title: 'General Company Information', icon: Building2 },
+    { id: 2, title: 'Carbon Emissions & Climate Strategy', icon: Leaf }
   ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear field-specific error when user starts typing
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (fieldErrors[field]) {
-      setFieldErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+      setFieldErrors(prev => ({ ...prev, [field]: '' }));
     }
     setError('');
   };
@@ -89,7 +64,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
       default:
         return { isValid: true, errors: {} };
     }
-    
     setFieldErrors(validation.errors);
     return validation;
   };
@@ -100,7 +74,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
       setError('Please correct the errors below before continuing.');
       return;
     }
-    if (currentStep < 3) {
+    if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
       setError('');
       setFieldErrors({});
@@ -116,146 +90,92 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   };
 
   const handleRegister = async () => {
-    console.log("register function called");
-    // Validate final step before submission
-    const validation = validateStep(3);
-    if (!validation.isValid) {
-      setError('Please correct all errors before submitting.');
-      return;
+  console.log("register function called");
+
+  const validation = validateStep(currentStep);
+  if (!validation.isValid) {
+    setError("Please correct all errors before submitting.");
+    return;
+  }
+
+  setIsSubmitting(true);
+  setError("");
+
+  try {
+    if (!window.ethereum) {
+      throw new Error("MetaMask is not installed");
     }
 
-    setIsSubmitting(true);
-    setError('');
+    // ✅ ethers v6 provider + signer
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(COMPANY_ADDRESS, COMPANY_ABI, signer);
 
-    try {
-      // Check if wallet is connected
-      if (!window.ethereum) {
-        throw new Error("MetaMask is not installed");
-      }
-      console.log("in try block");
-      const accounts = await window.ethereum.request({
-        method: 'eth_accounts'
-      });
-      console.log("accounts:",accounts);
-      if (accounts.length === 0) {
-        throw new Error("No wallet connected");
-      }
-      
-      const walletAddress = accounts[0];
-      
-      // Initialize contract
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new Contract(COMPANY_ADDRESS, COMPANY_ABI, signer);
-      
-      // Prepare structured parameters for smart contract
-      const basicInfo = {
-        name: formData.name || '',
-        hederaAccountId: formData.hederaAccountId || '',
-        legalEntityName: formData.legalEntityName || '',
-        registrationNumber: formData.registrationNumber || '',
-        jurisdiction: formData.jurisdiction || '',
-        registeredAddress: formData.registeredAddress || '',
-        principalBusinessAddress: formData.principalBusinessAddress || '',
-        localPartners: formData.localPartners || ''
-      };
+    // ✅ Build single struct as per ABI
+    const registrationData = {
+      name: formData.name || "",
+      hederaAccountId: formData.hederaAccountId || "",
+      legalEntityName: formData.legalEntityName || "",
+      registrationNumber: formData.registrationNumber || "",
+      walletAddress: formData.walletAddress || (await signer.getAddress()),
+      taxId: formData.taxId || "",
+      amlCompliance: formData.amlCompliance || false,
+      scope1Emissions: parseInt(formData.scope1Emissions) || 0,
+      scope2Emissions: parseInt(formData.scope2Emissions) || 0,
+      scope3Emissions: parseInt(formData.scope3Emissions) || 0,
+      emissionsCalculationMethod: formData.emissionsCalculationMethod || "",
+      emissionsVerified: formData.emissionsVerified || false,
+    };
 
-      const contactInfo = {
-        contactName: formData.contactName || '',
-        contactEmail: formData.contactEmail || '',
-        contactPhone: formData.contactPhone || '',
-        website: formData.website || '',
-        socialProfiles: formData.socialProfiles || '',
-        industry: formData.industry || '',
-        businessActivities: formData.businessActivities || '',
-        keyIndividualsProof: formData.keyIndividualsProof || ''
-      };
+    console.log("Submitting registrationData:", registrationData);
 
-      const financialInfo = {
-        walletAddress: formData.walletAddress || walletAddress,
-        taxId: formData.taxId || '',
-        amlCompliance: formData.amlCompliance || false
-      };
+    // ✅ Call contract with single struct
+    const tx = await contract.registerCompany(registrationData);
+    console.log("Transaction sent:", tx.hash);
 
-      const emissionsInfo = {
-        scope1Emissions: parseInt(formData.scope1Emissions) || 0,
-        scope2Emissions: parseInt(formData.scope2Emissions) || 0,
-        scope3Emissions: parseInt(formData.scope3Emissions) || 0,
-        emissionsCalculationMethod: formData.emissionsCalculationMethod || '',
-        emissionsVerified: formData.emissionsVerified || false,
-        verificationStatement: formData.verificationStatement || '',
-        decarbonizationStrategy: formData.decarbonizationStrategy || '',
-        climatePledges: formData.climatePledges || ''
-      };
-      
-      console.log('Registering company with structured params:', {
-        basicInfo,
-        contactInfo,
-        financialInfo,
-        emissionsInfo
-      });
-      
-      // Call smart contract function with structured parameters
-      const tx = await contract.registerCompany(
-        basicInfo,
-        contactInfo,
-        financialInfo,
-        emissionsInfo
-      );
-      
-      console.log('Transaction sent:', tx.hash);
-      
-      // Wait for transaction confirmation
-      const receipt = await tx.wait();
-      
-      console.log('Transaction confirmed:', receipt);
-      
-      // Registration successful - pass company data
-      onRegistrationComplete?.({
-        message: 'Company registration submitted successfully!',
-        companyData: formData,
-        showSellerOption: true,
-        transactionHash: receipt.transactionHash,
-        blockNumber: receipt.blockNumber,
-        gasUsed: receipt.gasUsed.toString()
-      });
-      
-    } catch (err) {
-      console.error('Registration error:', err);
-      
-      // Handle specific error types
-      if (err.code === 4001) {
-        setError('Transaction was rejected by user.');
-      } else if (err.code === -32603) {
-        setError('Internal JSON-RPC error. Please try again.');
-      } else if (err.message.includes('insufficient funds')) {
-        setError('Insufficient funds for gas fees.');
-      } else if (err.message.includes('user rejected')) {
-        setError('Transaction was rejected by user.');
-      } else if (err.message.includes('already registered')) {
-        setError('This wallet address is already registered.');
-      } else if (err.message.includes('Hedera account ID already registered')) {
-        setError('This Hedera account ID is already registered.');
-      } else {
-        setError(`Registration failed: ${err.message || 'Please try again.'}`);
-      }
-    } finally {
-      setIsSubmitting(false);
+    const receipt = await tx.wait();
+    console.log("Transaction confirmed:", receipt);
+
+    onRegistrationComplete?.({
+      message: "Company registration submitted successfully!",
+      companyData: formData,
+      showSellerOption: true,
+      transactionHash: receipt.hash,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+    });
+  } catch (err) {
+    console.error("Registration error:", err);
+    if (err.code === 4001) {
+      setError("Transaction was rejected by user.");
+    } else if (err.code === -32603) {
+      setError("Internal JSON-RPC error. Please try again.");
+    } else if (err.message.includes("insufficient funds")) {
+      setError("Insufficient funds for gas fees.");
+    } else if (err.message.includes("already registered")) {
+      setError("This wallet address is already registered.");
+    } else {
+      setError(`Registration failed: ${err.message || "Please try again."}`);
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-  const renderInputWithError = (field, label, type = 'text', placeholder = '', required = false, icon = null) => (
+
+  // ✅ Fixed: use Icon component instead of lowercase
+  const renderInputWithError = (field, label, type = 'text', placeholder = '', required = false, Icon = null) => (
     <div>
       <label className="block text-sm font-medium text-emerald-300 mb-2">
         {label} {required && '*'}
       </label>
       <div className="relative">
-        {icon && <icon className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />}
+        {Icon && <Icon className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />}
         <input
           type={type}
           value={formData[field] || ''}
           onChange={(e) => handleInputChange(field, e.target.value)}
-          className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:ring-1 transition-colors ${
+          className={`w-full ${Icon ? 'pl-11' : 'pl-4'} pr-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:ring-1 transition-colors ${
             fieldErrors[field] 
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
               : 'border-slate-600 focus:border-emerald-500 focus:ring-emerald-500'
@@ -311,28 +231,27 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
         {renderInputWithError('registrationNumber', 'Company Registration Number', 'text', '123456789', true)}
       </div>
 
-        <div>
-          <label className="block text-sm font-medium text-emerald-300 mb-2">
-            Tax Identification Number (TIN) *
-          </label>
-          <input
-            type="text"
-            value={formData.taxId}
-            onChange={(e) => handleInputChange('taxId', e.target.value)}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            placeholder="XX-XXXXXXX"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-emerald-300 mb-2">
+          Tax Identification Number (TIN) *
+        </label>
+        <input
+          type="text"
+          value={formData.taxId}
+          onChange={(e) => handleInputChange('taxId', e.target.value)}
+          className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          placeholder="XX-XXXXXXX"
+        />
+      </div>
 
-              <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+      <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
         <div className="flex items-start space-x-3">
           <Shield className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-white mb-2">Anti-Money Laundering (AML) Compliance</h4>
             <p className="text-slate-300 mb-4">
               By checking this box, you confirm that your company complies with all applicable 
-              Anti-Money Laundering regulations and that you have appropriate policies and 
-              procedures in place to prevent money laundering activities.
+              Anti-Money Laundering regulations.
             </p>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -348,7 +267,6 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
           </div>
         </div>
       </div>
-
     </div>
   );
 
@@ -366,47 +284,9 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
         </h4>
         
         <div className="grid md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-emerald-300 mb-2">
-              Scope 1 Emissions (tCO₂e)
-            </label>
-            <input
-              type="number"
-              value={formData.scope1Emissions}
-              onChange={(e) => handleInputChange('scope1Emissions', e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              placeholder="0"
-            />
-            <p className="text-xs text-slate-400 mt-1">Direct emissions from owned sources</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-emerald-300 mb-2">
-              Scope 2 Emissions (tCO₂e)
-            </label>
-            <input
-              type="number"
-              value={formData.scope2Emissions}
-              onChange={(e) => handleInputChange('scope2Emissions', e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              placeholder="0"
-            />
-            <p className="text-xs text-slate-400 mt-1">Indirect emissions from purchased energy</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-emerald-300 mb-2">
-              Scope 3 Emissions (tCO₂e)
-            </label>
-            <input
-              type="number"
-              value={formData.scope3Emissions}
-              onChange={(e) => handleInputChange('scope3Emissions', e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              placeholder="0"
-            />
-            <p className="text-xs text-slate-400 mt-1">All other indirect emissions in value chain</p>
-          </div>
+          {renderInputWithError('scope1Emissions', 'Scope 1 Emissions (tCO₂e)', 'number', '0')}
+          {renderInputWithError('scope2Emissions', 'Scope 2 Emissions (tCO₂e)', 'number', '0')}
+          {renderInputWithError('scope3Emissions', 'Scope 3 Emissions (tCO₂e)', 'number', '0')}
         </div>
       </div>
 
@@ -447,14 +327,12 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
               <h2 className="text-3xl font-bold text-white">Company Registration</h2>
               <p className="text-slate-400 mt-1">Step {currentStep} of 2</p>
             </div>
-            <div className="w-24" /> {/* Spacer for centering */}
+            <div className="w-24" />
           </div>
 
           {renderStepIndicator()}
 
-          {error && (
-            <ErrorMessage message={error} className="mb-6" />
-          )}
+          {error && <ErrorMessage message={error} className="mb-6" />}
 
           <div className="mb-8">
             {currentStep === 1 && renderStep1()}
