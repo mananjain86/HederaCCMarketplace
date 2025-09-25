@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { CreditCard } from './CreditCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
+import { BuyCreditPopup } from './BuyCreditPopup';
 
 // --- Load ABI from local file ---
 import CONTRACT_ABI from '../abi/CarbonCreditMarketplace.json'; // adjust path
@@ -23,6 +24,8 @@ function Marketplace({ onViewCompany }) {
     totalValueLocked: 0,
     verificationRate: 0,
   });
+  const [showBuyPopup, setShowBuyPopup] = useState(false);
+  const [selectedCredit, setSelectedCredit] = useState(null);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -87,7 +90,6 @@ function Marketplace({ onViewCompany }) {
       );
 
       setListings(fetchedListings);
-      console.log(listings);
       // --- Analytics calculations ---
       const totalCredits = fetchedListings.reduce((sum, l) => sum + l.amount, 0);
       const activeProjects = fetchedListings.length;
@@ -126,6 +128,11 @@ function Marketplace({ onViewCompany }) {
     const matchesFilter = filterType === 'all' || credit.type === filterType;
     return matchesSearch && matchesFilter;
   });
+
+  const handleBuyCredits = (creditData) => {
+    setSelectedCredit(creditData);
+    setShowBuyPopup(true);
+  };
 
   if (loading) {
     return (
@@ -226,6 +233,7 @@ function Marketplace({ onViewCompany }) {
               price: `${credit.pricePerCredit.toFixed(4)} ETH`,
             }}
             onViewCompany={onViewCompany}
+            onBuyCredits={handleBuyCredits}
           />
         ))}
       </div>
@@ -235,6 +243,16 @@ function Marketplace({ onViewCompany }) {
           No credits found. Try adjusting your search or filters.
         </div>
       )}
+
+      {/* Buy Credit Popup - rendered at page level */}
+      <BuyCreditPopup
+        isOpen={showBuyPopup}
+        onClose={() => {
+          setShowBuyPopup(false);
+          setSelectedCredit(null);
+        }}
+        creditData={selectedCredit}
+      />
     </div>
   );
 }

@@ -1,21 +1,23 @@
-import React from 'react';
-import { Star, MapPin, Calendar, TrendingUp, Shield, TreePine, Factory } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, MapPin, Calendar, TrendingUp, Shield, TreePine, Factory, ArrowLeft } from 'lucide-react';
+import { CompanyProfile } from './CompanyProfile';
 
-export function CreditCard({ credit, onViewCompany }) {
+export function CreditCard({ credit, onViewDetails, onBuyCredits }) {
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
   
   // Map blockchain data to UI properties with fallbacks
   const mappedCredit = {
     id: credit.id || '0',
     title: credit.projectName || `Project ${credit.id}`,
     location: `${credit.projectRegion || 'Unknown'}, ${credit.projectCountry || 'Unknown'}`,
-    co2Reduction: credit.amount || 0, // Using amount as CO2 reduction
+    co2Reduction: credit.amount || 0,
     realDataSource: credit.accreditedRegistry || 'Unknown Registry',
-    rating: '4.8', // Default rating since not in blockchain data
+    rating: '4.8',
     vintage: credit.creditVintageYear || new Date().getFullYear(),
     availableCredits: credit.amount || 0,
-    totalCredits: credit.amount || 0, // Assuming all credits are available
+    totalCredits: credit.amount || 0,
     price: credit.price || `${credit.pricePerCredit || 0} ETH`,
-    priceChange: 0, // Default since not tracked in blockchain
+    priceChange: 0,
     type: credit.type || 'carbon',
     verified: credit.isVerified || false,
     image: getDefaultImage(credit.type),
@@ -24,7 +26,15 @@ export function CreditCard({ credit, onViewCompany }) {
     registryUrl: credit.registryUrl || '',
     serialNumber: credit.creditSerialNumber || '',
     parisCompliant: credit.parisAgreementCompliant || false,
-    hostCountryAuth: credit.hostCountryAuthorization || false
+    hostCountryAuth: credit.hostCountryAuthorization || false,
+    projectName: credit.projectName || `Project ${credit.id}`,
+    projectDescription: credit.projectDescription || 'Carbon offset project contributing to environmental sustainability.',
+    projectRegion: credit.projectRegion || 'Unknown',
+    projectCountry: credit.projectCountry || 'Unknown',
+    accreditedRegistry: credit.accreditedRegistry || 'Unknown Registry',
+    creditVintageYear: credit.creditVintageYear || new Date().getFullYear(),
+    creditSerialNumber: credit.creditSerialNumber || '',
+    pricePerCredit: credit.pricePerCredit || 0
   };
 
   function getDefaultImage(type) {
@@ -36,6 +46,51 @@ export function CreditCard({ credit, onViewCompany }) {
     if (change < 0) return 'text-red-400';
     return 'text-slate-300';
   };
+
+  const handleViewDetails = () => {
+    setShowProjectDetails(true);
+    if (onViewDetails) {
+      onViewDetails(mappedCredit);
+    }
+  };
+
+  const handleBackToCard = () => {
+    setShowProjectDetails(false);
+  };
+
+  const handleBuyCredits = () => {
+    // Call the parent component's buy credits handler
+    if (onBuyCredits) {
+      onBuyCredits(mappedCredit);
+    }
+  };
+
+  // If showing project details, render CompanyProfile with credit data
+  if (showProjectDetails) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900">
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+          <button
+            onClick={handleBackToCard}
+            className="flex items-center space-x-2 text-emerald-300 hover:text-emerald-200 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Marketplace</span>
+          </button>
+          <h1 className="text-xl font-semibold text-white">Project Details</h1>
+          <div className="w-24" />
+        </div>
+        <div className="h-full overflow-y-auto">
+          <CompanyProfile 
+            creditData={mappedCredit}
+            onBack={handleBackToCard}
+            showProjectDetails={true}
+            onBuyCredits={onBuyCredits}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-800/70 backdrop-blur-md rounded-xl overflow-hidden border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10">
@@ -82,7 +137,6 @@ export function CreditCard({ credit, onViewCompany }) {
           </div>
         </div>
 
-        {/* Additional blockchain-specific info */}
         <div className="mb-3 space-y-1">
           {mappedCredit.serialNumber && (
             <div className="text-xs text-slate-400">
@@ -144,23 +198,19 @@ export function CreditCard({ credit, onViewCompany }) {
 
         <div className="flex space-x-3">
           <button 
-            onClick={() => onViewCompany && onViewCompany(mappedCredit.seller)}
+            onClick={handleViewDetails}
             className="flex-1 bg-slate-700/50 text-slate-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-600/50 transition-all"
           >
             View Details
           </button>
           <button 
-            onClick={() => {
-              // TODO: Implement buy functionality
-              console.log('Buy credits for listing:', mappedCredit.id);
-            }}
+            onClick={handleBuyCredits}
             className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all"
           >
             Buy Credits
           </button>
         </div>
 
-        {/* Registry link if available */}
         {mappedCredit.registryUrl && mappedCredit.registryUrl !== '' && (
           <div className="mt-3 pt-3 border-t border-slate-700">
             <a 

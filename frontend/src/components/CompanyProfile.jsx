@@ -1,21 +1,211 @@
 import React from 'react';
-import { ArrowLeft, MapPin, Calendar, TrendingDown, TrendingUp, Award, AlertCircle, CheckCircle } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Calendar, 
+  Shield, 
+  Star, 
+  TrendingUp, 
+  ExternalLink,
+  TreePine,
+  Factory
+} from 'lucide-react';
 import { PricingEngine } from './PricingEngine';
 import { LoadingSpinner } from './LoadingSpinner';
 
-export function CompanyProfile({ companies, companyId, onBack }) {
-  const company = companies.find(c => c.id === companyId);
-  
-   
-
-  if (!company) {
+export function CompanyProfile({ 
+  company, 
+  creditData, 
+  onBack, 
+  showProjectDetails = false,
+  onBuyCredits 
+}) {
+  // If showing project details, render project information
+  if (showProjectDetails && creditData) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <div className="text-red-400 text-lg">Company not found</div>
-          <button onClick={onBack} className="mt-4 text-emerald-400 hover:text-emerald-300">
-            Go back to marketplace
-          </button>
+      <div className="min-h-screen bg-gradient-to-r from-slate-900 to-emerald-900 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-8">
+            
+            {/* Project Header */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-3 mb-4">
+                {creditData.type === 'carbon' ? 
+                  <Factory className="h-8 w-8 text-emerald-400" /> : 
+                  <TreePine className="h-8 w-8 text-emerald-400" />
+                }
+                <div>
+                  <h1 className="text-3xl font-bold text-white">{creditData.projectName}</h1>
+                  <div className="flex items-center text-slate-400 mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{creditData.location}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status badges */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {creditData.verified && (
+                  <div className="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
+                    <Shield className="h-3 w-3" />
+                    <span>Verified</span>
+                  </div>
+                )}
+                {creditData.parisCompliant && (
+                  <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Paris Agreement Compliant
+                  </div>
+                )}
+                {creditData.hostCountryAuth && (
+                  <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Host Country Authorization
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Project Image */}
+            <div className="mb-8">
+              <img 
+                src={creditData.image} 
+                alt={creditData.projectName}
+                className="w-full h-64 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1497436072909-f5e4be8af9c6?w=800&h=400&fit=crop';
+                }}
+              />
+            </div>
+
+            {/* Project Details Grid */}
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              
+              {/* Left Column - Project Info */}
+              <div className="space-y-6">
+                <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-4">Project Details</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Project ID:</span>
+                      <span className="text-white">{creditData.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Vintage Year:</span>
+                      <span className="text-white">{creditData.creditVintageYear}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Registry:</span>
+                      <span className="text-white">{creditData.accreditedRegistry}</span>
+                    </div>
+                    {creditData.creditSerialNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Serial Number:</span>
+                        <span className="text-white font-mono text-sm">{creditData.creditSerialNumber}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">CO₂ Reduction:</span>
+                      <span className="text-white font-semibold">{creditData.co2Reduction.toLocaleString()} tons</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-4">Location & Impact</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Country:</span>
+                      <span className="text-white">{creditData.projectCountry}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Region:</span>
+                      <span className="text-white">{creditData.projectRegion}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Rating:</span>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                        <span className="text-white">{creditData.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Purchase Info */}
+              <div className="space-y-6">
+                <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-4">Purchase Information</h3>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-white mb-1">{creditData.price}</div>
+                      <div className="text-slate-400">per ton CO₂</div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Available Credits:</span>
+                        <span className="text-white font-semibold">{creditData.availableCredits.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${creditData.totalCredits > 0 ? (creditData.availableCredits / creditData.totalCredits) * 100 : 100}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Update the purchase button */}
+                    <button 
+                      onClick={() => {
+                        if (onBuyCredits) {
+                          onBuyCredits(creditData);
+                        }
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 px-6 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center space-x-2"
+                    >
+                      <span>Purchase Credits</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-4">Seller Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Seller Address:</span>
+                      <span className="text-white font-mono text-sm">{creditData.seller.slice(0, 6)}...{creditData.seller.slice(-4)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Description */}
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600 mb-8">
+              <h3 className="text-lg font-semibold text-white mb-4">Project Description</h3>
+              <p className="text-slate-300 leading-relaxed">
+                {creditData.projectDescription || `This ${creditData.type} credit project is located in ${creditData.location} and represents ${creditData.co2Reduction.toLocaleString()} tons of CO₂ equivalent emissions reductions. The project has been verified through ${creditData.accreditedRegistry} and meets international standards for carbon offset quality.`}
+              </p>
+            </div>
+
+            {/* Registry Link */}
+            {creditData.registryUrl && creditData.registryUrl !== '' && (
+              <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+                <h3 className="text-lg font-semibold text-white mb-4">External Links</h3>
+                <a 
+                  href={creditData.registryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span>View on Registry</span>
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
