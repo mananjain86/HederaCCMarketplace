@@ -82,7 +82,7 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
 
-      const contractAddress = "0xA60F239a201391765fF86c21E7F4A3c25e35edBA"; // Replace
+      const contractAddress = "0x38905B22dB57C130be8AeE1E82DC1De7a48FA3D5"; // Replace
       const contract = new ethers.Contract(contractAddress, abi, signer);
 
       // Map form data to contract structs

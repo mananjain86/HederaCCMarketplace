@@ -1,21 +1,46 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Leaf, BarChart3, Building2, Wallet, ChevronDown, TreePine, Users, Sparkles } from "lucide-react";
+import {
+  Leaf,
+  BarChart3,
+  Building2,
+  Wallet,
+  ChevronDown,
+  TreePine,
+  Users,
+  User,
+} from "lucide-react";
+import { ethers } from "ethers";
+import { useNavigate, Link } from "react-router-dom";
+import abi from "../abi/HandleCompany.json";
 
-export function Navbar({ currentView, onViewChange }) {
+const COMPANY_ABI = abi;
+const COMPANY_ADDRESS = "0x178b7C2cf7361120Ab911844e995dbd0991A3cBf";
+
+export function Navbar() {
+  const [companyId, setCompanyId] = useState(null);
   const [account, setAccount] = useState(null);
-  const [isMinting, setIsMinting] = useState(false);
-  const [mintResult, setMintResult] = useState(null);
+  const [allAccounts, setAllAccounts] = useState([]);
+  const [isRegistered, setIsRegistered] = useState(false);
 
+  // separate dropdown states
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showRegisterDropdown, setShowRegisterDropdown] = useState(false);
+
+  const accountDropdownRef = useRef(null);
+  const registerDropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Connect wallet
   const connectWallet = async () => {
-    if (typeof window.ethereum === "undefined") {
-      alert("Please install MetaMask!");
-      return;
-    }
+    if (!window.ethereum) return alert("Please install MetaMask!");
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
-      setAccount(accounts[0]);
+      if (accounts.length > 0) {
+        setAllAccounts(accounts);
+        setAccount(accounts[0]);
+      }
     } catch (err) {
       console.error("Wallet connection failed:", err);
     }
@@ -23,61 +48,83 @@ export function Navbar({ currentView, onViewChange }) {
 
   const disconnectWallet = () => {
     setAccount(null);
+    setIsRegistered(false);
+    setAllAccounts([]);
   };
 
- const handleMint = async () => {
-  setIsMinting(true);
-  setMintResult(null);
-
-  try {
-    const res = await fetch("http://localhost:5000/api/mint", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        data: { id: 2, amount:20, totalPrice:28, buyer: '0.0.6842639' },
-        type: "carbon",
-      }),
-    });
-
-    const text = await res.text(); // <-- read raw text
-    console.log("Raw response:", text);
-
-    const json = text ? JSON.parse(text) : {}; // <-- parse safely
-    console.log("Parsed JSON:", json);
-
-    if (json.success) {
-      setMintResult(json);
-      alert(`✅ NFT Minted! Token: ${json.tokenId}, Serial: ${json.serialNumber}`);
-    } else {
-      alert(`❌ Mint failed: ${json.error || "Unknown error"}`);
+  // Listen for account changes in MetaMask
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          setAllAccounts(accounts);
+          setAccount(accounts[0]);
+        } else {
+          setAccount(null);
+          setIsRegistered(false);
+          setAllAccounts([]);
+        }
+      });
     }
-  } catch (err) {
-    console.error("Error calling mint API:", err);
-    alert("Minting failed. Check console for details.");
-  } finally {
-    setIsMinting(false);
-  }
-};
+  }, []);
 
+  // Check if account is registered as a company
+  const checkCompanyRegistration = async (addr) => {
+    if (!addr || !window.ethereum) return;
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(
+        COMPANY_ADDRESS,
+        COMPANY_ABI,
+        provider
+      );
+      const allCompanies = await contract.getAllRegisteredCompanies();
 
-  const [showRegisterDropdown, setShowRegisterDropdown] = useState(false);
-  const dropdownRef = useRef(null);
+      const normalizedCompanies = allCompanies.map((c, idx) => ({
+        address: c.toString().toLowerCase(),
+        id: idx + 1,
+      }));
+
+      const normalizedAddr = addr.toLowerCase();
+      const matchedCompany = normalizedCompanies.find(
+        (c) => c.address === normalizedAddr
+      );
+
+      if (matchedCompany) {
+        setIsRegistered(true);
+        setCompanyId(matchedCompany.id);
+      } else {
+        setIsRegistered(false);
+        setCompanyId(null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch registered companies:", err);
+    }
+  };
 
   useEffect(() => {
+    if (account) checkCompanyRegistration(account);
+  }, [account]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        accountDropdownRef.current &&
+        !accountDropdownRef.current.contains(event.target)
+      ) {
+        setShowAccountDropdown(false);
+      }
+      if (
+        registerDropdownRef.current &&
+        !registerDropdownRef.current.contains(event.target)
+      ) {
         setShowRegisterDropdown(false);
       }
     }
-
-    if (showRegisterDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showRegisterDropdown]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-slate-900/90 backdrop-blur-md border-b border-emerald-500/20 sticky top-0 z-50">
@@ -87,82 +134,126 @@ export function Navbar({ currentView, onViewChange }) {
           <div className="flex items-center space-x-2">
             <Leaf className="h-8 w-8 text-emerald-400" />
             <span className="text-2xl font-bold text-white">CarbonChain</span>
-            <span className="text-sm text-emerald-400 font-medium">Marketplace</span>
+            <span className="text-sm text-emerald-400 font-medium">
+              Marketplace
+            </span>
           </div>
 
           {/* Nav Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => onViewChange("marketplace")}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
-                currentView === "marketplace"
-                  ? "bg-emerald-500 text-white"
-                  : "text-emerald-300 hover:bg-emerald-500/20"
-              }`}
+            <Link
+              to="/"
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
             >
               <Building2 className="h-4 w-4" />
               <span>Marketplace</span>
-            </button>
-            <button
-              onClick={() => onViewChange("analytics")}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
-                currentView === "analytics"
-                  ? "bg-emerald-500 text-white"
-                  : "text-emerald-300 hover:bg-emerald-500/20"
-              }`}
+            </Link>
+            <Link
+              to="/analytics"
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
             >
               <BarChart3 className="h-4 w-4" />
               <span>Analytics</span>
-            </button>
+            </Link>
           </div>
 
-          {/* Wallet + Mint */}
+          {/* Wallet + Register/Profile */}
           <div className="flex items-center space-x-4">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowRegisterDropdown(!showRegisterDropdown)}
-                className="border border-emerald-400 text-emerald-400 px-4 py-2 rounded-lg font-medium hover:bg-emerald-400/10 transition-all flex items-center space-x-2"
-              >
-                <span>Register</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              
-              {showRegisterDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
-                  <button
-                    onClick={() => {
-                      onViewChange('register');
-                      setShowRegisterDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
-                  >
-                    <Users className="h-5 w-5 text-emerald-400" />
-                    <div>
-                      <div className="font-medium">Basic Company Registration</div>
-                      <div className="text-sm text-slate-400">KYC/KYB and general company setup</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onViewChange('register-seller');
-                      setShowRegisterDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3 border-t border-slate-600"
-                  >
-                    <TreePine className="h-5 w-5 text-emerald-400" />
-                    <div>
-                      <div className="font-medium">Carbon Credit Seller</div>
-                      <div className="text-sm text-slate-400">Register as a project developer</div>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
             {account ? (
               <>
-                <span className="px-3 py-1 rounded-lg bg-emerald-700 text-white text-sm font-mono">
-                  {account.slice(0, 6)}...{account.slice(-4)}
-                </span>
+                {/* Account Dropdown */}
+                <div className="relative" ref={accountDropdownRef}>
+                  <button
+                    onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+                    className="px-3 py-1 rounded-lg bg-emerald-700 text-white text-sm font-mono"
+                  >
+                    {account.slice(0, 6)}...{account.slice(-4)}
+                  </button>
+
+                  {showAccountDropdown && allAccounts.length > 1 && (
+                    <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                      {allAccounts.map((acc) => (
+                        <button
+                          key={acc}
+                          onClick={() => {
+                            setAccount(acc);
+                            setShowAccountDropdown(false);
+                          }}
+                          className={`block w-full text-left px-4 py-2 text-sm font-mono ${
+                            acc === account
+                              ? "bg-emerald-600 text-white"
+                              : "text-emerald-300 hover:bg-slate-700"
+                          }`}
+                        >
+                          {acc.slice(0, 6)}...{acc.slice(-4)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Profile or Register */}
+                {isRegistered ? (
+                  <button
+                    onClick={() => navigate(`/profile/${companyId}`)}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center space-x-2"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Go to Profile</span>
+                  </button>
+                ) : (
+                  <div className="relative" ref={registerDropdownRef}>
+                    <button
+                      onClick={() =>
+                        setShowRegisterDropdown(!showRegisterDropdown)
+                      }
+                      className="border border-emerald-400 text-emerald-400 px-4 py-2 rounded-lg font-medium hover:bg-emerald-400/10 transition-all flex items-center space-x-2"
+                    >
+                      <span>Register</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    {showRegisterDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                        <button
+                          onClick={() => {
+                            navigate("/register");
+                            setShowRegisterDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        >
+                          <Users className="h-5 w-5 text-emerald-400" />
+                          <div>
+                            <div className="font-medium">
+                              Basic Company Registration
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              KYC/KYB and general company setup
+                            </div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate("/register-seller");
+                            setShowRegisterDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3 border-t border-slate-600"
+                        >
+                          <TreePine className="h-5 w-5 text-emerald-400" />
+                          <div>
+                            <div className="font-medium">
+                              Carbon Credit Seller
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              Register as a project developer
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Disconnect */}
                 <button
                   onClick={disconnectWallet}
                   className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all"

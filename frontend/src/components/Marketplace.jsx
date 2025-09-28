@@ -8,7 +8,7 @@ import { ErrorMessage } from './ErrorMessage';
 // --- Load ABI from local file ---
 import CONTRACT_ABI from '../abi/CarbonCreditMarketplace.json'; // adjust path
 
-const CONTRACT_ADDRESS = "0xA60F239a201391765fF86c21E7F4A3c25e35edBA";
+const CONTRACT_ADDRESS = "0x38905B22dB57C130be8AeE1E82DC1De7a48FA3D5";
 const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
 
 function Marketplace({ onViewCompany }) {
@@ -131,7 +131,7 @@ function Marketplace({ onViewCompany }) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-slate-900">
         <LoadingSpinner />
-        <p className="ml-3 text-emerald-400">Loading carbon credit listings...</p>
+        {/* <p className="ml-3 text-emerald-400">Loading carbon credit listings...</p> */}
       </div>
     );
   }

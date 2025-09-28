@@ -18,7 +18,7 @@ import { validateStep1, validateStep2 } from '../utils/validation';
 import { ethers } from 'ethers';
 
 const COMPANY_ABI = abi;
-const COMPANY_ADDRESS = '0xf1A975549085613B4399931d95b4ab10791887C9';
+const COMPANY_ADDRESS = '0x178b7C2cf7361120Ab911844e995dbd0991A3cBf';
 
 export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);

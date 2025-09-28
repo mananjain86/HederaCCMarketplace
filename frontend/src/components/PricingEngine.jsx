@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
+import { useNavigate, Link } from "react-router-dom";
 
 export function PricingEngine({ company }) {
   const [creditAmount, setCreditAmount] = useState(1000);
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [govFee, setGovFee] = useState(0);
   const [totalCost, setTotalCost] = useState(0);
+  const navigate = useNavigate();
+  console.log('PricingEngine Company Data:', company);
 
   useEffect(() => {
     // Dynamic pricing algorithm based on company's environmental data
@@ -125,7 +128,7 @@ export function PricingEngine({ company }) {
               </div>
             </div>
 
-            <button className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 px-6 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center space-x-2">
+            <button onClick={() => navigate(`/buy`)} className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 px-6 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center space-x-2">
               <DollarSign className="h-5 w-5" />
               <span>Initiate Purchase</span>
             </button>

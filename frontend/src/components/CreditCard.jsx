@@ -1,21 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, Calendar, TrendingUp, Shield, TreePine, Factory } from 'lucide-react';
 
-export function CreditCard({ credit, onViewCompany }) {
-  
+export function CreditCard({ credit }) {
+  const navigate = useNavigate();
+
   // Map blockchain data to UI properties with fallbacks
   const mappedCredit = {
     id: credit.id || '0',
     title: credit.projectName || `Project ${credit.id}`,
     location: `${credit.projectRegion || 'Unknown'}, ${credit.projectCountry || 'Unknown'}`,
-    co2Reduction: credit.amount || 0, // Using amount as CO2 reduction
+    co2Reduction: credit.amount || 0, 
     realDataSource: credit.accreditedRegistry || 'Unknown Registry',
-    rating: '4.8', // Default rating since not in blockchain data
+    rating: '4.8', // Default rating
     vintage: credit.creditVintageYear || new Date().getFullYear(),
     availableCredits: credit.amount || 0,
-    totalCredits: credit.amount || 0, // Assuming all credits are available
+    totalCredits: credit.amount || 0,
     price: credit.price || `${credit.pricePerCredit || 0} ETH`,
-    priceChange: 0, // Default since not tracked in blockchain
+    priceChange: 0, 
     type: credit.type || 'carbon',
     verified: credit.isVerified || false,
     image: getDefaultImage(credit.type),
@@ -26,9 +28,10 @@ export function CreditCard({ credit, onViewCompany }) {
     parisCompliant: credit.parisAgreementCompliant || false,
     hostCountryAuth: credit.hostCountryAuthorization || false
   };
+  // console.log('Mapped Credit:', mappedCredit);
 
   function getDefaultImage(type) {
-      return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
+    return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop';
   }
 
   const getPriceColor = (change) => {
@@ -82,7 +85,7 @@ export function CreditCard({ credit, onViewCompany }) {
           </div>
         </div>
 
-        {/* Additional blockchain-specific info */}
+        {/* Blockchain-specific info */}
         <div className="mb-3 space-y-1">
           {mappedCredit.serialNumber && (
             <div className="text-xs text-slate-400">
@@ -144,15 +147,16 @@ export function CreditCard({ credit, onViewCompany }) {
 
         <div className="flex space-x-3">
           <button 
-            onClick={() => onViewCompany && onViewCompany(mappedCredit.seller)}
+            onClick={() => navigate(`/company/${mappedCredit.seller}`)}
             className="flex-1 bg-slate-700/50 text-slate-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-600/50 transition-all"
           >
             View Details
           </button>
           <button 
-            onClick={() => {
-              // TODO: Implement buy functionality
-              console.log('Buy credits for listing:', mappedCredit.id);
+             onClick={() => { 
+              // Navigate using the unique listing ID, not the seller address
+              navigate(`/purchase/${mappedCredit.id}`);
+              console.log('Navigating to purchase page for listing:', mappedCredit.id);
             }}
             className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all"
           >
@@ -160,7 +164,6 @@ export function CreditCard({ credit, onViewCompany }) {
           </button>
         </div>
 
-        {/* Registry link if available */}
         {mappedCredit.registryUrl && mappedCredit.registryUrl !== '' && (
           <div className="mt-3 pt-3 border-t border-slate-700">
             <a 

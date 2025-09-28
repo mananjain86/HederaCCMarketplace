@@ -1,5 +1,36 @@
 [
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_company",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "addCarbonCreditsToCompany",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_verifier",
+				"type": "address"
+			}
+		],
+		"name": "addVerifier",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -88,6 +119,156 @@
 	{
 		"inputs": [
 			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "hederaAccountId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "legalEntityName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registrationNumber",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "walletAddress",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "taxId",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "amlCompliance",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "scope1Emissions",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "scope2Emissions",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "scope3Emissions",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "emissionsCalculationMethod",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "emissionsVerified",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct HandleCompany.RegistrationData",
+				"name": "_data",
+				"type": "tuple"
+			}
+		],
+		"name": "registerCompany",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_company",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_reason",
+				"type": "string"
+			}
+		],
+		"name": "rejectCompany",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_verifier",
+				"type": "address"
+			}
+		],
+		"name": "removeVerifier",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_marketplaceAddress",
+				"type": "address"
+			}
+		],
+		"name": "setMarketplaceAddress",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_company",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "updateCreditBalance",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_company",
+				"type": "address"
+			}
+		],
+		"name": "verifyCompany",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "",
 				"type": "address"
@@ -105,34 +286,16 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
+		"inputs": [],
+		"name": "authorizedMarketplace",
+		"outputs": [
 			{
 				"internalType": "address",
-				"name": "_company",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "addCarbonCreditsToCompany",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_verifier",
+				"name": "",
 				"type": "address"
 			}
 		],
-		"name": "addVerifier",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -404,81 +567,6 @@
 	{
 		"inputs": [
 			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "hederaAccountId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "legalEntityName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationNumber",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "walletAddress",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "taxId",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "amlCompliance",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint256",
-						"name": "scope1Emissions",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "scope2Emissions",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "scope3Emissions",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "emissionsCalculationMethod",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "emissionsVerified",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct HandleCompany.RegistrationData",
-				"name": "_data",
-				"type": "tuple"
-			}
-		],
-		"name": "registerCompany",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
@@ -499,37 +587,6 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_company",
-				"type": "address"
-			},
-			{
-				"internalType": "string",
-				"name": "_reason",
-				"type": "string"
-			}
-		],
-		"name": "rejectCompany",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_verifier",
-				"type": "address"
-			}
-		],
-		"name": "removeVerifier",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
@@ -543,19 +600,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_company",
-				"type": "address"
-			}
-		],
-		"name": "verifyCompany",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]

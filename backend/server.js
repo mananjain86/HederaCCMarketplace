@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import { mintNFT } from "./mint.js";
-import mongoose from "mongoose";
+
 import {
   // createTopic,
   submitMessage,
@@ -12,14 +12,6 @@ import {
 } from "./consensus.js";
 
 dotenv.config();
-const MONGODB_KEY = process.env.MONGODB_KEY;
-mongoose.connect(MONGODB_KEY).then(() => {
-  console.log("Connected to MongoDB");
-}
-).catch(err => {
-  console.error("Error connecting to MongoDB:", err);
-}
-);
 
 const app = express();
 app.use(cors({
@@ -113,6 +105,59 @@ app.get(
     }
   }
 );
+app.post("/api/tokenize-purchase", async (req, res) => {
+  try {
+    const { buyerHederaId, amount, ethereumTxHash, buyerEthAddress, projectName } = req.body;
+
+    if (!buyerHederaId || !amount || !ethereumTxHash) {
+      return res.status(400).json({ success: false, error: "Missing required fields." });
+    }
+
+    console.log(`🚀 Starting Hedera tokenization for ETH tx: ${ethereumTxHash}`);
+
+    // Step 1: Create the NFT Metadata and upload to IPFS
+    const metadataPayload = {
+      id: ethereumTxHash, // Use ETH tx hash as a unique ID
+      amount: amount,
+      totalPrice: "N/A (Paid on Ethereum)",
+      buyer: buyerHederaId,
+      name: projectName,
+      // Add any other relevant details
+    };
+    // Note: The 'createNFTMetadata' function in ipfs.js is for NFTs, 
+    // but you want to mint a FUNGIBLE token. You'll need to adapt this logic.
+    // For now, let's assume you're creating an NFT receipt.
+    
+    // Step 2: Mint the NFT on Hedera
+    // We pass "carbon-credit" as the type to mint.js
+    const mintResult = await mintNFT(metadataPayload, "carbon-credit", buyerHederaId);
+    if (!mintResult.success) {
+      throw new Error("Hedera NFT minting failed.");
+    }
+    console.log(`✅ Minted NFT ${mintResult.tokenId}-${mintResult.serialNumber}`);
+
+    // Step 3: Submit a record to the Hedera Consensus Service
+    const consensusMessage = JSON.stringify({
+      type: "carbon_credit_purchase_receipt",
+      ethereumTxHash,
+      buyerEthAddress,
+      buyerHederaId,
+      amount,
+      nftId: `${mintResult.tokenId}@${mintResult.serialNumber}`,
+      timestamp: new Date().toISOString(),
+    });
+
+    const HCS_TOPIC_ID = process.env.HCS_TOPIC_ID; // Add your Topic ID to .env
+    await submitMessage(HCS_TOPIC_ID, consensusMessage);
+    console.log(`✅ Message submitted to HCS Topic ${HCS_TOPIC_ID}`);
+
+    res.status(200).json({ success: true, ...mintResult });
+
+  } catch (err) {
+    console.error("❌ Tokenization API Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

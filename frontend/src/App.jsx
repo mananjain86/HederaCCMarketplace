@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { Marketplace } from './components/Marketplace.jsx';
-import { CompanyProfile } from './components/CompanyProfile';
+import { Marketplace } from './components/Marketplace';
 import { Analytics } from './components/Analytics';
 import { Footer } from './components/Footer';
 import { APITestPanel } from './components/APITestPanel';
@@ -10,10 +11,13 @@ import { CompanyRegistration } from './components/CompanyRegistration';
 import { CarbonCreditSellerRegistration } from './components/CarbonCreditSellerRegistration';
 import { RegistrationSuccess } from './components/RegistrationSuccess';
 import { SuccessMessage } from './components/SuccessMessage';
+import CompanyProfile from './components/Profile';
+import { SellerProfile } from './components/SellerProfile';
+import {Buy} from './components/Buy';
+
+
 
 function App() {
-  const [currentView, setCurrentView] = useState('marketplace');
-  const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [analytics, setAnalytics] = useState({
     totalCredits: 500000,
     avgPrice: 12.5,
@@ -24,7 +28,8 @@ function App() {
     activeBuyers: 1500,
     volume24h: 1250000,
   });
-  const [carbonCredits, setCarbonCredits] = useState([
+
+  const [carbonCredits] = useState([
     {
       id: 1,
       title: 'Amazon Rainforest Conservation',
@@ -60,7 +65,8 @@ function App() {
       companyId: 2,
     },
   ]);
-  const [companies, setCompanies] = useState([
+
+  const [companies] = useState([
     {
       id: 1,
       name: 'Eco Corp',
@@ -113,73 +119,36 @@ function App() {
     },
   ]);
 
-  const handleViewCompany = (companyId) => {
-    setSelectedCompanyId(companyId);
-    setCurrentView('company');
-  };
-
-  const [registrationSuccess, setRegistrationSuccess] = useState(null);
-  const [registrationData, setRegistrationData] = useState(null);
-
-  const handleRegistrationComplete = (successData) => {
-    setRegistrationData(successData);
-    setCurrentView('registration-success');
-  };
-
-  const handleProceedToSeller = () => {
-    setCurrentView('register-seller');
-  };
-
-  const handleBackToMarketplace = () => {
-    // Show success message on marketplace
-    setRegistrationSuccess(registrationData);
-    setCurrentView('marketplace');
-    // Clear success message after 5 seconds
-    setTimeout(() => setRegistrationSuccess(null), 5000);
-  };
-
-  const renderContent = () => {
-    switch (currentView) {
-      case 'company':
-        return <CompanyProfile companies={companies} companyId={selectedCompanyId} onBack={() => setCurrentView('marketplace')} />;
-      case 'analytics':
-        return <Analytics analytics={analytics} />;
-      case 'register':
-        return <CompanyRegistration onBack={() => setCurrentView('marketplace')} onRegistrationComplete={handleRegistrationComplete} />;
-      case 'registration-success':
-        return (
-          <RegistrationSuccess
-            registrationData={registrationData}
-            onProceedToSeller={handleProceedToSeller}
-            onBackToMarketplace={handleBackToMarketplace}
-          />
-        );
-      case 'register-seller':
-        return <CarbonCreditSellerRegistration onBack={() => setCurrentView('marketplace')} onRegistrationComplete={handleBackToMarketplace} />;
-      default:
-        return <Marketplace carbonCredits={carbonCredits} analytics={analytics} onViewCompany={handleViewCompany} />;
-    }
-  };
-
-  const isRegistrationView = ['register', 'register-seller', 'registration-success'].includes(currentView);
+  console.log("App loaded successfully");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800">
-      {!isRegistrationView && <Navbar currentView={currentView} onViewChange={setCurrentView} />}
-      {currentView === 'marketplace' && <Hero analytics={analytics} />}
-      {registrationSuccess && currentView === 'marketplace' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <SuccessMessage 
-            message="Company registration completed successfully! Your registration is now on the blockchain."
-            transactionHash={registrationSuccess.transactionHash}
-            onClose={() => setRegistrationSuccess(null)}
+    
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800">
+        <Navbar />
+
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Hero analytics={analytics} />
+                <Marketplace carbonCredits={carbonCredits} analytics={analytics} />
+              </>
+            }
           />
-        </div>
-      )}
-      {renderContent()}
-      {!isRegistrationView && <Footer />}
-      {!isRegistrationView && <APITestPanel />}
-    </div>
+          <Route path="/analytics" element={<Analytics analytics={analytics} />} />
+          <Route path="/register" element={<CompanyRegistration />} />
+          <Route path="/register-seller" element={<CarbonCreditSellerRegistration />} />
+          <Route path="/registration-success" element={<RegistrationSuccess />} />
+          <Route path="/profile/:companyId" element={<CompanyProfile companies={companies} />} />
+          <Route path="/company/:sellerAddress" element={<SellerProfile />} />
+          <Route path="/purchase/:projectId" element={<Buy />} />
+        </Routes>
+
+        <Footer />
+        <APITestPanel />
+      </div>
+    
   );
 }
 
