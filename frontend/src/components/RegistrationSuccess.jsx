@@ -51,10 +51,6 @@ export function RegistrationSuccess({
                 <span className="text-slate-400">Legal Entity:</span>
                 <span className="text-white ml-2 font-medium">{companyData.legalEntityName}</span>
               </div>
-              <div>
-                <span className="text-slate-400">Jurisdiction:</span>
-                <span className="text-white ml-2 font-medium">{companyData.jurisdiction}</span>
-              </div>
             </div>
           </div>
 

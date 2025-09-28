@@ -26,7 +26,15 @@ export function CreditCard({ credit }) {
     registryUrl: credit.registryUrl || '',
     serialNumber: credit.creditSerialNumber || '',
     parisCompliant: credit.parisAgreementCompliant || false,
-    hostCountryAuth: credit.hostCountryAuthorization || false
+    hostCountryAuth: credit.hostCountryAuthorization || false,
+    projectName: credit.projectName || `Project ${credit.id}`,
+    projectDescription: credit.projectDescription || 'Carbon offset project contributing to environmental sustainability.',
+    projectRegion: credit.projectRegion || 'Unknown',
+    projectCountry: credit.projectCountry || 'Unknown',
+    accreditedRegistry: credit.accreditedRegistry || 'Unknown Registry',
+    creditVintageYear: credit.creditVintageYear || new Date().getFullYear(),
+    creditSerialNumber: credit.creditSerialNumber || '',
+    pricePerCredit: credit.pricePerCredit || 0
   };
   // console.log('Mapped Credit:', mappedCredit);
 
@@ -39,6 +47,51 @@ export function CreditCard({ credit }) {
     if (change < 0) return 'text-red-400';
     return 'text-slate-300';
   };
+
+  const handleViewDetails = () => {
+    setShowProjectDetails(true);
+    if (onViewDetails) {
+      onViewDetails(mappedCredit);
+    }
+  };
+
+  const handleBackToCard = () => {
+    setShowProjectDetails(false);
+  };
+
+  const handleBuyCredits = () => {
+    // Call the parent component's buy credits handler
+    if (onBuyCredits) {
+      onBuyCredits(mappedCredit);
+    }
+  };
+
+  // If showing project details, render CompanyProfile with credit data
+  if (showProjectDetails) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900">
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+          <button
+            onClick={handleBackToCard}
+            className="flex items-center space-x-2 text-emerald-300 hover:text-emerald-200 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Marketplace</span>
+          </button>
+          <h1 className="text-xl font-semibold text-white">Project Details</h1>
+          <div className="w-24" />
+        </div>
+        <div className="h-full overflow-y-auto">
+          <CompanyProfile 
+            creditData={mappedCredit}
+            onBack={handleBackToCard}
+            showProjectDetails={true}
+            onBuyCredits={onBuyCredits}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-800/70 backdrop-blur-md rounded-xl overflow-hidden border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10">

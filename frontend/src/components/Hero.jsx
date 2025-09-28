@@ -36,7 +36,7 @@ export function Hero({ analytics }) {
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all">
-              Start Trading
+              Buy Credits
             </button>
             <button className="border border-emerald-400 text-emerald-400 px-8 py-3 rounded-lg font-medium hover:bg-emerald-400/10 transition-all">
               Learn More
