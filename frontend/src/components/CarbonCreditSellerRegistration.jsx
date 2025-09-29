@@ -89,8 +89,8 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
 
-      const contractAddress = "0x38905B22dB57C130be8AeE1E82DC1De7a48FA3D5"; // Replace
-      const contract = new ethers.Contract(contractAddress, abi, signer);
+      const CarbonMarketplaceContract = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || '0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6';
+      const contract = new ethers.Contract(CarbonMarketplaceContract, abi, signer);
 
       // Map form data to contract structs
       const projectInfo = {

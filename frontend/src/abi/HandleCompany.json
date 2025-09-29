@@ -226,11 +226,16 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_marketplaceAddress",
+				"name": "_caller",
 				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "_isAuthorized",
+				"type": "bool"
 			}
 		],
-		"name": "setMarketplaceAddress",
+		"name": "setAuthorizedCaller",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -249,6 +254,24 @@
 			}
 		],
 		"name": "updateCreditBalance",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_company",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_forestAreaId",
+				"type": "uint256"
+			}
+		],
+		"name": "updateForestAreaPurchase",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -280,19 +303,6 @@
 				"internalType": "string",
 				"name": "",
 				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "authorizedMarketplace",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -508,6 +518,25 @@
 				"internalType": "address[]",
 				"name": "",
 				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isAuthorizedCaller",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

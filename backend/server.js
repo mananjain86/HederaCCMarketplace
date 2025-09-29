@@ -159,6 +159,67 @@ app.post("/api/tokenize-purchase", async (req, res) => {
   }
 });
 
+app.post("/api/tokenize-forest-purchase", async (req, res) => {
+  try {
+    // MODIFIED: Expecting forest-specific data from the frontend
+    const { 
+      buyerHederaId, 
+      ethereumTxHash, 
+      buyerEthAddress, 
+      location, 
+      areaSize,
+      price, // Price can be passed for the record
+      ipfsDeedHash // IPFS hash of the deed/image
+    } = req.body;
+
+    // MODIFIED: Updated validation for new fields
+    if (!buyerHederaId || !ethereumTxHash || !location || !areaSize) {
+      return res.status(400).json({ success: false, error: "Missing required fields." });
+    }
+
+    console.log(`🚀 Starting Hedera tokenization for Forest Area at ${location}`);
+
+    // MODIFIED: Building the correct payload for the "forest" type in ipfs.js
+    const metadataPayload = {
+      areaId: ethereumTxHash, // Use ETH tx hash as a unique ID
+      location: location,
+      area: areaSize,
+      totalPrice: price,
+      buyer: buyerHederaId,
+      ipfsDeedHash: ipfsDeedHash
+    };
+    
+    // This call is now correct because the payload matches what's needed for "forest"
+    const mintResult = await mintNFT(metadataPayload, "forest", buyerHederaId);
+    if (!mintResult.success) {
+      throw new Error("Hedera NFT minting failed.");
+    }
+    console.log(`✅ Minted Forest NFT ${mintResult.tokenId}-${mintResult.serialNumber}`);
+
+    // MODIFIED: Create a richer, more accurate consensus message
+    const consensusMessage = JSON.stringify({
+      type: "forest_area_purchase_receipt",
+      ethereumTxHash,
+      buyerEthAddress,
+      buyerHederaId,
+      location,
+      areaSize,
+      nftId: `${mintResult.tokenId}@${mintResult.serialNumber}`,
+      timestamp: new Date().toISOString(),
+    });
+
+    const HCS_TOPIC_ID = process.env.HCS_TOPIC_ID;
+    await submitMessage(HCS_TOPIC_ID, consensusMessage);
+    console.log(`✅ Message submitted to HCS Topic ${HCS_TOPIC_ID}`);
+
+    res.status(200).json({ success: true, ...mintResult });
+
+  } catch (err) {
+    console.error("❌ Tokenization API Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${PORT}`);

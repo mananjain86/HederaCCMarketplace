@@ -18,7 +18,7 @@ import { validateStep1, validateStep2 } from '../utils/validation';
 import { ethers } from 'ethers';
 
 const COMPANY_ABI = abi;
-const COMPANY_ADDRESS = '0x178b7C2cf7361120Ab911844e995dbd0991A3cBf';
+const COMPANY_ADDRESS = import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS || "0x6136a57179ddb0FeF580724263BDc73c96B31863";
 
 export function CompanyRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);

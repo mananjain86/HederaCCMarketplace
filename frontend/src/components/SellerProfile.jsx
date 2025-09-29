@@ -12,7 +12,7 @@ import { ErrorMessage } from './ErrorMessage';
 import CONTRACT_ABI from '../abi/CarbonCreditMarketplace.json';
 
 // --- Constants ---
-const CONTRACT_ADDRESS = "0x38905B22dB57C130be8AeE1E82DC1De7a48FA3D5";
+const CARBON_CONTRACT_ADDRESS = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || "0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6";
 const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
 
 // Helper component for displaying badges
@@ -47,7 +47,7 @@ export function SellerProfile() {
 
       try {
         const provider = new ethers.JsonRpcProvider(RPC_URL);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const contract = new ethers.Contract(CARBON_CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
         const activeIds = await contract.getActiveCarbonCreditListings();
         const allListingsDetails = await Promise.all(

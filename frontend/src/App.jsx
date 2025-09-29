@@ -14,6 +14,9 @@ import { SuccessMessage } from './components/SuccessMessage';
 import CompanyProfile from './components/Profile';
 import { SellerProfile } from './components/SellerProfile';
 import {Buy} from './components/Buy';
+import {ForestSellerRegistration} from './components/ForestSellerRegistration';
+import {ForestProfile} from './components/ForestProfile';
+import {BuyForest} from './components/BuyForest'; 
 
 
 
@@ -143,6 +146,10 @@ function App() {
           <Route path="/profile/:companyId" element={<CompanyProfile companies={companies} />} />
           <Route path="/company/:sellerAddress" element={<SellerProfile />} />
           <Route path="/purchase/:projectId" element={<Buy />} />
+          <Route path="/forest-seller-registration" element={<ForestSellerRegistration />} />
+          <Route path="/forest/:id" element={<ForestProfile />} />
+          <Route path="/buy-forest/:id" element={<BuyForest />} />
+          <Route path="/success" element={<SuccessMessage />} />
         </Routes>
 
         <Footer />

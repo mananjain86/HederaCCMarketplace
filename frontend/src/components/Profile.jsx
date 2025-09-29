@@ -18,10 +18,15 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import abi from "../abi/HandleCompany.json";
 
 // --- Constants ---
-const COMPANY_ADDRESS = "0x178b7C2cf7361120Ab911844e995dbd0991A3cBf";
+const COMPANY_ADDRESS =
+  import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS ||
+  "0x6136a57179ddb0FeF580724263BDc73c96B31863";
 const COMPANY_ABI = abi;
-const HEDERA_TOKEN_ID = "0.0.6886497";
-const PROJECT_ID = import.meta.env.VITE_HASHCONNECT_PROJECT_ID || "49c3c0e847f638a813f33db581602915";
+const CARBON_TOKEN_ID = "0.0.6886497";
+const FOREST_TOKEN_ID = "0.0.6886481";
+const PROJECT_ID =
+  import.meta.env.VITE_HASHCONNECT_PROJECT_ID ||
+  "49c3c0e847f638a813f33db581602915";
 
 const appMetadata = {
   name: "CarbonCredit Marketplace",
@@ -30,7 +35,12 @@ const appMetadata = {
   url: window.location.origin,
 };
 
-const hashconnect = new HashConnect(LedgerId.TESTNET, PROJECT_ID, appMetadata, true);
+const hashconnect = new HashConnect(
+  LedgerId.TESTNET,
+  PROJECT_ID,
+  appMetadata,
+  true
+);
 
 export default function CompanyProfile() {
   const [company, setCompany] = useState(null);
@@ -38,10 +48,28 @@ export default function CompanyProfile() {
   const [pairingData, setPairingData] = useState(null);
   const [isAssociating, setIsAssociating] = useState(false);
   const [isAssociated, setIsAssociated] = useState(false);
+  const [isForestAssociated, setIsForestAssociated] = useState(false);
+  const [isForestAssociating, setIsForestAssociating] = useState(false);
+
+  const checkForestTokenAssociation = async (accountId) => {
+    try {
+      const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?token.id=${FOREST_TOKEN_ID}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data && data.tokens && data.tokens.length > 0) {
+        setIsForestAssociated(true);
+      } else {
+        setIsForestAssociated(false);
+      }
+    } catch (e) {
+      console.error("Could not check Forest token association:", e);
+      setIsForestAssociated(false);
+    }
+  };
 
   const checkTokenAssociation = async (accountId) => {
     try {
-      const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?token.id=${HEDERA_TOKEN_ID}`;
+      const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?token.id=${CARBON_TOKEN_ID}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data && data.tokens && data.tokens.length > 0) {
@@ -59,10 +87,16 @@ export default function CompanyProfile() {
     if (!window.ethereum) return console.warn("MetaMask not found");
     setLoading(true);
     try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
       const userAddress = accounts[0];
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(COMPANY_ADDRESS, COMPANY_ABI, provider);
+      const contract = new ethers.Contract(
+        COMPANY_ADDRESS,
+        COMPANY_ABI,
+        provider
+      );
       const details = await contract.getCompanyDetails(userAddress);
 
       if (!details.isRegistered) {
@@ -70,9 +104,10 @@ export default function CompanyProfile() {
         setLoading(false);
         return;
       }
-      
+
       if (details.hederaAccountId) {
         await checkTokenAssociation(details.hederaAccountId);
+        await checkForestTokenAssociation(details.hederaAccountId);
       }
       console.log("Hedera Account ID:", details.hederaAccountId);
 
@@ -80,7 +115,10 @@ export default function CompanyProfile() {
       const emissions = await contract.getCompanyEmissionsSummary(userAddress);
       const toSafeNumber = (value) => Number(value || 0);
       const carbonCreditsOwned = toSafeNumber(details.carbonCreditsOwned);
-      const carbonFootprint = toSafeNumber(emissions.scope1Emissions) + toSafeNumber(emissions.scope2Emissions) + toSafeNumber(emissions.scope3Emissions);
+      const carbonFootprint =
+        toSafeNumber(emissions.scope1Emissions) +
+        toSafeNumber(emissions.scope2Emissions) +
+        toSafeNumber(emissions.scope3Emissions);
       const creditsRequired = carbonFootprint - carbonCreditsOwned;
 
       setCompany({
@@ -88,7 +126,9 @@ export default function CompanyProfile() {
         hederaAccountId: details.hederaAccountId,
         isRegistered: details.isRegistered,
         verified: details.verificationStatus === 1,
-        registrationYear: new Date(toSafeNumber(details.registrationTimestamp) * 1000).getFullYear(),
+        registrationYear: new Date(
+          toSafeNumber(details.registrationTimestamp) * 1000
+        ).getFullYear(),
         walletAddress: regulatory.walletAddress,
         carbonFootprint: carbonFootprint,
         carbonCreditsOwned: carbonCreditsOwned,
@@ -115,8 +155,12 @@ export default function CompanyProfile() {
         if (initData && initData.topic) {
           topic = initData.topic;
         }
-        if (initData && initData.savedPairings && initData.savedPairings.length > 0) {
-            setPairingData(initData.savedPairings[0]);
+        if (
+          initData &&
+          initData.savedPairings &&
+          initData.savedPairings.length > 0
+        ) {
+          setPairingData(initData.savedPairings[0]);
         }
         console.log("HashConnect init successful");
       } catch (err) {
@@ -141,6 +185,41 @@ export default function CompanyProfile() {
   const openHashPairingModal = () => {
     hashconnect.openPairingModal();
   };
+  const handleAssociateForestToken = async () => {
+    if (!pairingData) {
+      openHashPairingModal();
+      return;
+    }
+    const accountIdString = pairingData.accountIds?.[0];
+    if (!accountIdString) {
+      alert("No Hedera account found in pairing data.");
+      return;
+    }
+
+    setIsForestAssociating(true);
+    try {
+      const accountId = AccountId.fromString(accountIdString);
+      const signer = hashconnect.getSigner(accountId);
+      const tx = await new TokenAssociateTransaction()
+        .setAccountId(accountId)
+        .setTokenIds([FOREST_TOKEN_ID])
+        .freezeWithSigner(signer);
+      const response = await tx.executeWithSigner(signer);
+      await response.getReceiptWithSigner(signer);
+
+      alert("Forest token successfully associated!");
+      setIsForestAssociated(true);
+    } catch (err) {
+      console.error("Forest Token Association Error:", err);
+      alert(
+        `Failed to associate Forest token: ${
+          err?.message || "Please try again."
+        }`
+      );
+    } finally {
+      setIsForestAssociating(false);
+    }
+  };
 
   const handleAssociateToken = async () => {
     if (!pairingData) {
@@ -159,7 +238,7 @@ export default function CompanyProfile() {
       const signer = hashconnect.getSigner(accountId);
       const tx = await new TokenAssociateTransaction()
         .setAccountId(accountId)
-        .setTokenIds([HEDERA_TOKEN_ID])
+        .setTokenIds([CARBON_TOKEN_ID])
         .freezeWithSigner(signer);
       const response = await tx.executeWithSigner(signer);
       await response.getReceiptWithSigner(signer);
@@ -168,7 +247,9 @@ export default function CompanyProfile() {
       setIsAssociated(true);
     } catch (err) {
       console.error("Token Association Error:", err);
-      alert(`Failed to associate token: ${err?.message || "Please try again."}`);
+      alert(
+        `Failed to associate token: ${err?.message || "Please try again."}`
+      );
     } finally {
       setIsAssociating(false);
     }
@@ -198,7 +279,7 @@ export default function CompanyProfile() {
       </div>
     );
   }
-
+  console.log("Company Data:", company);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
@@ -220,7 +301,8 @@ export default function CompanyProfile() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-1 text-yellow-400 text-sm bg-yellow-900/50 px-2 py-1 rounded-full">
-                  <AlertCircle className="h-4 w-4" /> <span>Pending Verification</span>
+                  <AlertCircle className="h-4 w-4" />{" "}
+                  <span>Pending Verification</span>
                 </div>
               )}
             </div>
@@ -230,23 +312,78 @@ export default function CompanyProfile() {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-mono text-slate-400">Wallet Address</div>
-            <div className="text-lg font-mono text-white break-all">{company.walletAddress}</div>
+            <div className="text-sm font-mono text-slate-400">
+              Wallet Address
+            </div>
+            <div className="text-lg font-mono text-white break-all">
+              {company.walletAddress}
+            </div>
           </div>
         </div>
       </div>
+      {!isForestAssociated ? (
+        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">
+                Enable Forest NFT Receipts
+              </h3>
+              <p className="text-slate-400 text-sm">
+                Connect your Hedera wallet and associate our Forest token to
+                receive NFT receipts for forest purchases.
+              </p>
+            </div>
+            <button
+              onClick={
+                pairingData ? handleAssociateForestToken : openHashPairingModal
+              }
+              disabled={isForestAssociating}
+              className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Leaf className="h-5 w-5" />
+              <span>
+                {pairingData
+                  ? isForestAssociating
+                    ? "Associating..."
+                    : "Enable Forest NFT Receipts"
+                  : "Connect Hedera Wallet"}
+              </span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-emerald-900/30 backdrop-blur-md rounded-xl p-6 border border-emerald-600/50 mb-8">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-6 w-6 text-emerald-400" />
+            <div>
+              <h3 className="text-lg font-semibold text-white">
+                Forest NFT Receipts Enabled
+              </h3>
+              <p className="text-slate-400 text-sm">
+                Your Hedera account is successfully associated. You will now
+                receive Forest NFT receipts.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!isAssociated ? (
         <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">Enable Hedera NFT Receipts</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Enable Hedera NFT Receipts
+              </h3>
               <p className="text-slate-400 text-sm">
-                Connect your Hedera wallet and associate our token to receive unique NFT receipts for every purchase.
+                Connect your Hedera wallet and associate our token to receive
+                unique NFT receipts for every purchase.
               </p>
             </div>
             <button
-              onClick={pairingData ? handleAssociateToken : openHashPairingModal}
+              onClick={
+                pairingData ? handleAssociateToken : openHashPairingModal
+              }
               disabled={isAssociating}
               className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -266,9 +403,12 @@ export default function CompanyProfile() {
           <div className="flex items-center gap-3">
             <CheckCircle className="h-6 w-6 text-emerald-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">NFT Receipts Enabled</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Carbon Credit Receipts Enabled
+              </h3>
               <p className="text-slate-400 text-sm">
-                Your Hedera account is successfully associated. You will now receive NFT receipts for your purchases.
+                Your Hedera account is successfully associated. You will now
+                receive receipts for your purchases.
               </p>
             </div>
           </div>
@@ -278,37 +418,59 @@ export default function CompanyProfile() {
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Carbon Footprint</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Carbon Footprint
+            </h3>
             <BarChart className="h-5 w-5 text-red-400" />
           </div>
-          <div className="text-3xl font-bold text-white mb-2">{company.carbonFootprint.toLocaleString()}</div>
+          <div className="text-3xl font-bold text-white mb-2">
+            {company.carbonFootprint.toLocaleString()}
+          </div>
           <div className="text-slate-400 text-sm">tons CO₂/year</div>
         </div>
         <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Credits Purchased</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Credits Purchased
+            </h3>
             <Leaf className="h-5 w-5 text-emerald-400" />
           </div>
-          <div className="text-3xl font-bold text-white mb-2">{company.carbonCreditsOwned.toLocaleString()}</div>
+          <div className="text-3xl font-bold text-white mb-2">
+            {company.carbonCreditsOwned.toLocaleString()}
+          </div>
           <div className="text-slate-400 text-sm">tons CO₂ offset</div>
         </div>
-        <div className={`bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border ${company.isCarbonNeutral ? "border-emerald-500/50" : "border-slate-700/50"}`}>
+        <div
+          className={`bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border ${
+            company.isCarbonNeutral
+              ? "border-emerald-500/50"
+              : "border-slate-700/50"
+          }`}
+        >
           {company.isCarbonNeutral ? (
             <>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Status</h3>
                 <ShieldCheck className="h-5 w-5 text-emerald-400" />
               </div>
-              <div className="text-3xl font-bold text-emerald-400 mb-2">Carbon Neutral</div>
-              <div className="text-slate-400 text-sm">Footprint offset achieved!</div>
+              <div className="text-3xl font-bold text-emerald-400 mb-2">
+                Carbon Neutral
+              </div>
+              <div className="text-slate-400 text-sm">
+                Footprint offset achieved!
+              </div>
             </>
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Credits to Offset</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Credits to Offset
+                </h3>
                 <Target className="h-5 w-5 text-yellow-400" />
               </div>
-              <div className="text-3xl font-bold text-white mb-2">{company.creditsRequired.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-white mb-2">
+                {company.creditsRequired.toLocaleString()}
+              </div>
               <div className="text-slate-400 text-sm">tons CO₂ needed</div>
             </>
           )}

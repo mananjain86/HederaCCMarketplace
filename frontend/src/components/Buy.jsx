@@ -13,8 +13,8 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 
 // --- UPDATE THESE WITH YOUR DEPLOYED CONTRACT ADDRESSES ---
-const MARKETPLACE_ADDRESS = "0x38905B22dB57C130be8AeE1E82DC1De7a48FA3D5";
-const COMPANY_ADDRESS = "0x178b7C2cf7361120Ab911844e995dbd0991A3cBf";
+const MARKETPLACE_ADDRESS = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || "0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6";
+const COMPANY_ADDRESS = import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS || "0x6136a57179ddb0FeF580724263BDc73c96B31863";
 // -----------------------------------------------------------
 
 const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
