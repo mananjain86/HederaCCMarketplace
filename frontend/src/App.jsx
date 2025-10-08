@@ -17,8 +17,8 @@ import {Buy} from './components/Buy';
 import {ForestSellerRegistration} from './components/ForestSellerRegistration';
 import {ForestProfile} from './components/ForestProfile';
 import {BuyForest} from './components/BuyForest'; 
-
-
+import {CarbonCreditsManager} from './components/CarbonCreditsManager';
+import {CompanyVerificationManager} from './components/CompanyVerificationManager';
 
 function App() {
   const [analytics, setAnalytics] = useState({
@@ -150,6 +150,8 @@ function App() {
           <Route path="/forest/:id" element={<ForestProfile />} />
           <Route path="/buy-forest/:id" element={<BuyForest />} />
           <Route path="/success" element={<SuccessMessage />} />
+          <Route path="/verify-company" element={<CompanyVerificationManager />} />
+          <Route path="/manage-credits" element={<CarbonCreditsManager />} />
         </Routes>
 
         <Footer />

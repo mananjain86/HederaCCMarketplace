@@ -16,7 +16,12 @@ module.exports = {
   networks: {
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.SEPOLIA_PRIVATE_KEY],
+    },
+    testnet: {
+      type: "http",
+      url: process.env.HEDERA_RPC_URL,
+      accounts: [process.env.HEDERA_PRIVATE_KEY],
     },
   },
 };

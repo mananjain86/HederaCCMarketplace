@@ -17,7 +17,7 @@ const MARKETPLACE_ADDRESS = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || "0x2
 const COMPANY_ADDRESS = import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS || "0x6136a57179ddb0FeF580724263BDc73c96B31863";
 // -----------------------------------------------------------
 
-const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
+const RPC_URL = "https://testnet.hashio.io/api";
 const BACKEND_URL = "http://localhost:5000";
 
 export function Buy() {

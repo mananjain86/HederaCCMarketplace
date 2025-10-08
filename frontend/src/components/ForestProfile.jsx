@@ -8,8 +8,7 @@ import ForestABI from "../abi/ForestTokenMarketplace.json";
 const FOREST_CONTRACT_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
   "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
-const RPC_URL =
-  "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
+const RPC_URL = "https://testnet.hashio.io/api";
 
 export function ForestProfile() {
   const { id } = useParams(); // /forest/:id → listingId

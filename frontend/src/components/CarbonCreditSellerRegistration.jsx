@@ -86,7 +86,6 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       if (!window.ethereum) throw new Error("MetaMask not found");
 
       const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
 
       const CarbonMarketplaceContract = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || '0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6';

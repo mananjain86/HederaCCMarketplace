@@ -313,7 +313,7 @@ contract HandleCompany {
         }
         
         return verified;
-    }
+    } 
     
     function isVerifier(address _address) external view returns (bool) {
         return verifiers[_address];

@@ -15,12 +15,12 @@
     "axios": "^1.12.2",
     "dotenv": "^17.2.2",
     "ethers": "^6.15.0",
-    "hashconnect": "^3.0.13",
+    "hashconnect": "^0.2.9",
     "lucide-react": "^0.344.0",
     "pinata": "^2.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.9.2"
+    "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

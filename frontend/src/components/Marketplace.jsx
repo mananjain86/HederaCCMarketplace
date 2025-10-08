@@ -15,7 +15,14 @@ const CARBON_CONTRACT_ADDRESS =
 const FOREST_CONTRACT_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
   "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
-const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
+const RPC_URL = "https://testnet.hashio.io/api";
+
+// Add HBAR conversion helper
+const HBAR_TO_TINYBAR = 100000000;
+const formatHBAR = (tinybars) => {
+  const hbar = Number(tinybars) / HBAR_TO_TINYBAR;
+  return hbar.toFixed(2);
+};
 
 function Marketplace({ onViewCompany }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,7 +58,6 @@ function Marketplace({ onViewCompany }) {
         provider
       );
       const activeCarbonIds = await carbonContract.getActiveCarbonCreditListings();
-
       const carbonListings = await Promise.all(
         activeCarbonIds.map(async (idBN) => {
           const id = idBN.toString();
@@ -129,7 +135,6 @@ function Marketplace({ onViewCompany }) {
       // --- Combine both listings ---
       const fetchedListings = [...carbonListings, ...validForestListings];
       setListings(fetchedListings);
-
       // --- Analytics (carbon credits only) ---
       const totalCredits = carbonListings.reduce((sum, l) => sum + l.amount, 0);
       const activeProjects = carbonListings.length + validForestListings.length;
@@ -142,7 +147,6 @@ function Marketplace({ onViewCompany }) {
       setAnalytics({
         totalCredits,
         activeProjects,
-      
         totalValueLocked,
         verificationRate: activeProjects
           ? Math.round((verifiedCount / activeProjects) * 100)
@@ -274,7 +278,7 @@ function Marketplace({ onViewCompany }) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCredits.map((credit) => (
           <CreditCard
-            key={`${credit.type}-${credit.id}`} 
+            key={`${credit.type}-${credit.id}`}
             credit={{
               ...credit,
               price: credit.pricePerCredit

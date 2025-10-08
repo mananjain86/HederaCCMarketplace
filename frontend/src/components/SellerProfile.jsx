@@ -13,7 +13,7 @@ import CONTRACT_ABI from '../abi/CarbonCreditMarketplace.json';
 
 // --- Constants ---
 const CARBON_CONTRACT_ADDRESS = import.meta.env.VITE_CARBON_CONTRACT_ADDRESS || "0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6";
-const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
+const RPC_URL = "https://testnet.hashio.io/api";
 
 // Helper component for displaying badges
 const InfoBadge = ({ text, icon, color = 'blue' }) => {
@@ -31,45 +31,45 @@ const InfoBadge = ({ text, icon, color = 'blue' }) => {
 
 
 export function SellerProfile() {
-  const { sellerAddress } = useParams();
-  const navigate = useNavigate();
+  const { sellerAddress } = useParams();
+  const navigate = useNavigate();
 
-  const [sellerData, setSellerData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [sellerData, setSellerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchSellerData = async () => {
-      if (!sellerAddress) return;
+  useEffect(() => {
+    const fetchSellerData = async () => {
+      if (!sellerAddress) return;
 
-      setLoading(true);
-      setError(null);
+      setLoading(true);
+      setError(null);
 
-      try {
-        const provider = new ethers.JsonRpcProvider(RPC_URL);
-        const contract = new ethers.Contract(CARBON_CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      try {
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(CARBON_CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-        const activeIds = await contract.getActiveCarbonCreditListings();
-        const allListingsDetails = await Promise.all(
+        const activeIds = await contract.getActiveCarbonCreditListings();
+        const allListingsDetails = await Promise.all(
           activeIds.map(id => contract.getListingDetails(id))
         );
 
-        const sellerListings = allListingsDetails
-          .filter(details => details.seller.toLowerCase() === sellerAddress.toLowerCase())
-          .map(details => {
+        const sellerListings = allListingsDetails
+          .filter(details => details.seller.toLowerCase() === sellerAddress.toLowerCase())
+          .map(details => {
             // Destructuring the returned array for clarity based on the Solidity structs
             const [, , , , , projectInfo, projectDocs, creditDetails] = details;
 
-            return {
-              id: details.id.toString(),
-              amount: Number(details.amount),
-              pricePerCredit: parseFloat(ethers.formatEther(details.pricePerCredit)),
+            return {
+              id: details.id.toString(),
+              amount: Number(details.amount),
+              pricePerCredit: parseFloat(ethers.formatEther(details.pricePerCredit)),
               
               // ProjectInfo
-              projectName: projectInfo.projectName,
-              projectType: projectInfo.projectType,
-              projectCountry: projectInfo.projectCountry,
-              projectRegion: projectInfo.projectRegion,
+              projectName: projectInfo.projectName,
+              projectType: projectInfo.projectType,
+              projectCountry: projectInfo.projectCountry,
+              projectRegion: projectInfo.projectRegion,
               projectAddress: projectInfo.projectAddress,
               registryUrl: projectInfo.registryUrl,
 
@@ -83,126 +83,126 @@ export function SellerProfile() {
               isVerified: projectDocs.isVerified,
 
               // CreditDetails
-              creditVintageYear: Number(creditDetails.creditVintageYear),
+              creditVintageYear: Number(creditDetails.creditVintageYear),
               vintageSerialNumbers: creditDetails.vintageSerialNumbers,
-            };
-          });
+            };
+          });
         
-        const unlistedCredits = await contract.carbonCreditsOwned(sellerAddress);
-        const totalListed = sellerListings.reduce((sum, l) => sum + l.amount, 0);
-        const avgPrice = sellerListings.length > 0
-            ? (sellerListings.reduce((sum, l) => sum + l.pricePerCredit, 0) / sellerListings.length)
-            : 0;
+        const unlistedCredits = await contract.carbonCreditsOwned(sellerAddress);
+        const totalListed = sellerListings.reduce((sum, l) => sum + l.amount, 0);
+        const avgPrice = sellerListings.length > 0
+            ? (sellerListings.reduce((sum, l) => sum + l.pricePerCredit, 0) / sellerListings.length)
+            : 0;
 
-        setSellerData({
-          id: sellerAddress,
-          name: `Seller ${sellerAddress.slice(0, 6)}...${sellerAddress.slice(-4)}`,
-          verified: sellerListings.some(l => l.isVerified), // True if at least one project is verified
-          location: sellerListings.length > 0 ? `${sellerListings[0].projectRegion}, ${sellerListings[0].projectCountry}` : "Unknown Location",
-          firstVintage: sellerListings.length > 0 ? Math.min(...sellerListings.map(l => l.creditVintageYear)) : "N/A",
-          primaryRegistry: sellerListings.length > 0 ? sellerListings[0].accreditedRegistry : "N/A",
-          unlistedCredits: Number(unlistedCredits),
-          totalListedCredits: totalListed,
-          listings: sellerListings,
-          avgPrice: avgPrice.toFixed(4),
-        });
+        setSellerData({
+          id: sellerAddress,
+          name: `Seller ${sellerAddress.slice(0, 6)}...${sellerAddress.slice(-4)}`,
+          verified: sellerListings.some(l => l.isVerified), // True if at least one project is verified
+          location: sellerListings.length > 0 ? `${sellerListings[0].projectRegion}, ${sellerListings[0].projectCountry}` : "Unknown Location",
+          firstVintage: sellerListings.length > 0 ? Math.min(...sellerListings.map(l => l.creditVintageYear)) : "N/A",
+          primaryRegistry: sellerListings.length > 0 ? sellerListings[0].accreditedRegistry : "N/A",
+          unlistedCredits: Number(unlistedCredits),
+          totalListedCredits: totalListed,
+          listings: sellerListings,
+          avgPrice: avgPrice.toFixed(4),
+        });
 
-      } catch (err) {
-        console.error("Error fetching seller data:", err);
-        setError("Could not fetch seller details. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+      } catch (err) {
+        console.error("Error fetching seller data:", err);
+        setError("Could not fetch seller details. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    fetchSellerData();
-  }, [sellerAddress]);
+    fetchSellerData();
+  }, [sellerAddress]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-slate-900">
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-slate-900">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
-  if (error || !sellerData) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-slate-900">
-        <ErrorMessage message={error || "Seller data could not be loaded."} />
-      </div>
-    );
-  }
+  if (error || !sellerData) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-slate-900">
+        <ErrorMessage message={error || "Seller data could not be loaded."} />
+      </div>
+    );
+  }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Back Button */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        <span>Back to Marketplace</span>
-      </button>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6"
+      >
+        <ArrowLeft className="h-5 w-5" />
+        <span>Back to Marketplace</span>
+      </button>
 
-      {/* Seller Header */}
-      <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-8 mb-8 border border-slate-700/50">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">{sellerData.name}</h1>
-              {sellerData.verified ? (
-                <CheckCircle className="h-6 w-6 text-emerald-400" title="This seller has verified projects" />
-              ) : (
-                <AlertCircle className="h-6 w-6 text-yellow-400" title="This seller has no verified projects" />
-              )}
-            </div>
-            <div className="flex items-center text-slate-400 mb-2">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>{sellerData.location}</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-slate-400">
-                <Calendar className="h-4 w-4 mr-1" />
-                <span>Projects since {sellerData.firstVintage}</span>
-              </div>
-              <div className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
-                📊 {sellerData.primaryRegistry}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Seller Header */}
+      <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-8 mb-8 border border-slate-700/50">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-2">
+              <h1 className="text-3xl font-bold text-white">{sellerData.name}</h1>
+              {sellerData.verified ? (
+                <CheckCircle className="h-6 w-6 text-emerald-400" title="This seller has verified projects" />
+              ) : (
+                <AlertCircle className="h-6 w-6 text-yellow-400" title="This seller has no verified projects" />
+              )}
+            </div>
+            <div className="flex items-center text-slate-400 mb-2">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span>{sellerData.location}</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center text-slate-400">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>Projects since {sellerData.firstVintage}</span>
+              </div>
+              <div className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
+                📊 {sellerData.primaryRegistry}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Key Metrics */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      {/* Key Metrics */}
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
         <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Unlisted Credits</h3>
-          <div className="text-3xl font-bold text-white mb-2">{sellerData.unlistedCredits.toLocaleString()}</div>
-          <div className="text-slate-400 text-sm">Credits held on-chain</div>
-        </div>
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Total Listed Credits</h3>
-          <div className="text-3xl font-bold text-white mb-2">{sellerData.totalListedCredits.toLocaleString()}</div>
-          <div className="text-slate-400 text-sm">tons CO₂ for sale</div>
-        </div>
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Average Price</h3>
-          <div className="text-3xl font-bold text-white mb-2">{sellerData.avgPrice} ETH</div>
-          <div className="text-slate-400 text-sm">per ton</div>
-        </div>
-      </div>
+          <h3 className="text-lg font-semibold text-white mb-4">Unlisted Credits</h3>
+          <div className="text-3xl font-bold text-white mb-2">{sellerData.unlistedCredits.toLocaleString()}</div>
+          <div className="text-slate-400 text-sm">Credits held on-chain</div>
+        </div>
+        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <h3 className="text-lg font-semibold text-white mb-4">Total Listed Credits</h3>
+          <div className="text-3xl font-bold text-white mb-2">{sellerData.totalListedCredits.toLocaleString()}</div>
+          <div className="text-slate-400 text-sm">tons CO₂ for sale</div>
+        </div>
+        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+          <h3 className="text-lg font-semibold text-white mb-4">Average Price</h3>
+          <div className="text-3xl font-bold text-white mb-2">{sellerData.avgPrice} ETH</div>
+          <div className="text-slate-400 text-sm">per ton</div>
+        </div>
+      </div>
 
-      {/* Listings Section */}
-      <div className="space-y-6">
+      {/* Listings Section */}
+      <div className="space-y-6">
         <h3 className="text-2xl font-semibold text-white">Current Listings from this Seller</h3>
-        {sellerData.listings.length === 0 ? (
-          <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 text-center text-slate-400">
+        {sellerData.listings.length === 0 ? (
+          <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 text-center text-slate-400">
             This seller has no active listings.
           </div>
-        ) : (
-          sellerData.listings.map((listing) => (
-            <div key={listing.id} className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+        ) : (
+          sellerData.listings.map((listing) => (
+            <div key={listing.id} className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
               {/* Card Header */}
               <div className="flex justify-between items-start mb-4">
                   <div>
@@ -259,9 +259,9 @@ export function SellerProfile() {
                   </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+          ))
+        )}
+      </div>
+    </div>
+  );
 }

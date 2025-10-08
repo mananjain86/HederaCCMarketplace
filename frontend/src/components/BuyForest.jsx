@@ -11,9 +11,9 @@ const FOREST_CONTRACT_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
   "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
 const COMPANY_ADDRESS =
-  import.meta.env.VITE_COMPANY_ADDRESS ||
+  import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS ||
   "0x178b7C2cf7361120Ab911844e995dbd0991A3cBf";
-const RPC_URL = "https://sepolia.infura.io/v3/034100fe6f094ec3a1d8bfeb5a3ae773";
+const RPC_URL = "https://testnet.hashio.io/api";
 const BACKEND_URL = "http://localhost:5000";
 
 // -----------------
@@ -74,9 +74,10 @@ export function BuyForest() {
       setStatusMessage("Fetching your company details...");
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const companyContract = new ethers.Contract(COMPANY_ADDRESS, CompanyABI, provider);
-      const companyDetails = await companyContract.getCompanyDetails(signer.address);
-
+      const companyContract = new ethers.Contract(COMPANY_ADDRESS, CompanyABI, signer);
+      const address = await signer.getAddress();
+      const companyDetails = await companyContract.getCompanyDetails(address);
+      console.log(companyDetails);
       if (!companyDetails.isRegistered) {
         throw new Error("Your company is not registered. Please register to make a purchase.");
       }

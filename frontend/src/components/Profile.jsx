@@ -1,8 +1,8 @@
 // src/pages/CompanyProfile.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-import { HashConnect } from "hashconnect";
-import { LedgerId, TokenAssociateTransaction, AccountId } from "@hashgraph/sdk";
+// import { HashConnect } from "hashconnect";
+// import { LedgerId, TokenAssociateTransaction, AccountId } from "@hashgraph/sdk";
 import {
   ArrowLeft,
   Calendar,
@@ -35,13 +35,7 @@ const appMetadata = {
   url: window.location.origin,
 };
 
-const hashconnect = new HashConnect(
-  LedgerId.TESTNET,
-  PROJECT_ID,
-  appMetadata,
-  true
-);
-
+// REMOVED static new HashConnect(...) here and instead will initialize dynamically
 export default function CompanyProfile() {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +44,10 @@ export default function CompanyProfile() {
   const [isAssociated, setIsAssociated] = useState(false);
   const [isForestAssociated, setIsForestAssociated] = useState(false);
   const [isForestAssociating, setIsForestAssociating] = useState(false);
+
+  // refs to hold dynamic imports / instances
+  const hashconnectRef = useRef(null);
+  const sdkRef = useRef(null);
 
   const checkForestTokenAssociation = async (accountId) => {
     try {
@@ -103,8 +101,10 @@ export default function CompanyProfile() {
         setCompany(null);
         setLoading(false);
         return;
-      }
-
+      } 
+      console.log("Verification Status (raw):", details.verificationStatus);
+      console.log("Verification Status (Number):", Number(details.verificationStatus));
+      
       if (details.hederaAccountId) {
         await checkTokenAssociation(details.hederaAccountId);
         await checkForestTokenAssociation(details.hederaAccountId);
@@ -121,11 +121,15 @@ export default function CompanyProfile() {
         toSafeNumber(emissions.scope3Emissions);
       const creditsRequired = carbonFootprint - carbonCreditsOwned;
 
+      // Convert BigInt verification status to number for comparison
+      const verificationStatus = Number(details.verificationStatus);
+      
       setCompany({
         name: details.name,
         hederaAccountId: details.hederaAccountId,
         isRegistered: details.isRegistered,
-        verified: details.verificationStatus === 1,
+        verified: verificationStatus === 1, // 0 = Pending, 1 = Verified, 2 = Rejected, 3 = Suspended
+        verificationStatus: verificationStatus, // Store the actual status for more detailed checks if needed
         registrationYear: new Date(
           toSafeNumber(details.registrationTimestamp) * 1000
         ).getFullYear(),
@@ -147,19 +151,42 @@ export default function CompanyProfile() {
     let topic = "";
 
     const initHashConnect = async () => {
-      hashconnect.pairingEvent.on((newPairing) => setPairingData(newPairing));
-      hashconnect.disconnectionEvent.on(() => setPairingData(null));
-
       try {
-        const initData = await hashconnect.init();
+        // Browser shim: ensure "global" and Buffer exist before loading Node-targeted libs
+        if (typeof globalThis.global === "undefined") {
+          globalThis.global = globalThis;
+        }
+        if (typeof globalThis.Buffer === "undefined") {
+          // dynamic import of 'buffer' (install it if you haven't: npm i buffer)
+          try {
+            const bufferMod = await import("buffer");
+            globalThis.Buffer = bufferMod.Buffer;
+          } catch (e) {
+            console.warn("Buffer polyfill not available:", e);
+          }
+        }
+
+        // Dynamically import hashconnect and @hashgraph/sdk after shims
+        const hcModule = await import("hashconnect");
+        const sdkModule = await import("@hashgraph/sdk");
+
+        sdkRef.current = sdkModule;
+        const { HashConnect } = hcModule;
+        const { LedgerId } = sdkModule;
+
+        // create instance and store on ref
+        const instance = new HashConnect(LedgerId.TESTNET, PROJECT_ID, appMetadata, true);
+        hashconnectRef.current = instance;
+
+        // wire events to local state
+        instance.pairingEvent.on((newPairing) => setPairingData(newPairing));
+        instance.disconnectionEvent.on(() => setPairingData(null));
+
+        const initData = await instance.init();
         if (initData && initData.topic) {
           topic = initData.topic;
         }
-        if (
-          initData &&
-          initData.savedPairings &&
-          initData.savedPairings.length > 0
-        ) {
+        if (initData && initData.savedPairings && initData.savedPairings.length > 0) {
           setPairingData(initData.savedPairings[0]);
         }
         console.log("HashConnect init successful");
@@ -176,15 +203,21 @@ export default function CompanyProfile() {
 
     return () => {
       window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
-      if (topic) {
-        hashconnect.disconnect(topic);
+      if (topic && hashconnectRef.current) {
+        hashconnectRef.current.disconnect(topic);
       }
     };
   }, [fetchCompanyData]);
 
   const openHashPairingModal = () => {
-    hashconnect.openPairingModal();
+    const hc = hashconnectRef.current;
+    if (!hc) {
+      alert("HashConnect not initialized yet. Please try again in a moment.");
+      return;
+    }
+    hc.openPairingModal();
   };
+
   const handleAssociateForestToken = async () => {
     if (!pairingData) {
       openHashPairingModal();
@@ -198,8 +231,9 @@ export default function CompanyProfile() {
 
     setIsForestAssociating(true);
     try {
+      const { AccountId, TokenAssociateTransaction } = sdkRef.current;
       const accountId = AccountId.fromString(accountIdString);
-      const signer = hashconnect.getSigner(accountId);
+      const signer = hashconnectRef.current.getSigner(accountId);
       const tx = await new TokenAssociateTransaction()
         .setAccountId(accountId)
         .setTokenIds([FOREST_TOKEN_ID])
@@ -212,9 +246,7 @@ export default function CompanyProfile() {
     } catch (err) {
       console.error("Forest Token Association Error:", err);
       alert(
-        `Failed to associate Forest token: ${
-          err?.message || "Please try again."
-        }`
+        `Failed to associate Forest token: ${err?.message || "Please try again."}`
       );
     } finally {
       setIsForestAssociating(false);
@@ -234,8 +266,9 @@ export default function CompanyProfile() {
 
     setIsAssociating(true);
     try {
+      const { AccountId, TokenAssociateTransaction } = sdkRef.current;
       const accountId = AccountId.fromString(accountIdString);
-      const signer = hashconnect.getSigner(accountId);
+      const signer = hashconnectRef.current.getSigner(accountId);
       const tx = await new TokenAssociateTransaction()
         .setAccountId(accountId)
         .setTokenIds([CARBON_TOKEN_ID])
@@ -295,9 +328,17 @@ export default function CompanyProfile() {
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <h1 className="text-3xl font-bold text-white">{company.name}</h1>
-              {company.verified ? (
+              {company.verificationStatus === 1 ? (
                 <div className="flex items-center space-x-1 text-emerald-400 text-sm bg-emerald-900/50 px-2 py-1 rounded-full">
                   <CheckCircle className="h-4 w-4" /> <span>Verified</span>
+                </div>
+              ) : company.verificationStatus === 2 ? (
+                <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-900/50 px-2 py-1 rounded-full">
+                  <AlertCircle className="h-4 w-4" /> <span>Rejected</span>
+                </div>
+              ) : company.verificationStatus === 3 ? (
+                <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-900/50 px-2 py-1 rounded-full">
+                  <AlertCircle className="h-4 w-4" /> <span>Suspended</span>
                 </div>
               ) : (
                 <div className="flex items-center space-x-1 text-yellow-400 text-sm bg-yellow-900/50 px-2 py-1 rounded-full">
