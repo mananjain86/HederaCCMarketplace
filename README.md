@@ -311,7 +311,7 @@ The platform automatically generates NFT certificates for two types of purchases
 Each carbon credit purchase creates a comprehensive NFT containing:
 - **Project Information**: Name, type, location, country, registry details
 - **Credit Specifications**: Amount purchased, vintage year, serial numbers
-- **Purchase Data**: Transaction hash, buyer details, purchase date and price
+- **Purchase Data**: Transaction hash, buyer details, purchase date and price in HBAR
 - **Verification**: Accredited registry compliance and documentation links
 - **Environmental Impact**: CO2 reduction amount and calculation methodology
 
@@ -343,7 +343,7 @@ Forest area purchases generate deed NFTs with:
     "ethereum_tx_hash": "0x...",
     "buyer_hedera_id": "0.0.123456",
     "amount": 5,
-    "total_price": "0.075 ETH"
+    "total_price": "0.075 HBAR"
   }
 }
 ```
@@ -430,7 +430,7 @@ Content-Type: application/json
     "buyer": "0.0.123456",
     "amount": 5,
     "projectName": "Amazon Forest Conservation",
-    "totalPrice": "0.075 ETH",
+    "totalPrice": "0.075 HBAR",
     "id": "ethereum_tx_hash"
   }
 }
@@ -447,7 +447,7 @@ Content-Type: application/json
     "buyer": "0.0.123456",
     "location": "Costa Rica, Guanacaste",
     "area": 2.5,
-    "totalPrice": "1.5 ETH",
+    "totalPrice": "1.5 HBAR",
     "areaId": "ethereum_tx_hash",
     "ipfsDeedHash": "QmDeedHash..."
   }
@@ -481,7 +481,7 @@ Content-Type: application/json
   "buyerEthAddress": "0x...",
   "location": "Costa Rica",
   "areaSize": 2.5,
-  "price": "1.5 ETH",
+  "price": "1.5 HBAR",
   "ipfsDeedHash": "QmDeedHash..."
 }
 ```

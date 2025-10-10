@@ -117,7 +117,7 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       };
 
       const amount = BigInt(formData.amountToSell);
-      const pricePerCredit = ethers.parseEther(formData.pricePerCredit);
+      const pricePerCredit = ethers.parseUnits(formData.pricePerCredit,8);
 
       console.log("Submitting:", { amount, pricePerCredit, projectInfo, documentation, creditDetails });
 
@@ -326,7 +326,7 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       <div className="grid md:grid-cols-3 gap-6">
         {renderInputWithError('creditVintage', 'Credit Vintage Year', 'number', '2024', true, Calendar)}
         {renderInputWithError('amountToSell', 'Total Credits', 'number', '1000', true)}
-        {renderInputWithError('pricePerCredit', 'Price per Credit (ETH)', 'text', '0.01', true)}
+        {renderInputWithError('pricePerCredit', 'Price per Credit (HBAR)', 'text', '0.01', true)}
       </div>
 
       <div>

@@ -98,7 +98,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         ipfsDeedHash: formData.ipfsDeedHash,
       };
 
-      const price = ethers.parseEther(formData.price);
+      const price = ethers.parseUnits(formData.price,8);
 
       console.log("Submitting:", { info, price });
 
@@ -258,7 +258,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         )}
         {renderInputWithError(
           "price",
-          "Price (ETH)",
+          "Price (HBAR)",
           "text",
           "1.5",
           true,

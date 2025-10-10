@@ -70,7 +70,7 @@ function Marketplace({ onViewCompany }) {
             id,
             seller: listing[1],
             amount: Number(listing[2]),
-            pricePerCredit: parseFloat(ethers.formatEther(listing[3])),
+            pricePerCredit: parseFloat(ethers.formatUnits(listing[3],8)),
             isActive: listing[4],
             projectName: basicInfo[0] || `Project ${id}`,
             projectType: basicInfo[1] || "Carbon Credit",
@@ -112,7 +112,7 @@ function Marketplace({ onViewCompany }) {
               id,
               seller: listing[1],
               currentOwner: listing[2],
-              pricePerHectare: parseFloat(ethers.formatEther(listing[3] || 0)),
+              pricePerHectare: parseFloat(ethers.formatUnits(listing[3],8 || 0)),
               isActive: listing[4] || false,
               projectName: info[0] || `Forest Project ${id}`,
               projectRegion: info[1] || "Unknown",
@@ -212,7 +212,7 @@ function Marketplace({ onViewCompany }) {
         </div>
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="text-2xl font-bold text-emerald-400">
-            {analytics.totalValueLocked.toFixed(2)} ETH
+            {analytics.totalValueLocked.toFixed(2)} HBAR
           </div>
           <div className="text-slate-400">Total Value Locked</div>
         </div>
@@ -282,9 +282,9 @@ function Marketplace({ onViewCompany }) {
             credit={{
               ...credit,
               price: credit.pricePerCredit
-                ? `${credit.pricePerCredit.toFixed(4)} ETH`
+                ? `${credit.pricePerCredit.toFixed(4)} HBAR`
                 : credit.pricePerHectare
-                ? `${credit.pricePerHectare.toFixed(4)} ETH`
+                ? `${credit.pricePerHectare.toFixed(4)} HBAR`
                 : "N/A",
             }}
             onViewCompany={onViewCompany}

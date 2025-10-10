@@ -19,7 +19,7 @@ import {ForestProfile} from './components/ForestProfile';
 import {BuyForest} from './components/BuyForest'; 
 import {CarbonCreditsManager} from './components/CarbonCreditsManager';
 import {CompanyVerificationManager} from './components/CompanyVerificationManager';
-
+ 
 function App() {
   const [analytics, setAnalytics] = useState({
     totalCredits: 500000,

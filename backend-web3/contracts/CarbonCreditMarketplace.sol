@@ -133,8 +133,9 @@ contract CarbonCreditsMarketplace {
         require(listing.seller != msg.sender, "Cannot buy from yourself");
         require(_amount > 0 && _amount <= listing.amount, "Invalid amount");
         
-        uint256 totalPrice = _amount * listing.pricePerCredit;
-        require(msg.value >= totalPrice, "Insufficient payment");
+        uint256 totalPrice = _amount * listing.pricePerCredit; // in tinybars
+        // Accept >= so small frontend rounding/UX won't always revert, then refund any overpayment
+        require(msg.value >= totalPrice, "Insufficient HBAR payment");
         
         uint256 platformFee = (totalPrice * platformFeePercentage) / 1000;
         uint256 sellerPayment = totalPrice - platformFee;
@@ -149,6 +150,7 @@ contract CarbonCreditsMarketplace {
         payable(listing.seller).transfer(sellerPayment);
         payable(owner).transfer(platformFee);
         
+        // Refund any overpayment to buyer
         if (msg.value > totalPrice) {
             payable(msg.sender).transfer(msg.value - totalPrice);
         }

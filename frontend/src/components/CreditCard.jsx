@@ -27,9 +27,9 @@ export function CreditCard({ credit }) {
     price: credit.price
       ? credit.price
       : credit.pricePerCredit !== undefined
-      ? `${credit.pricePerCredit.toFixed(4)} ETH`
+      ? `${credit.pricePerCredit.toFixed(4)} HBAR`
       : credit.pricePerHectare !== undefined
-      ? `${credit.pricePerHectare.toFixed(4)} ETH`
+      ? `${credit.pricePerHectare.toFixed(4)} HBAR`
       : "N/A",
     priceChange: 0,
     type: credit.type || "carbon",
@@ -173,7 +173,7 @@ export function CreditCard({ credit }) {
             <div className="text-2xl font-bold text-white">
               {mappedCredit.price}
             </div>
-            <div className="text-slate-400 text-sm">
+            <div className="text-slate-400 texett-sm">
               {mappedCredit.type === "carbon" ? "per ton CO₂" : "per hectare"}
             </div>
           </div>

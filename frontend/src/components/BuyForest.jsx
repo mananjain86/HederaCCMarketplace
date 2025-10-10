@@ -44,7 +44,9 @@ export function BuyForest() {
           listingId: Number(listing.listingId),
           seller: listing.seller,
           currentOwner: listing.currentOwner,
-          price: parseFloat(ethers.formatEther(listing.price)),
+          // keep raw on-chain price (tinybars) for exact payment math and a human display value
+          priceRaw: listing.price, // bigint in tinybars
+          price: parseFloat(ethers.formatUnits(listing.price, 8)), // HBAR human-friendly
           isActive: listing.isActive,
           location: listing.info.location,
           gpsCoordinates: listing.info.gpsCoordinates,
@@ -86,19 +88,20 @@ export function BuyForest() {
       // --- Ethereum transaction ---
       setStatusMessage("Waiting for MetaMask confirmation...");
       const forestContract = new ethers.Contract(FOREST_CONTRACT_ADDRESS, ForestABI, signer);
-      const priceInWei = ethers.parseEther(forest.price.toString());
-      const tx = await forestContract.buyForestArea(forest.listingId, { value: priceInWei });
+      // Use exact on-chain tinybars value (priceRaw) to avoid float rounding issues
+      const totalTinybars = BigInt(forest.priceRaw); // buying one area
+      const tx = await forestContract.buyForestArea(forest.listingId, { value: totalTinybars });
       setTxHash(tx.hash);
-      setStatusMessage("Processing Ethereum transaction...");
+      setStatusMessage("Processing transaction...");
       const receipt = await tx.wait();
-      console.log("✅ Ethereum transaction successful:", receipt.hash);
+      console.log("✅ Hedera transaction successful:", receipt.hash);
 
       // --- Backend Hedera workflow ---
       setStatusMessage("Minting your Hedera NFT deed...");
       const payload = {
         buyerHederaId,
         ethereumTxHash: receipt.hash,
-        buyerEthAddress: signer.address,
+        buyerEthAddress: address,
         location: forest.location,
         areaSize: forest.areaSize,
         price: forest.price,
@@ -169,7 +172,7 @@ export function BuyForest() {
           </div>
           <div className="p-4 bg-slate-700/50 rounded-lg">
             <p className="text-slate-300 text-sm">Price</p>
-            <p>{forest.price} ETH</p>
+            <p className="font-mono text-white">{forest.price} HBAR</p>
           </div>
           <div className="p-4 bg-slate-700/50 rounded-lg">
             <p className="text-slate-300 text-sm">Current Owner</p>
@@ -206,7 +209,7 @@ export function BuyForest() {
           <p className="mt-4 text-sm text-emerald-300">
             Transaction Hash:{" "}
             <a
-              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              href={`https://testnet.hashio.io/api/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="underline"

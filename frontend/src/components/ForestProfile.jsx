@@ -39,7 +39,7 @@ export function ForestProfile() {
           listingId: Number(listing.listingId),
           seller: listing.seller,
           currentOwner: listing.currentOwner,
-          price: ethers.formatEther(listing.price),
+          price: ethers.formatUnits(listing.price,8),
           isActive: listing.isActive,
           location: listing.info.location,
           gpsCoordinates: listing.info.gpsCoordinates,
@@ -101,7 +101,7 @@ export function ForestProfile() {
             { label: "Location", value: forest.location },
             { label: "GPS Coordinates", value: forest.gpsCoordinates },
             { label: "Area Size", value: `${forest.areaSize} ha` },
-            { label: "Price", value: `${forest.price} ETH` },
+            { label: "Price", value: `${forest.price} HBAR` },
             {
               label: "Active Status",
               value: forest.isActive ? "Active" : "Inactive",

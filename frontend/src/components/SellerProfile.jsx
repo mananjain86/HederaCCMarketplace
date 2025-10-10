@@ -63,7 +63,7 @@ export function SellerProfile() {
             return {
               id: details.id.toString(),
               amount: Number(details.amount),
-              pricePerCredit: parseFloat(ethers.formatEther(details.pricePerCredit)),
+              pricePerCredit: parseFloat(ethers.formatUnits(details.pricePerCredit,8)),
               
               // ProjectInfo
               projectName: projectInfo.projectName,
@@ -188,7 +188,7 @@ export function SellerProfile() {
         </div>
         <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <h3 className="text-lg font-semibold text-white mb-4">Average Price</h3>
-          <div className="text-3xl font-bold text-white mb-2">{sellerData.avgPrice} ETH</div>
+          <div className="text-3xl font-bold text-white mb-2">{sellerData.avgPrice} HBAR</div>
           <div className="text-slate-400 text-sm">per ton</div>
         </div>
       </div>
@@ -210,7 +210,7 @@ export function SellerProfile() {
                       <p className="text-sm text-slate-400">{listing.projectRegion}, {listing.projectCountry} (Vintage: {listing.creditVintageYear})</p>
                   </div>
                   <div className="text-right">
-                      <p className="text-xl font-bold text-emerald-400">{listing.pricePerCredit.toFixed(4)} ETH</p>
+                      <p className="text-xl font-bold text-emerald-400">{listing.pricePerCredit.toFixed(4)} HBAR</p>
                       <p className="text-sm text-slate-400">/ ton CO₂</p>
                   </div>
               </div>

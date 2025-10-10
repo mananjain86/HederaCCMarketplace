@@ -46,7 +46,9 @@ export function Buy() {
           id: projectId,
           projectName: details.projectName,
           amount: Number(details.amount),
-          pricePerCredit: parseFloat(ethers.formatEther(details.pricePerCredit)),
+          // keep raw on-chain value for exact math; also provide a human-friendly display price
+          pricePerCreditRaw: details.pricePerCredit, // bigint (tinybars)
+          pricePerCredit: parseFloat(ethers.formatUnits(details.pricePerCredit, 8)),
           isVerified: details.isVerified,
           seller: details.seller,
         });
@@ -82,8 +84,11 @@ export function Buy() {
       
       // --- PHASE 1: ETHEREUM TRANSACTION ---
       const marketplaceContract = new ethers.Contract(MARKETPLACE_ADDRESS, MARKETPLACE_ABI, signer);
-      const totalCost = (listing.pricePerCredit * amountToBuy).toString();
-      const tx = await marketplaceContract.buyCarbonCredits(listing.id, amountToBuy, { value: ethers.parseEther(totalCost) });
+      // Compute exact tinybars total using on-chain raw value (pricePerCreditRaw is tinybars)
+      const qty = BigInt(amountToBuy);
+      const pricePerCreditRaw = BigInt(listing.pricePerCreditRaw);
+      const totalCostTinybars = pricePerCreditRaw * qty; // bigint
+      const tx = await marketplaceContract.buyCarbonCredits(listing.id, amountToBuy, { value: totalCostTinybars });
 
       setStatusMessage("Processing Ethereum transaction...");
       const receipt = await tx.wait();
@@ -149,7 +154,7 @@ export function Buy() {
         <div className="space-y-4 mb-6">
           <div className="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
             <span className="text-slate-300">Price per Credit</span>
-            <span className="font-mono text-white">{listing.pricePerCredit.toFixed(4)} ETH</span>
+            <span className="font-mono text-white">{listing.pricePerCredit.toFixed(4)} HBAR</span>
           </div>
           <div className="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
             <span className="text-slate-300">Available Credits</span>
@@ -176,7 +181,7 @@ export function Buy() {
           <div className="border-t border-slate-700 pt-4">
             <div className="flex justify-between items-center mb-4">
               <span className="text-slate-300 text-lg">Total Cost</span>
-              <span className="text-2xl font-bold text-emerald-400">{totalCost.toFixed(4)} ETH</span>
+              <span className="text-2xl font-bold text-emerald-400">{totalCost.toFixed(4)} HBAR</span>
             </div>
             <button
               onClick={handlePurchase}
