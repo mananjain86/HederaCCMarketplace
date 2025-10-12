@@ -18,11 +18,15 @@ export function Analytics() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
+        console.log("🚀 Starting analytics data fetch...");
+        
         const provider = new ethers.JsonRpcProvider(RPC_URL);
         const marketplace = new ethers.Contract(MARKETPLACE_ADDRESS, MARKETPLACE_ABI, provider);
 
+        console.log("📡 Fetching active listings from smart contract...");
         // 1️⃣ Fetch all active listings
         const activeListingIds = await marketplace.getActiveCarbonCreditListings();
+        console.log("📋 Found active listing IDs:", activeListingIds);
 
         let totalVolumeHBAR = 0;
         let totalCredits = 0;
@@ -30,12 +34,25 @@ export function Analytics() {
         let listingsData = [];
 
         for (const id of activeListingIds) {
+          console.log(`🔍 Fetching details for listing ID: ${id}`);
           const listing = await marketplace.getListingDetails(id);
-          if (!listing.isActive) continue;
+          
+          if (!listing.isActive) {
+            console.log(`⏭️ Skipping inactive listing ID: ${id}`);
+            continue;
+          }
 
           const amount = Number(listing.amount);
-          const pricePerCreditHBAR = Number(ethers.formatEther(listing.pricePerCredit));
+          const pricePerCreditHBAR = Number(ethers.formatUnits(listing.pricePerCredit,8));
           const totalListingValue = amount * pricePerCreditHBAR;
+
+          console.log(`📊 Listing ${id}:`, {
+            projectName: listing.info.projectName,
+            projectType: listing.info.projectType,
+            amount: amount,
+            pricePerCreditHBAR: pricePerCreditHBAR,
+            totalValueHBAR: totalListingValue
+          });
 
           totalVolumeHBAR += totalListingValue;
           totalCredits += amount;
@@ -47,14 +64,24 @@ export function Analytics() {
             type: listing.info.projectType || "General",
             priceHBAR: pricePerCreditHBAR,
             amount,
+            totalValueHBAR: totalListingValue,
           });
         }
 
+        console.log("📈 Total listings data:", {
+          totalListings: listingsData.length,
+          totalVolumeHBAR: totalVolumeHBAR,
+          totalCredits: totalCredits,
+          uniqueSellers: uniqueSellers.size
+        });
+
         // 2️⃣ Get real-time HBAR → USD rate from CoinGecko
+        console.log("💰 Fetching HBAR to USD conversion rate from CoinGecko...");
         const cg = await axios.get(
           "https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd"
         );
         const hbarToUSD = cg.data["hedera-hashgraph"].usd;
+        console.log("💱 HBAR to USD rate:", hbarToUSD);
 
         // 3️⃣ Compute analytics
         const avgPriceUSD =
@@ -66,18 +93,31 @@ export function Analytics() {
         const activeBuyers = uniqueSellers.size;
         const co2OffsetTons = Math.floor(totalCredits * 1.2);
 
-        // 4️⃣ Rank top 4 projects by price per credit
+        console.log("🧮 Calculated analytics:", {
+          avgPriceUSD: avgPriceUSD,
+          totalVolumeUSD: totalVolumeUSD,
+          activeBuyers: activeBuyers,
+          co2OffsetTons: co2OffsetTons
+        });
+
+        // 4️⃣ Rank top 4 projects by price per credit (highest first)
         const topFour = listingsData
-          .sort((a, b) => a.priceHBAR - b.priceHBAR)
+          .sort((a, b) => b.priceHBAR - a.priceHBAR) // Sort by highest price first
           .slice(0, 4)
-          .map((l) => ({
-            name: l.name,
-            type: l.type,
-            price: `$${(l.priceHBAR * hbarToUSD).toFixed(2)}`,
-            change: `+${(Math.random() * 10).toFixed(1)}%`, // simulate 24h change
-            volume: (l.amount * Math.random() * 10).toFixed(0),
-            positive: true,
-          }));
+          .map((l) => {
+            const priceUSD = l.priceHBAR * hbarToUSD;
+            const volumeUSD = l.totalValueHBAR * hbarToUSD;
+            return {
+              name: l.name,
+              type: l.type,
+              price: `$${priceUSD.toFixed(2)}`,
+              change: `+${(Math.random() * 10).toFixed(1)}%`, // simulate 24h change
+              volume: Math.floor(volumeUSD).toLocaleString(),
+              positive: true,
+            };
+          });
+
+        console.log("🏆 Top performing credits:", topFour);
 
         setTopCredits(topFour);
         setAnalytics({
@@ -86,8 +126,15 @@ export function Analytics() {
           volume24h: totalVolumeUSD,
           co2Offset: co2OffsetTons,
         });
+
+        // Show message if no active listings
+        if (listingsData.length === 0) {
+          console.log("⚠️ No active carbon credit listings found");
+        }
+
+        console.log("✅ Analytics data successfully updated!");
       } catch (err) {
-        console.error("Analytics fetch failed:", err);
+        console.error("❌ Analytics fetch failed:", err);
         setError("Failed to fetch live analytics data.");
       } finally {
         setLoading(false);
@@ -142,7 +189,12 @@ export function Analytics() {
             <span className="text-purple-400 text-sm font-medium">+23.1%</span>
           </div>
           <div className="text-2xl font-bold text-white">
-            ${(analytics.volume24h / 1000000).toFixed(1)}M
+            ${analytics.volume24h >= 1000000 
+              ? (analytics.volume24h / 1000000).toFixed(1) + 'M'
+              : analytics.volume24h >= 1000 
+                ? (analytics.volume24h / 1000).toFixed(1) + 'K'
+                : analytics.volume24h.toFixed(0)
+            }
           </div>
           <div className="text-purple-300 text-sm">Volume (24h)</div>
         </div>
@@ -232,34 +284,43 @@ export function Analytics() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left py-3 px-4 text-slate-300">Project</th>
-                <th className="text-left py-3 px-4 text-slate-300">Type</th>
-                <th className="text-left py-3 px-4 text-slate-300">Price</th>
-                <th className="text-left py-3 px-4 text-slate-300">24h Change</th>
-                <th className="text-left py-3 px-4 text-slate-300">Volume</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topCredits.map((credit, i) => (
-                <tr key={i} className="border-b border-slate-700/50">
-                  <td className="py-3 px-4 text-white font-medium">{credit.name}</td>
-                  <td className="py-3 px-4 text-slate-300">{credit.type}</td>
-                  <td className="py-3 px-4 text-white font-medium">{credit.price}</td>
-                  <td
-                    className={`py-3 px-4 font-medium ${
-                      credit.positive ? "text-emerald-400" : "text-red-400"
-                    }`}
-                  >
-                    {credit.change}
-                  </td>
-                  <td className="py-3 px-4 text-slate-300">{credit.volume}</td>
+          {topCredits.length > 0 ? (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th className="text-left py-3 px-4 text-slate-300">Project</th>
+                  <th className="text-left py-3 px-4 text-slate-300">Type</th>
+                  <th className="text-left py-3 px-4 text-slate-300">Price</th>
+                  <th className="text-left py-3 px-4 text-slate-300">24h Change</th>
+                  <th className="text-left py-3 px-4 text-slate-300">Volume</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {topCredits.map((credit, i) => (
+                  <tr key={i} className="border-b border-slate-700/50">
+                    <td className="py-3 px-4 text-white font-medium">{credit.name}</td>
+                    <td className="py-3 px-4 text-slate-300">{credit.type}</td>
+                    <td className="py-3 px-4 text-white font-medium">{credit.price}</td>
+                    <td
+                      className={`py-3 px-4 font-medium ${
+                        credit.positive ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      {credit.change}
+                    </td>
+                    <td className="py-3 px-4 text-slate-300">{credit.volume}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-slate-400 text-lg mb-2">No Active Carbon Credit Listings</div>
+              <div className="text-slate-500 text-sm">
+                Register carbon credit projects to see them appear in the analytics dashboard.
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
