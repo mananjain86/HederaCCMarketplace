@@ -99,7 +99,7 @@ const CompanyVerificationManager = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto mt-10 p-8 rounded-xl bg-slate-800/70 backdrop-blur-md border border-slate-700/50">
+        <div className="max-w-4xl mx-auto mt-10 p-8 rounded-xl bg-slate-800/70 backdrop-blur-md border border-slate-700/50 mb-10">
             <h3 className="text-3xl font-bold text-white mb-8 text-center">Company Verification</h3>
 
             {loading && pendingCompanies.length === 0 && (

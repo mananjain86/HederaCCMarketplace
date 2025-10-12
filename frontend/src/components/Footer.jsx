@@ -3,7 +3,7 @@ import { Leaf, Github, Twitter, Linkedin } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="bg-slate-900/90 backdrop-blur-md border-t border-slate-700/50 mt-16">
+    <footer className="bg-slate-900/90 backdrop-blur-md border-t border-slate-700/50 mt-0 mb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="col-span-1">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ethers } from "ethers";
-import { TreePine } from "lucide-react";
+import { TreePine, ArrowLeft } from "lucide-react";
 
 import ForestABI from "../abi/ForestTokenMarketplace.json";
 
@@ -15,6 +15,7 @@ export function ForestProfile() {
   const [forest, setForest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchForestDetails() {
@@ -87,6 +88,13 @@ export function ForestProfile() {
 
       {/* Content container */}
       <div className="relative z-10 max-w-5xl mx-auto">
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6 relative z-10"
+      >
+        <ArrowLeft className="h-5 w-5" />
+        <span>Back to Marketplace</span>
+      </button>
         <div className="flex items-center mb-8">
           <TreePine className="h-12 w-12 text-emerald-400 mr-3" />
           <h1 className="text-3xl font-bold">

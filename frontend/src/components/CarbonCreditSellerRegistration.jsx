@@ -6,6 +6,8 @@ import {
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import abi from "../abi/CarbonCreditMarketplace.json";
+import { useToast } from '../hooks/useToast';
+import { useNavigate } from 'react-router-dom';
 
 export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,12 +21,13 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
     authorizationLetter: '', parisAgreementCompliant: false, projectDocumentation: '', isVerified: false,
     creditVintage: '', serialNumbers: '', amountToSell: '', pricePerCredit: ''
   });
+  const { toast } = useToast();
 
   const steps = [
     { id: 1, title: 'Project Information', icon: TreePine },
     { id: 2, title: 'Documentation & Credits', icon: Award }
   ];
-
+  const navigate = useNavigate();
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (fieldErrors[field]) setFieldErrors(prev => ({ ...prev, [field]: '' }));
@@ -72,18 +75,16 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
     }
   };
 
-  const handleSubmit = async () => {
-    const validation = validateStep(currentStep);
-    if (!validation.isValid) {
-      setError("Please correct all errors before submitting.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError("");
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     try {
-      if (!window.ethereum) throw new Error("MetaMask not found");
+      setIsSubmitting(true);
+
+      if (!window.ethereum) {
+        toast.error("Please install MetaMask!");
+        return;
+      }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -133,12 +134,13 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
       await tx.wait();
       console.log("Transaction confirmed.");
 
+      toast.success("🎉 Carbon credit listing created successfully!");
       onRegistrationComplete?.({
         message: "Carbon credits listed successfully!",
         creditData: formData,
         transactionHash: tx.hash,
       });
-
+      navigate("/");
     } catch (err) {
       console.error("Registration error:", err);
       if (err.code === 4001) {

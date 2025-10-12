@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -19,7 +19,9 @@ import {ForestProfile} from './components/ForestProfile';
 import {BuyForest} from './components/BuyForest'; 
 import {CarbonCreditsManager} from './components/CarbonCreditsManager';
 import {CompanyVerificationManager} from './components/CompanyVerificationManager';
- 
+import { ToastProvider } from './hooks/useToast';
+import { ToastContainer } from './components/Toast';
+
 function App() {
   const [analytics, setAnalytics] = useState({
     totalCredits: 500000,
@@ -125,39 +127,41 @@ function App() {
   console.log("App loaded successfully");
 
   return (
-    
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800">
+    <ToastProvider>
+      <div className="min-h-screen bg-slate-900 text-white" style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #0f172a 100%)'
+      }}>
         <Navbar />
-
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Hero analytics={analytics} />
-                <Marketplace carbonCredits={carbonCredits} analytics={analytics} />
-              </>
-            }
-          />
-          <Route path="/analytics" element={<Analytics analytics={analytics} />} />
-          <Route path="/register" element={<CompanyRegistration />} />
-          <Route path="/register-seller" element={<CarbonCreditSellerRegistration />} />
-          <Route path="/registration-success" element={<RegistrationSuccess />} />
-          <Route path="/profile/:companyId" element={<CompanyProfile companies={companies} />} />
-          <Route path="/company/:sellerAddress" element={<SellerProfile />} />
-          <Route path="/purchase/:projectId" element={<Buy />} />
-          <Route path="/forest-seller-registration" element={<ForestSellerRegistration />} />
-          <Route path="/forest/:id" element={<ForestProfile />} />
-          <Route path="/buy-forest/:id" element={<BuyForest />} />
-          <Route path="/success" element={<SuccessMessage />} />
-          <Route path="/verify-company" element={<CompanyVerificationManager />} />
-          <Route path="/manage-credits" element={<CarbonCreditsManager />} />
-        </Routes>
-
+        <main className="flex-1">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <Hero analytics={analytics} />
+                  <Marketplace carbonCredits={carbonCredits} analytics={analytics} />
+                </>
+              }
+            />
+            <Route path="/analytics" element={<Analytics analytics={analytics} />} />
+            <Route path="/register" element={<CompanyRegistration />} />
+            <Route path="/register-seller" element={<CarbonCreditSellerRegistration />} />
+            <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/profile/:companyId" element={<CompanyProfile companies={companies} />} />
+            <Route path="/company/:sellerAddress" element={<SellerProfile />} />
+            <Route path="/purchase/:projectId" element={<Buy />} />
+            <Route path="/forest-seller-registration" element={<ForestSellerRegistration />} />
+            <Route path="/forest/:id" element={<ForestProfile />} />
+            <Route path="/buy-forest/:id" element={<BuyForest />} />
+            <Route path="/success" element={<SuccessMessage />} />
+            <Route path="/verify-company" element={<CompanyVerificationManager />} />
+            <Route path="/manage-credits" element={<CarbonCreditsManager />} />
+          </Routes>
+        </main>
         <Footer />
-        <APITestPanel />
+        <ToastContainer />
       </div>
-    
+    </ToastProvider>
   );
 }
 

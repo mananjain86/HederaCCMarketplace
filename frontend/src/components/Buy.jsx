@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ethers } from "ethers";
 import { ArrowLeft, Shield, ShoppingCart } from "lucide-react";
+import { useToast } from '../hooks/useToast';
 
 // --- Load ABIs from local files ---
 import MARKETPLACE_ABI from "../abi/CarbonCreditMarketplace.json";
@@ -34,6 +35,7 @@ export function Buy() {
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     // MODIFIED: This now ONLY fetches public listing data and does NOT require a wallet connection.
@@ -70,92 +72,88 @@ export function Buy() {
     fetchListingDetails();
   }, [projectId]);
 
-const handlePurchase = async () => {
-  if (!listing || amountToBuy <= 0) return alert("Invalid amount.");
+  const handlePurchase = async () => {
+    if (!listing || amountToBuy <= 0) return alert("Invalid amount.");
 
-  setIsProcessing(true);
-  try {
-    setStatusMessage("Waiting for MetaMask confirmation...");
-    if (typeof window.ethereum === "undefined")
-      throw new Error("MetaMask is not installed.");
+    setIsProcessing(true);
+    try {
+      setStatusMessage("Waiting for MetaMask confirmation...");
+      if (typeof window.ethereum === "undefined")
+        throw new Error("MetaMask is not installed.");
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const userAddress = await signer.getAddress();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
 
-    // --- Verify company registration ---
-    const companyContract = new ethers.Contract(
-      COMPANY_ADDRESS,
-      COMPANY_ABI,
-      provider
-    );
-    const companyDetails = await companyContract.getCompanyDetails(userAddress);
-
-    if (!companyDetails.isRegistered) {
-      throw new Error(
-        "Your company is not registered. Please register to make a purchase."
+      // --- Verify company registration ---
+      const companyContract = new ethers.Contract(
+        COMPANY_ADDRESS,
+        COMPANY_ABI,
+        provider
       );
-    }
+      const companyDetails = await companyContract.getCompanyDetails(userAddress);
 
-    const buyerHederaId = companyDetails.hederaAccountId;
+      if (!companyDetails.isRegistered) {
+        throw new Error(
+          "Your company is not registered. Please register to make a purchase."
+        );
+      }
 
-    // --- Phase 1: Hedera (EVM) transaction ---
-    const marketplaceContract = new ethers.Contract(
-      MARKETPLACE_ADDRESS,
-      MARKETPLACE_ABI,
-      signer
-    );
+      const buyerHederaId = companyDetails.hederaAccountId;
 
-    // ⚠️ FIX: Handle Hedera precision (tinybars → HBAR 18-decimals)
-    // On-chain price stored as tinybars (1 HBAR = 10^8 tinybars)
-    // EVM expects 18-decimals (1 HBAR = 10^18 "wei")
-    const qty = BigInt(amountToBuy);
-    const pricePerCreditTinybars = BigInt(listing.pricePerCreditRaw);
-    const totalCostTinybars = pricePerCreditTinybars * qty;
-
-    // Convert tinybars → EVM-compatible value (multiply by 10^10)
-    const totalCostWei = totalCostTinybars * 10_000_000_000n;
-    console.log("💰 totalCostWei (to send HBAR):", ethers.formatEther(totalCostWei));
-    console.log("💰 totalCostWei (to send):", totalCostWei.toString());
-
-    const tx = await marketplaceContract.buyCarbonCredits(listing.id, amountToBuy, {
-      value: totalCostWei,
-    });
-
-    setStatusMessage("Processing Hedera transaction...");
-    const receipt = await tx.wait();
-    console.log("✅ Transaction confirmed:", receipt.hash);
-
-    // --- Phase 2: Mint NFT receipt on Hedera ---
-    setStatusMessage("Minting your Hedera NFT receipt...");
-    const payload = {
-      buyerHederaId,
-      amount: amountToBuy,
-      ethereumTxHash: receipt.hash,
-      buyerEthAddress: userAddress,
-      projectName: listing.projectName,
-    };
-
-    const response = await axios.post(`${BACKEND_URL}/api/tokenize-purchase`, payload);
-
-    if (response.data.success) {
-      alert(
-        `✅ Purchase complete!\nNFT receipt minted on Hedera: Token ID ${response.data.tokenId}`
+      // --- Phase 1: Hedera (EVM) transaction ---
+      const marketplaceContract = new ethers.Contract(
+        MARKETPLACE_ADDRESS,
+        MARKETPLACE_ABI,
+        signer
       );
-      navigate(`/profile`);
-    } else {
-      throw new Error(response.data.error || "Backend tokenization failed.");
+
+      // ⚠️ FIX: Handle Hedera precision (tinybars → HBAR 18-decimals)
+      // On-chain price stored as tinybars (1 HBAR = 10^8 tinybars)
+      // EVM expects 18-decimals (1 HBAR = 10^18 "wei")
+      const qty = BigInt(amountToBuy);
+      const pricePerCreditTinybars = BigInt(listing.pricePerCreditRaw);
+      const totalCostTinybars = pricePerCreditTinybars * qty;
+
+      // Convert tinybars → EVM-compatible value (multiply by 10^10)
+      const totalCostWei = totalCostTinybars * 10_000_000_000n;
+      console.log("💰 totalCostWei (to send HBAR):", ethers.formatEther(totalCostWei));
+      console.log("💰 totalCostWei (to send):", totalCostWei.toString());
+
+      const tx = await marketplaceContract.buyCarbonCredits(listing.id, amountToBuy, {
+        value: totalCostWei,
+      });
+
+      setStatusMessage("Processing Hedera transaction...");
+      const receipt = await tx.wait();
+      console.log("✅ Transaction confirmed:", receipt.hash);
+
+      // --- Phase 2: Mint NFT receipt on Hedera ---
+      setStatusMessage("Minting your Hedera NFT receipt...");
+      const payload = {
+        buyerHederaId,
+        amount: amountToBuy,
+        ethereumTxHash: receipt.hash,
+        buyerEthAddress: userAddress,
+        projectName: listing.projectName,
+      };
+
+      const response = await axios.post(`${BACKEND_URL}/api/tokenize-purchase`, payload);
+
+      if (response.data.success) {
+        toast.success(`✅ Purchase complete! NFT receipt minted on Hedera: Token ID ${response.data.tokenId}`);
+        navigate(`/profile`);
+      } else {
+        throw new Error(response.data.error || "Backend tokenization failed.");
+      }
+    } catch (err) {
+      console.error("❌ Purchase failed:", err);
+      toast.error(`Purchase failed: ${err.reason || err.message}`);
+    } finally {
+      setIsProcessing(false);
+      setStatusMessage("");
     }
-  } catch (err) {
-    console.error("❌ Purchase failed:", err);
-    alert(`Purchase failed: ${err.reason || err.message}`);
-  } finally {
-    setIsProcessing(false);
-    setStatusMessage("");
-  }
-};
-
-
+  };
 
   if (loading)
     return (

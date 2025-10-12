@@ -137,9 +137,18 @@ export function SellerProfile() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Back Button */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-40 min-h-screen"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1632834784573-f212a0b4586b?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+          zIndex: 0,
+        }}
+      ></div>
+
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6"
+        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6 relative z-10"
       >
         <ArrowLeft className="h-5 w-5" />
         <span>Back to Marketplace</span>

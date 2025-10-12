@@ -68,7 +68,7 @@ const CarbonCreditsManager = () => {
     };
 
     return (
-        <div className="p-10 rounded-xl bg-slate-800/70 backdrop-blur-sm shadow-xl border border-yellow-700 max-w-2xl mx-auto mt-10"> {/* Increased padding and max-width */}
+        <div className="p-10 rounded-xl bg-slate-800/70 backdrop-blur-sm shadow-xl border border-yellow-700 max-w-2xl mx-auto mt-10 mb-10"> {/* Increased padding and max-width */}
             <h3 className="text-3xl font-bold text-yellow-300 mb-10 text-center"> {/* Increased text size and margin */}
                 Approve Carbon Credits
             </h3>

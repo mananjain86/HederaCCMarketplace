@@ -5,6 +5,7 @@ import { TreePine, CheckCircle } from "lucide-react";
 import axios from "axios";
 import ForestABI from "../abi/ForestTokenMarketplace.json";
 import CompanyABI from "../abi/HandleCompany.json";
+import { useToast } from '../hooks/useToast';
 
 // --- Constants ---
 const FOREST_CONTRACT_ADDRESS =
@@ -27,6 +28,7 @@ export function BuyForest() {
   const [statusMessage, setStatusMessage] = useState("");
   const [txHash, setTxHash] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const { toast } = useToast();
 
   // Fetch forest listing details
   useEffect(() => {
@@ -66,81 +68,85 @@ export function BuyForest() {
   }, [id]);
 
   // Buy forest token
-const handleBuy = async () => {
-  if (!window.ethereum) return alert("MetaMask is required!");
+  const handleBuy = async () => {
+    try {
+      setBuying(true);
+      setStatusMessage("Connecting to wallet...");
 
-  try {
-    setBuying(true);
+      if (!window.ethereum) {
+        toast.error("MetaMask not found! Please install MetaMask.");
+        return;
+      }
 
-    // --- 1️⃣ Fetch Company Details ---
-    setStatusMessage("Fetching your company details...");
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const companyContract = new ethers.Contract(COMPANY_ADDRESS, CompanyABI, signer);
-    const address = await signer.getAddress();
-    const companyDetails = await companyContract.getCompanyDetails(address);
+      // --- 1️⃣ Fetch Company Details ---
+      setStatusMessage("Fetching your company details...");
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const companyContract = new ethers.Contract(COMPANY_ADDRESS, CompanyABI, signer);
+      const address = await signer.getAddress();
+      const companyDetails = await companyContract.getCompanyDetails(address);
 
-    if (!companyDetails.isRegistered) {
-      throw new Error("Your company is not registered. Please register to make a purchase.");
+      if (!companyDetails.isRegistered) {
+        throw new Error("Your company is not registered. Please register to make a purchase.");
+      }
+
+      const buyerHederaId = companyDetails.hederaAccountId;
+
+      // --- 2️⃣ Confirm MetaMask Transaction ---
+      setStatusMessage("Waiting for MetaMask confirmation...");
+      const forestContract = new ethers.Contract(FOREST_CONTRACT_ADDRESS, ForestABI, signer);
+
+      // ⚠️ Fix: Convert price (tinybars → 18-decimal HBAR “wei”)
+      // 1 tinybar = 10^10 wei equivalent on EVM
+      const totalTinybars = BigInt(forest.priceRaw);
+      const totalCostWei = totalTinybars * 10_000_000_000n; // multiply by 1e10
+
+      console.log("💰 totalCostWei (in wei):", totalCostWei.toString());
+      console.log("💰 totalCost in HBAR:", ethers.formatEther(totalCostWei));
+
+      // --- 3️⃣ Execute Transaction ---
+      const tx = await forestContract.buyForestArea(forest.listingId, { value: totalCostWei });
+      setTxHash(tx.hash);
+      setStatusMessage("Processing transaction...");
+      const receipt = await tx.wait();
+      console.log("✅ Hedera transaction successful:", receipt.hash);
+
+      // --- 4️⃣ Backend NFT Tokenization ---
+      setStatusMessage("Minting your Hedera NFT deed...");
+      const payload = {
+        buyerHederaId,
+        ethereumTxHash: receipt.hash,
+        buyerEthAddress: address,
+        location: forest.location,
+        areaSize: forest.areaSize,
+        price: forest.price,
+        ipfsDeedHash: forest.ipfsDeedHash,
+      };
+
+      const response = await axios.post(`${BACKEND_URL}/api/tokenize-forest-purchase`, payload);
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Backend tokenization failed.");
+      }
+
+      console.log("✅ Hedera tokenization successful:", response.data);
+      setStatusMessage("Purchase complete!");
+      setShowModal(true);
+
+      // Auto-close modal → navigate to profile
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/profile");
+      }, 5000);
+
+    } catch (err) {
+      console.error("❌ Purchase failed:", err);
+      toast.error("❌ Purchase failed: " + err.message);
+    } finally {
+      setBuying(false);
+      setStatusMessage("");
     }
-
-    const buyerHederaId = companyDetails.hederaAccountId;
-
-    // --- 2️⃣ Confirm MetaMask Transaction ---
-    setStatusMessage("Waiting for MetaMask confirmation...");
-    const forestContract = new ethers.Contract(FOREST_CONTRACT_ADDRESS, ForestABI, signer);
-
-    // ⚠️ Fix: Convert price (tinybars → 18-decimal HBAR “wei”)
-    // 1 tinybar = 10^10 wei equivalent on EVM
-    const totalTinybars = BigInt(forest.priceRaw);
-    const totalCostWei = totalTinybars * 10_000_000_000n; // multiply by 1e10
-
-    console.log("💰 totalCostWei (in wei):", totalCostWei.toString());
-    console.log("💰 totalCost in HBAR:", ethers.formatEther(totalCostWei));
-
-    // --- 3️⃣ Execute Transaction ---
-    const tx = await forestContract.buyForestArea(forest.listingId, { value: totalCostWei });
-    setTxHash(tx.hash);
-    setStatusMessage("Processing transaction...");
-    const receipt = await tx.wait();
-    console.log("✅ Hedera transaction successful:", receipt.hash);
-
-    // --- 4️⃣ Backend NFT Tokenization ---
-    setStatusMessage("Minting your Hedera NFT deed...");
-    const payload = {
-      buyerHederaId,
-      ethereumTxHash: receipt.hash,
-      buyerEthAddress: address,
-      location: forest.location,
-      areaSize: forest.areaSize,
-      price: forest.price,
-      ipfsDeedHash: forest.ipfsDeedHash,
-    };
-
-    const response = await axios.post(`${BACKEND_URL}/api/tokenize-forest-purchase`, payload);
-
-    if (!response.data.success) {
-      throw new Error(response.data.error || "Backend tokenization failed.");
-    }
-
-    console.log("✅ Hedera tokenization successful:", response.data);
-    setStatusMessage("Purchase complete!");
-    setShowModal(true);
-
-    // Auto-close modal → navigate to profile
-    setTimeout(() => {
-      setShowModal(false);
-      navigate("/profile");
-    }, 5000);
-
-  } catch (err) {
-    console.error("❌ Purchase failed:", err);
-    alert(`Transaction failed: ${err.reason || err.message}`);
-  } finally {
-    setBuying(false);
-    setStatusMessage("");
-  }
-};
+  };
 
 
   if (loading)

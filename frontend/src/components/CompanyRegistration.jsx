@@ -16,6 +16,8 @@ import { ErrorMessage } from './ErrorMessage';
 import { validateStep1, validateStep2 } from '../utils/validation';
 // ✅ ethers v6
 import { ethers } from 'ethers';
+import { useToast } from '../hooks/useToast';
+import { useNavigate } from 'react-router-dom';
 
 const COMPANY_ABI = abi;
 const COMPANY_ADDRESS = import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS || "0x6136a57179ddb0FeF580724263BDc73c96B31863";
@@ -38,7 +40,8 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     emissionsCalculationMethod: '',
     emissionsVerified: false,
   });
-
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const steps = [
     { id: 1, title: 'General Company Information', icon: Building2 },
     { id: 2, title: 'Carbon Emissions & Climate Strategy', icon: Leaf }
@@ -136,6 +139,8 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
     const receipt = await tx.wait();
     console.log("Transaction confirmed:", receipt);
 
+    toast.success("🎉 Company registered successfully!");
+
     onRegistrationComplete?.({
       message: "Company registration submitted successfully!",
       companyData: formData,
@@ -144,6 +149,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
       blockNumber: receipt.blockNumber,
       gasUsed: receipt.gasUsed.toString(),
     });
+    navigate("/profile");
   } catch (err) {
     console.error("Registration error:", err);
     if (err.code === 4001) {
