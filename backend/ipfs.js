@@ -14,38 +14,37 @@ const uploadImageToIPFS = async (req, res) => {
   try {
     const imageBlob = new Blob([req.file.buffer]);
     const imageFile = new File([imageBlob], req.file.originalname, { type: req.file.mimetype });
-    let imageUpload = pinata.upload.public.file(imageFile);
+    let imageUpload = await pinata.upload.public.file(imageFile);
     if (req.body.group) imageUpload = imageUpload.group(req.body.group);
     if (req.body.imageName) imageUpload = imageUpload.name(req.body.imageName);
     if (req.body.keyvalues) imageUpload = imageUpload.keyvalues(req.body.keyvalues);
+
     const imageResult = await imageUpload;
+
     res.json({
-    success: true,
+      success: true,
       imageCid: imageResult.cid,
       imageUrl: `${process.env.GATEWAY_URL}/ipfs/${imageResult.cid}`
     });
-} catch (error) {
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Utility function to upload metadata JSON to IPFS (no file, just data)
+// Utility function to upload metadata JSON to IPFS
 async function uploadMetadataToIPFS(data) {
-  // Sanitize and validate input
   if (typeof data.name === 'string' && /<|>|script/i.test(data.name)) {
     throw new Error('Invalid characters in name.');
   }
   if (typeof data.description === 'string' && /<|>|script/i.test(data.description)) {
     throw new Error('Invalid characters in description.');
   }
-  // Limit metadata size
   if (JSON.stringify(data).length > 10 * 1024) {
     throw new Error('Metadata too large.');
   }
+
   let metadataUpload = pinata.upload.public.json(data);
-  if (data.name) {
-    metadataUpload = metadataUpload.name(data.name + '.json');
-  }
+  if (data.name) metadataUpload = metadataUpload.name(`${data.name}.json`);
   const metadataResult = await metadataUpload;
 
   return {
@@ -60,123 +59,89 @@ async function uploadMetadataToIPFS(data) {
 const getDataByCid = async (req, res) => {
   try {
     const { cid } = req.params;
-    return `${process.env.GATEWAY_URL}/ipfs/${cid}`;
+    const url = `${process.env.GATEWAY_URL}/ipfs/${cid}`;
+    res.json({ success: true, url });
   } catch (error) {
     res.status(404).json({ success: false, message: 'NFT not found' });
   }
 };
 
 // Get NFT Metadata by name
-const listDataByName = async (req,res) => {
-  try{
-    const {name} = req.query;
+const listDataByName = async (req, res) => {
+  try {
+    const { name } = req.query;
     const fileResult = await pinata.files.public.list().name(name);
     const fileArray = Array.isArray(fileResult.files) ? fileResult.files : [];
-    const nfts = fileArray.map(file => {
-      const cid = file.cid;
-      const id = file.id;
-      if (!cid || !id) return null;
-      return { url: `https://${process.env.GATEWAY_URL}/ipfs/${cid}`, id, cid };
-    }).filter(Boolean);
+    const nfts = fileArray
+      .map(file => {
+        const { cid, id } = file;
+        if (!cid || !id) return null;
+        return { url: `${process.env.GATEWAY_URL}/ipfs/${cid}`, id, cid };
+      })
+      .filter(Boolean);
     res.json({ success: true, nfts });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
-    }
-}
+  }
+};
 
-// Generate forest area NFT metadata and upload to IPFS
+// Generate NFT metadata (forest or carbon)
 async function createNFTMetadata(type, data) {
   try {
+    const base = {
+      type: "image/png",
+      format: "HIP412@1.0.0"
+    };
+
     let metadata;
-    if(type == "forest") {
+
+    if (type === "forest") {
       metadata = {
+        ...base,
         name: `Forest Area #${data.areaId}`,
-        description: `Certificate of forest area ownership in ${data.location}. This NFT represents ownership rights to ${data.area} of forest land.`,
-        attributes: [
-          {
-            trait_type: "Area ID",
-            value: data.areaId
-          },
-          {
-            trait_type: "Location",
-            value: data.location
-          },
-          {
-            trait_type: "Area Size",
-            value: data.area
-          },
-          {
-            trait_type: "Purchase Price",
-            display_type: "number",
-            value: data.totalPrice
-          },
-          {
-            trait_type: "Owner",
-            value: data.buyer
-          },
-          {
-            trait_type: "Asset Type",
-            value: "Forest Area Certificate"
-          },
-          {
-            trait_type: "Sustainability Rating",
-            value: "A+"
-          }
-        ],
-        type: "nft",
-        category: "forest"
+        creator: "Carbon Chain Inc.",
+        description: `Certificate of ownership for ${data.area} hectares of forest land in ${data.location}.`,
+        image: "ipfs://bafybeibkvvab3fnqmbhgoeilxbkszyvjehu6wa55d7b2ymifpbdp73zhje",
+        properties: {
+          area_id: data.areaId,
+          location: data.location,
+          area_size: data.area,
+          purchase_price_hbar: data.totalPrice,
+          owner: data.buyer,
+          asset_type: "Forest Area Certificate",
+          sustainability_rating: "A+"
+        }
       };
     } else {
       metadata = {
-        name: `Carbon Credit #${0}`,
-        description: `Tradable carbon credit for offsetting emissions. Represents verified reduction of CO2 equivalent in ${data.location}.`,
-        attributes: [
-          {
-            trait_type: "Credit ID",
-            value: data.id
-          },
-          {
-            trait_type: "CO2 Offset Amount (tons)",
-            display_type: "number",
-            value: data.amount
-          },
-          {
-            trait_type: "Purchase Price",
-            display_type: "number",
-            value: data.totalPrice
-          },
-          {
-            trait_type: "Owner",
-            value: data.buyer
-          },
-          {
-            trait_type: "Asset Type",
-            value: "Carbon Credit"
-          },
-          {
-            trait_type: "Certification Standard",
-            value: "Verified Carbon Standard (VCS)"
-          },
-          {
-            trait_type: "Vintage Year",
-            value: new Date().getFullYear()
-          }
-        ],
-        type: "nft",
-        category: "carbon-credit"
+        ...base,
+        name: `Carbon Credit #${data.id}`,
+        creator: "Carbon Chain Inc.",
+        description: `Tradable carbon credit representing ${data.amount} tons of CO₂ offset.`,
+        image: "ipfs://bafybeigyi6bpq2httfil2jbrgolqcnecd5i7t3vyqjq3bqj4tsethyuay4",
+        properties: {
+          credit_id: data.id,
+          co2_offset_tons: data.amount,
+          purchase_price_hbar: data.totalPrice,
+          owner: data.buyer,
+          asset_type: "Carbon Credit",
+          certification_standard: "Verified Carbon Standard (VCS)",
+          vintage_year: new Date().getFullYear()
+        }
       };
     }
 
-    // Upload metadata to IPFS
     const result = await uploadMetadataToIPFS(metadata);
     return result;
   } catch (error) {
-    throw new Error(`Failed to create forest area NFT metadata: ${error.message}`);
+    throw new Error(`Failed to create NFT metadata: ${error.message}`);
   }
 }
 
+
 export {
   uploadImageToIPFS,
+  uploadMetadataToIPFS,
   getDataByCid,
   listDataByName,
   createNFTMetadata

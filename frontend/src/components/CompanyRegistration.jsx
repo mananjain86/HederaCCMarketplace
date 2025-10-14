@@ -14,7 +14,6 @@ import {
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { validateStep1, validateStep2 } from '../utils/validation';
-// ✅ ethers v6
 import { ethers } from 'ethers';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';

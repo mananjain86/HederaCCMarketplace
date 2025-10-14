@@ -195,8 +195,7 @@ app.post("/api/tokenize-forest-purchase", async (req, res) => {
       throw new Error("Hedera NFT minting failed.");
     }
     console.log(`✅ Minted Forest NFT ${mintResult.tokenId}-${mintResult.serialNumber}`);
-
-    // MODIFIED: Create a richer, more accurate consensus message
+    // MODIFIED: Updated consensus message structure for forest purchase
     const consensusMessage = JSON.stringify({
       type: "forest_area_purchase_receipt",
       ethereumTxHash,

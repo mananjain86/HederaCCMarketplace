@@ -142,7 +142,7 @@ export function Buy() {
 
       if (response.data.success) {
         toast.success(`✅ Purchase complete! NFT receipt minted on Hedera: Token ID ${response.data.tokenId}`);
-        navigate(`/profile`);
+        navigate(`/`);
       } else {
         throw new Error(response.data.error || "Backend tokenization failed.");
       }
