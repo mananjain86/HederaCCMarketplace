@@ -21,7 +21,7 @@ import {CarbonCreditsManager} from './components/CarbonCreditsManager';
 import {CompanyVerificationManager} from './components/CompanyVerificationManager';
 import { ToastProvider } from './hooks/useToast';
 import { ToastContainer } from './components/Toast';
-
+import KycAdmin from './components/GrantKyc';
 function App() {
   const [analytics, setAnalytics] = useState({
     totalCredits: 500000,
@@ -156,6 +156,7 @@ function App() {
             <Route path="/success" element={<SuccessMessage />} />
             <Route path="/verify-company" element={<CompanyVerificationManager />} />
             <Route path="/manage-credits" element={<CarbonCreditsManager />} />
+            <Route path="/grant-kyc" element={<KycAdmin />} />
           </Routes>
         </main>
         <Footer />

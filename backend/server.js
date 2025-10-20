@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-import { mintNFT } from "./mint.js";
+import { mintNFT,grantKyc } from "./mint.js";
 
 import {
   // createTopic,
@@ -189,6 +189,27 @@ app.post("/api/tokenize-purchase", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+app.post("/api/grant-kyc", async (req, res) => {
+  const { accountId, tokenId } = req.body;
+  
+  console.log(`Received KYC grant request for token ${tokenId} to account ${accountId}`);
+
+  if (!accountId || !tokenId) {
+    console.error("Validation failed: Missing accountId or tokenId.");
+    return res.status(400).json({ error: "Both accountId and tokenId are required." });
+  }
+
+  try {
+    // Call the service function
+    const result = await grantKyc(accountId, tokenId);
+    
+    console.log("✅ KYC Grant successful.", result);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ KYC Granting API Error:", error.message);
+    res.status(500).json({ error: "Failed to grant KYC.", message: error.message });
+  }
+});
 
 app.post("/api/tokenize-forest-purchase", async (req, res) => {
   try {
@@ -249,6 +270,8 @@ app.post("/api/tokenize-forest-purchase", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

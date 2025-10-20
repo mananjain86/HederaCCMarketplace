@@ -8,16 +8,20 @@ import {
   TreePine,
   Users,
   User,
-  ShieldPlus
+  ShieldPlus,
 } from "lucide-react";
 import { ethers } from "ethers";
 import { useNavigate, Link } from "react-router-dom";
 import COMPANY_ABI from "../abi/HandleCompany.json";
 import FOREST_ABI from "../abi/ForestTokenMarketplace.json";
-import { useToast } from '../hooks/useToast';
+import { useToast } from "../hooks/useToast";
 
-const COMPANY_ADDRESS = import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS || "0x6136a57179ddb0FeF580724263BDc73c96B31863";
-const FOREST_ADDRESS = import.meta.env.VITE_FOREST_CONTRACT_ADDRESS || "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
+const COMPANY_ADDRESS =
+  import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS ||
+  "0x6136a57179ddb0FeF580724263BDc73c96B31863";
+const FOREST_ADDRESS =
+  import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
+  "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
 
 export function Navbar() {
   const [companyId, setCompanyId] = useState(null);
@@ -27,7 +31,7 @@ export function Navbar() {
   const [isOwner, setIsOwner] = useState(false);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
   const ownerDropdownRef = useRef(null);
-  const [open,setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // separate dropdown states
@@ -69,7 +73,11 @@ export function Navbar() {
     if (!addr || !window.ethereum) return;
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(FOREST_ADDRESS, FOREST_ABI, provider);
+      const contract = new ethers.Contract(
+        FOREST_ADDRESS,
+        FOREST_ABI,
+        provider
+      );
       const ownerAddress = await contract.owner();
       setIsOwner(ownerAddress.toLowerCase() === addr.toLowerCase());
     } catch (err) {
@@ -106,7 +114,6 @@ export function Navbar() {
       );
       const allCompanies = await contract.getAllRegisteredCompanies();
 
-
       const normalizedCompanies = allCompanies.map((c, idx) => ({
         address: c.toString().toLowerCase(),
         id: idx + 1,
@@ -139,14 +146,22 @@ export function Navbar() {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target)) {
+      if (
+        accountDropdownRef.current &&
+        !accountDropdownRef.current.contains(event.target)
+      ) {
         setShowAccountDropdown(false);
       }
-      if (ownerDropdownRef.current && !ownerDropdownRef.current.contains(event.target)) {
+      if (
+        ownerDropdownRef.current &&
+        !ownerDropdownRef.current.contains(event.target)
+      ) {
         setShowOwnerDropdown(false);
       }
 
-      if (registerDropdownRef.current && !registerDropdownRef.current.contains(event.target)
+      if (
+        registerDropdownRef.current &&
+        !registerDropdownRef.current.contains(event.target)
       ) {
         setShowRegisterDropdown(false);
       }
@@ -167,7 +182,7 @@ export function Navbar() {
             to="/"
             className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
           >
-            <div className="flex items-center space-x-2" >
+            <div className="flex items-center space-x-2">
               <Leaf className="h-8 w-8 text-emerald-400" />
               <span className="text-2xl font-bold text-white">CarbonChain</span>
               <span className="text-sm text-emerald-400 font-medium">
@@ -198,7 +213,9 @@ export function Navbar() {
             {account ? (
               <>
                 {/* Profile or Register */}
-                {isRegistered ? "" : (
+                {isRegistered ? (
+                  ""
+                ) : (
                   <div className="relative" ref={registerDropdownRef}>
                     <button
                       onClick={() =>
@@ -271,9 +288,28 @@ export function Navbar() {
                         >
                           <TreePine className="h-5 w-5 text-yellow-400" />
                           <div>
-                            <div className="font-medium">List New Forest Area</div>
+                            <div className="font-medium">
+                              List New Forest Area
+                            </div>
                             <div className="text-sm text-slate-400">
                               Create a new listing for sale
+                            </div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate("/grant-kyc");
+                            setShowOwnerDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        >
+                          <ShieldPlus className="h-5 w-5 text-yellow-400" />
+                          <div>
+                            <div className="font-medium">
+                              Grant Token KYC
+                            </div>
+                            <div className="text-sm text-slate-400">    
+                              approve companies to trade tokens
                             </div>
                           </div>
                         </button>
@@ -286,7 +322,9 @@ export function Navbar() {
                         >
                           <TreePine className="h-5 w-5 text-yellow-400" />
                           <div>
-                            <div className="font-medium">Verify Registered Companies</div>
+                            <div className="font-medium">
+                              Verify Registered Companies
+                            </div>
                             <div className="text-sm text-slate-400">
                               check if the registered companies are not fake
                             </div>
@@ -301,7 +339,9 @@ export function Navbar() {
                         >
                           <TreePine className="h-5 w-5 text-yellow-400" />
                           <div>
-                            <div className="font-medium">Manage Carbon Credits</div>
+                            <div className="font-medium">
+                              Manage Carbon Credits
+                            </div>
                             <div className="text-sm text-slate-400">
                               Approve carbon credits to a company for sale
                             </div>
@@ -318,7 +358,9 @@ export function Navbar() {
                     onClick={() => setOpen(!open)}
                     className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all flex items-center space-x-2"
                   >
-                    <span>{account.slice(0, 6)}...{account.slice(-4)}</span>
+                    <span>
+                      {account.slice(0, 6)}...{account.slice(-4)}
+                    </span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
                   {open && (
@@ -335,7 +377,9 @@ export function Navbar() {
                             <User className="h-5 w-5 text-emerald-400" />
                             <div>
                               <div className="font-medium">Go to Profile</div>
-                              <div className="text-sm text-slate-400">View your company profile</div>
+                              <div className="text-sm text-slate-400">
+                                View your company profile
+                              </div>
                             </div>
                           </button>
                           <button
@@ -347,8 +391,12 @@ export function Navbar() {
                           >
                             <TreePine className="h-5 w-5 text-emerald-400" />
                             <div>
-                              <div className="font-medium">Register as Seller</div>
-                              <div className="text-sm text-slate-400">Sell carbon credits</div>
+                              <div className="font-medium">
+                                Register as Seller
+                              </div>
+                              <div className="text-sm text-slate-400">
+                                Sell carbon credits
+                              </div>
                             </div>
                           </button>
                           <div className="border-t border-slate-600" />
@@ -364,7 +412,9 @@ export function Navbar() {
                         <Wallet className="h-5 w-5 text-red-400" />
                         <div>
                           <div className="font-medium">Disconnect Wallet</div>
-                          <div className="text-sm text-slate-400">Sign out of your account</div>
+                          <div className="text-sm text-slate-400">
+                            Sign out of your account
+                          </div>
                         </div>
                       </button>
                     </div>

@@ -10,7 +10,8 @@ import {
   TokenCreateTransaction,
   TokenMintTransaction,
   TransferTransaction,
-  TokenInfoQuery,
+  TokenCreateTransaction,
+  TokenGrantKycTransaction
 } from "@hashgraph/sdk";
 import { createNFTMetadata } from "./ipfs.js"; // must return { success, metadataCid, metadataUrl }
 import { monitorForest } from "./services/forest-monitor.js";
@@ -214,21 +215,32 @@ export async function mintNFT(data, type, buyerAccountId) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Uncomment this ONCE to create token and log keys
-// ---------------------------------------------------------------------------
-(async () => {
-  const { tokenId, kycKey, freezeKey, supplyKey } = await createCompliantToken();
-  console.log("🎉 Save these keys for future use!");
-  console.log({ tokenId, kycKey: kycKey.toString(), freezeKey: freezeKey.toString(), supplyKey: supplyKey.toString() });
-})();
+export async function grantKyc(accountId, tokenId) {
+  try {
+    console.log(`Granting KYC for token ${tokenId} to account ${accountId}...`);
 
-// ---------------------------------------------------------------------------
-// Use this to mint after creation (comment out above after first run)
-// ---------------------------------------------------------------------------
-// (async () => {
-//   const tokenId = "0.0.xxxxxxx"; // replace with created token ID
-//   const supplyKey = PrivateKey.fromString("your-supply-key");
-//   const buyerAccountId = "0.0.xxxxx"; // HashPack buyer account
-//   await mintNFT(tokenId, supplyKey, "forest", buyerAccountId);
-// })();
+    // 1. Create the Grant KYC Transaction
+    const transaction = await new TokenGrantKycTransaction()
+      .setAccountId(accountId)
+      .setTokenId(tokenId)
+      .freezeWith(client)
+      .sign(operatorKey); // Must be signed by the token's KycKey
+
+    // 2. Execute the transaction
+    const txResponse = await transaction.execute(client);
+    
+    // 3. Get the receipt to confirm success
+    const receipt = await txResponse.getReceipt(client);
+
+    console.log(`✅ KYC grant status: ${receipt.status.toString()}`);
+
+    // 4. Return the result
+    return {
+      status: receipt.status.toString(),
+      transactionId: txResponse.transactionId.toString(),
+    };
+  } catch (error) {
+    console.error(`❌ Error granting KYC:`, error);
+    throw error; // Re-throw the error to be caught by the server API layer
+  }
+}
