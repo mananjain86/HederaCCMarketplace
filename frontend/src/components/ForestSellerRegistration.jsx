@@ -6,6 +6,7 @@ import {
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorMessage } from "./ErrorMessage";
 import abi from "../abi/ForestTokenMarketplace.json";
+import { useNavigate } from 'react-router-dom';
 
 export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,6 +20,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     ipfsDeedHash: "",
     price: "",
   });
+  const navigate = useNavigate();
 
   const steps = [
     { id: 1, title: "Forest Information", icon: TreePine },
@@ -113,6 +115,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         forestData: formData,
         transactionHash: tx.hash,
       });
+      navigate("/");
     } catch (err) {
       console.error("Registration error:", err);
       if (err.code === 4001) {
