@@ -1,6 +1,6 @@
 import { mintNFT } from './mint.js';
 import { buyCreditsContract, buyForestAreaContract } from './contract.js';
-import { submitMessage } from './consensus.js';
+import { submitMessage } from './hcs/consensus.js';
 
 /**
  * Buy carbon credits - calls smart contract and mints NFT

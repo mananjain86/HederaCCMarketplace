@@ -14,6 +14,7 @@ import {
 } from "@hashgraph/sdk";
 
 import { createNFTMetadata } from "./ipfs.js"; // must return { success, metadataCid, metadataUrl }
+import { monitorForest } from "./services/forest-monitor.js";
 
 // Parse operator credentials (supports ECDSA or ED25519)
 function parsePrivateKey(str) {
@@ -26,38 +27,78 @@ function parsePrivateKey(str) {
 
 const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = parsePrivateKey(process.env.OPERATOR_KEY);
-
 // Initialize Hedera client
 const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 client.setDefaultMaxTransactionFee(new Hbar(20));
 
 // Create the NFT collection (Non-Fungible, Finite supply)
-// async function createNFTCollection(type, config) {
-//   console.log(`Creating ${config.name} NFT Collection...`);
+export async function createNFTCollection(type, config) {
+  // Provide sensible defaults when config not supplied
+  if (!config) {
+    const defaults =
+      type === "forest"
+        ? { name: "Forest Area Certificates", symbol: "FAC" }
+        : { name: "Carbon Credits", symbol: "CC" };
+    config = {
+      ...defaults,
+      treasuryId: operatorId,
+      treasuryKey: operatorKey,
+      supplyKey: operatorKey,
+      adminKey: operatorKey,
+    };
+  }
 
-//   const nftCreate = new TokenCreateTransaction()
-//     .setTokenName(config.name)
-//     .setTokenSymbol(config.symbol)
-//     .setTokenType(TokenType.NonFungibleUnique)
-//     .setDecimals(0)
-//     .setInitialSupply(0)
-//     .setTreasuryAccountId(config.treasuryId)
-//     .setSupplyType(TokenSupplyType.Finite)
-//     .setMaxSupply(1000)
-//     .setSupplyKey(config.supplyKey) // supply key required to mint/burn
-//     .freezeWith(client);
+  console.log(`Creating ${config.name} NFT Collection...`);
 
-//   // Sign with the treasury key (here treasuryKey = operatorKey)
-//   const nftCreateTxSign = await nftCreate.sign(config.treasuryKey);
+  // Execute with explicit node list and simple retry loop; set node BEFORE freeze/sign
+  const nodeIds = ["0.0.3", "0.0.4", "0.0.5"].map((id) => AccountId.fromString(id));
+  let nftCreateSubmit;
+  let lastError;
+  for (let i = 0; i < nodeIds.length; i++) {
+    try {
+      const tx = new TokenCreateTransaction()
+        .setTokenName(config.name)
+        .setTokenSymbol(config.symbol)
+        .setTokenType(TokenType.NonFungibleUnique)
+        .setDecimals(0)
+        .setInitialSupply(0)
+        .setTreasuryAccountId(config.treasuryId)
+        .setSupplyType(TokenSupplyType.Finite)
+        .setMaxSupply(1000)
+        .setSupplyKey(config.supplyKey)
+        .setAdminKey(config.adminKey)
+        .setKycKey(operatorKey)
+        .setFreezeKey(operatorKey)
+        .setMetadataKey(operatorKey)
+        .setMaxTransactionFee(new Hbar(20))
+        .setTransactionMemo(`Create ${config.symbol} collection`)
+        .setNodeAccountIds([nodeIds[i]])
+        .freezeWith(client);
 
-//   const nftCreateSubmit = await nftCreateTxSign.execute(client);
-//   const nftCreateRx = await nftCreateSubmit.getReceipt(client);
+      console.log(`nftCreate freeze done on node ${nodeIds[i].toString()}`);
+      const signed = await tx.sign(config.treasuryKey);
+      console.log("nftCreateTxSign done");
+      console.log(`execute attempt ${i + 1} on node ${nodeIds[i].toString()}`);
+      nftCreateSubmit = await signed.execute(client);
+      console.log("nftCreateSubmit done");
+      lastError = undefined;
+      break;
+    } catch (e) {
+      console.error(`execute failed on node ${nodeIds[i].toString()}:`, e?.message || e);
+      lastError = e;
+    }
+  }
+  if (!nftCreateSubmit) {
+    throw lastError || new Error("TokenCreateTransaction failed on all nodes");
+  }
+  const nftCreateRx = await nftCreateSubmit.getReceipt(client);
+  console.log("nftCreateRx done");
 
-//   config.tokenId = nftCreateRx.tokenId;
+  config.tokenId = nftCreateRx.tokenId;
 
-//   console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
-//   return config.tokenId;
-// }
+  console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
+  return config.tokenId;
+}
 
 // Mint one NFT and transfer it to buyer
 // data: arbitrary data passed to createNFTMetadata
@@ -74,7 +115,8 @@ export async function mintNFT(data, type, buyerAccountId) {
             treasuryId: operatorId,
             treasuryKey: operatorKey,
             supplyKey: operatorKey,
-            tokenId: "0.0.6886481",
+            tokenId: "0.0.7074734",
+            adminKey: operatorKey,
           }
         : {
             name: "Carbon Credits",
@@ -82,7 +124,8 @@ export async function mintNFT(data, type, buyerAccountId) {
             treasuryId: operatorId,
             treasuryKey: operatorKey,
             supplyKey: operatorKey,
-            tokenId: "0.0.6886497",
+            tokenId: "0.0.7074735",
+            adminKey: operatorKey,
           };
 
     if (!buyerAccountId) {
@@ -90,10 +133,44 @@ export async function mintNFT(data, type, buyerAccountId) {
     }
 
     console.log(`\n🌲 Minting NFT for ${type}...`);
+
+    // NEW: If type is "forest", add IoT and regeneration data
+    let dynamicData = { ...data };
+    if (type === "forest") {
+      console.log("📡 Collecting IoT sensor data and regeneration score...");
+
+      // HCS Topic IDs (replace with actual topic IDs after creation)
+      const iotTopicId = process.env.IOT_TOPIC_ID || "0.0.XXXXXXX";
+      const regenTopicId = process.env.REGEN_TOPIC_ID || "0.0.YYYYYYY";
+
+      const monitoringData = await monitorForest(
+        {
+          id: data.id || `FOREST-${Date.now()}`,
+          name: data.name,
+          location: data.location,
+          coordinates: data.coordinates,
+          area: data.area,
+          type: data.forestType,
+        },
+        iotTopicId,
+        regenTopicId
+      );
+
+      dynamicData = {
+        ...data,
+        iotData: monitoringData.iotData,
+        regenerationScore: monitoringData.regenerationScore,
+        hcsTopics: {
+          iot: iotTopicId,
+          regeneration: regenTopicId,
+        },
+      };
+    }
+
     console.log("📄 Creating metadata and uploading to IPFS...");
 
-    // Create metadata and upload to IPFS
-    const metadataResult = await createNFTMetadata(type, data);
+    // Create metadata with dynamic data
+    const metadataResult = await createNFTMetadata(type, dynamicData);
     if (!metadataResult?.success || !metadataResult.metadataCid) {
       throw new Error("Failed to create metadata or missing CID");
     }
