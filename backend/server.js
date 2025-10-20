@@ -9,7 +9,7 @@ import {
   submitMessage,
   queryTopic,
   queryTopicWithSequenceNumber,
-} from "./consensus.js";
+} from "./hcs/consensus.js";
 
 dotenv.config();
 
@@ -23,6 +23,37 @@ app.use(express.json());
 app.use(bodyParser.json());
 //API routes
 
+// const kycDatabase = {
+//   "0.0.6918": { kycStatus: "approved", role: "buyer", country: "IN" },
+//   "0.0.5678": { kycStatus: "pending", role: "seller", country: "US" },
+//   "0.0.9999": { kycStatus: "rejected", role: "buyer", country: "FR" },
+// };
+
+// // ERC-3643 style JSON response
+// app.get("/compliance/:accountId", async (req, res) => {
+//   const accountId = req.params.accountId;
+//   const record = await kycDatabase[accountId];
+
+//   if (!record) {
+//     return res.status(404).json({
+//       accountId,
+//       kycStatus: "unknown",
+//       eligible: false,
+//       message: "Account not found in KYC database",
+//     });
+//   }
+
+//   const eligible = record.kycStatus === "approved";
+//   res.json({
+//     accountId,
+//     kycStatus: record.kycStatus,
+//     role: record.role,
+//     country: record.country,
+//     eligible,
+//     standard: "ERC-3643",
+//     schemaVersion: "1.0.0",
+//   });
+// });
 
 // ----------------- Mint API -----------------
 app.post("/api/mint", async (req, res) => {

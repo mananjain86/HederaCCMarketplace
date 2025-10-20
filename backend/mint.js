@@ -13,6 +13,7 @@ import {
   TokenInfoQuery,
 } from "@hashgraph/sdk";
 import { createNFTMetadata } from "./ipfs.js"; // must return { success, metadataCid, metadataUrl }
+import { monitorForest } from "./services/forest-monitor.js";
 
 // Helper: parse key type (ED25519 or ECDSA)
 function parsePrivateKey(str) {
@@ -26,77 +27,150 @@ function parsePrivateKey(str) {
 // Operator (treasury / issuer)
 const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = parsePrivateKey(process.env.OPERATOR_KEY);
-
-// Hedera Client
+// Initialize Hedera client
 const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 client.setDefaultMaxTransactionFee(new Hbar(20));
 
-/**
- * STEP 1️⃣ — Create Compliant Token (run ONCE)
- */
-export async function createCompliantToken() {
-  try {
-    console.log("\n🛠️ Creating ERC-3643 style compliant HTS token...");
-
-    const adminKey = operatorKey;
-    const kycKey = PrivateKey.generate();
-    const freezeKey = PrivateKey.generate();
-    const supplyKey = PrivateKey.generate();
-
-    const tokenCreateTx = await new TokenCreateTransaction()
-      .setTokenName("Forest Credit Token")
-      .setTokenSymbol("FCT")
-      .setTokenType(TokenType.NonFungibleUnique)
-      .setTreasuryAccountId(operatorId)
-      .setSupplyType(TokenSupplyType.Infinite)
-      .setInitialSupply(0)
-      .setAdminKey(adminKey)
-      .setKycKey(kycKey)
-      .setFreezeKey(freezeKey)
-      .setSupplyKey(supplyKey)
-      .setMaxTransactionFee(new Hbar(20))
-      .execute(client);
-
-    const receipt = await tokenCreateTx.getReceipt(client);
-    const tokenId = receipt.tokenId.toString();
-
-    const info = await new TokenInfoQuery().setTokenId(tokenId).execute(client);
-
-    console.log("\n✅ Token created successfully!");
-    console.log("Token ID:", tokenId);
-    console.log("KYC Key:", kycKey.toString());
-    console.log("Supply Key:", supplyKey.toString());
-    console.log("Freeze Key:", freezeKey.toString());
-    console.log("Token Info:", info);
-
-    return { tokenId, kycKey, freezeKey, supplyKey };
-  } catch (err) {
-    console.error("❌ Error creating token:", err);
-    throw err;
+// Create the NFT collection (Non-Fungible, Finite supply)
+export async function createNFTCollection(type, config) {
+  // Provide sensible defaults when config not supplied
+  if (!config) {
+    const defaults =
+      type === "forest"
+        ? { name: "Forest Area Certificates", symbol: "FAC" }
+        : { name: "Carbon Credits", symbol: "CC" };
+    config = {
+      ...defaults,
+      treasuryId: operatorId,
+      treasuryKey: operatorKey,
+      supplyKey: operatorKey,
+      adminKey: operatorKey,
+    };
   }
+
+  console.log(`Creating ${config.name} NFT Collection...`);
+
+  // Execute with explicit node list and simple retry loop; set node BEFORE freeze/sign
+  const nodeIds = ["0.0.3", "0.0.4", "0.0.5"].map((id) => AccountId.fromString(id));
+  let nftCreateSubmit;
+  let lastError;
+  for (let i = 0; i < nodeIds.length; i++) {
+    try {
+      const tx = new TokenCreateTransaction()
+        .setTokenName(config.name)
+        .setTokenSymbol(config.symbol)
+        .setTokenType(TokenType.NonFungibleUnique)
+        .setDecimals(0)
+        .setInitialSupply(0)
+        .setTreasuryAccountId(config.treasuryId)
+        .setSupplyType(TokenSupplyType.Finite)
+        .setMaxSupply(1000)
+        .setSupplyKey(config.supplyKey)
+        .setAdminKey(config.adminKey)
+        .setKycKey(operatorKey)
+        .setFreezeKey(operatorKey)
+        .setMetadataKey(operatorKey)
+        .setMaxTransactionFee(new Hbar(20))
+        .setTransactionMemo(`Create ${config.symbol} collection`)
+        .setNodeAccountIds([nodeIds[i]])
+        .freezeWith(client);
+
+      console.log(`nftCreate freeze done on node ${nodeIds[i].toString()}`);
+      const signed = await tx.sign(config.treasuryKey);
+      console.log("nftCreateTxSign done");
+      console.log(`execute attempt ${i + 1} on node ${nodeIds[i].toString()}`);
+      nftCreateSubmit = await signed.execute(client);
+      console.log("nftCreateSubmit done");
+      lastError = undefined;
+      break;
+    } catch (e) {
+      console.error(`execute failed on node ${nodeIds[i].toString()}:`, e?.message || e);
+      lastError = e;
+    }
+  }
+  if (!nftCreateSubmit) {
+    throw lastError || new Error("TokenCreateTransaction failed on all nodes");
+  }
+  const nftCreateRx = await nftCreateSubmit.getReceipt(client);
+  console.log("nftCreateRx done");
+
+  config.tokenId = nftCreateRx.tokenId;
+
+  console.log(`✅ ${config.name} NFT Collection created with token ID: ${config.tokenId}`);
+  return config.tokenId;
 }
 
-/**
- * STEP 2️⃣ — Mint + Transfer NFT (HashPack buyers)
- */
-export async function mintNFT(tokenId, supplyKey, type, buyerAccountId) {
+// Mint one NFT and transfer it to buyer
+// data: arbitrary data passed to createNFTMetadata
+// type: "forest" or other
+// buyerAccountId: AccountId string like "0.0.x" or AccountId object
+export async function mintNFT(data, type, buyerAccountId) {
   try {
-    if (!buyerAccountId) throw new Error("buyerAccountId is required");
+    // Configure collection; using operator as both treasury and supply key for simplicity
+    const config =
+      type == "forest"
+        ? {
+            name: "Forest Area Certificates",
+            symbol: "FAC",
+            treasuryId: operatorId,
+            treasuryKey: operatorKey,
+            supplyKey: operatorKey,
+            tokenId: "0.0.7074734",
+            adminKey: operatorKey,
+          }
+        : {
+            name: "Carbon Credits",
+            symbol: "CC",
+            treasuryId: operatorId,
+            treasuryKey: operatorKey,
+            supplyKey: operatorKey,
+            tokenId: "0.0.7074735",
+            adminKey: operatorKey,
+          };
+
+    if (!buyerAccountId) {
+      throw new Error("buyerAccountId is required");
+    }
 
     console.log(`\n🌲 Minting NFT for ${type}...`);
 
-    // Compliance check via off-chain API
-    console.log("🔍 Checking compliance...");
-    const compliance = await fetch(`http://localhost:3000/compliance/${buyerAccountId}`);
-    const result = await compliance.json();
-    if (result.kycStatus !== "approved") {
-      throw new Error("❌ Buyer not KYC verified! Minting aborted.");
-    }
-    console.log("✅ Compliance check passed!");
+    // NEW: If type is "forest", add IoT and regeneration data
+    let dynamicData = { ...data };
+    if (type === "forest") {
+      console.log("📡 Collecting IoT sensor data and regeneration score...");
 
-    // 1️⃣ Create metadata + upload to IPFS
-    console.log("📄 Creating metadata...");
-    const metadataResult = await createNFTMetadata(type, { buyer: buyerAccountId });
+      // HCS Topic IDs (replace with actual topic IDs after creation)
+      const iotTopicId = process.env.IOT_TOPIC_ID || "0.0.XXXXXXX";
+      const regenTopicId = process.env.REGEN_TOPIC_ID || "0.0.YYYYYYY";
+
+      const monitoringData = await monitorForest(
+        {
+          id: data.id || `FOREST-${Date.now()}`,
+          name: data.name,
+          location: data.location,
+          coordinates: data.coordinates,
+          area: data.area,
+          type: data.forestType,
+        },
+        iotTopicId,
+        regenTopicId
+      );
+
+      dynamicData = {
+        ...data,
+        iotData: monitoringData.iotData,
+        regenerationScore: monitoringData.regenerationScore,
+        hcsTopics: {
+          iot: iotTopicId,
+          regeneration: regenTopicId,
+        },
+      };
+    }
+
+    console.log("📄 Creating metadata and uploading to IPFS...");
+
+    // Create metadata with dynamic data
+    const metadataResult = await createNFTMetadata(type, dynamicData);
     if (!metadataResult?.success || !metadataResult.metadataCid) {
       throw new Error("❌ Failed to create metadata or missing CID");
     }

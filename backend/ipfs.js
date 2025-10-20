@@ -85,7 +85,7 @@ const listDataByName = async (req, res) => {
   }
 };
 
-// Generate NFT metadata (forest or carbon)
+// Generate NFT metadata (forest or carbon) - UPDATED for Dynamic NFTs
 async function createNFTMetadata(type, data) {
   try {
     const base = {
@@ -96,23 +96,65 @@ async function createNFTMetadata(type, data) {
     let metadata;
 
     if (type === "forest") {
+      // Dynamic Forest NFT with IoT and AI regeneration score
       metadata = {
         ...base,
-        name: `Forest Area #${data.areaId}`,
+        name: data.name || `Forest Area #${data.areaId || data.id}`,
         creator: "Carbon Chain Inc.",
-        description: `Certificate of ownership for ${data.area} hectares of forest land in ${data.location}.`,
-        image: "ipfs://bafybeibkvvab3fnqmbhgoeilxbkszyvjehu6wa55d7b2ymifpbdp73zhje",
+        description: `Dynamic Forest Certificate for ${data.area} hectares in ${data.location}. Real-time monitoring via IoT sensors and AI-powered regeneration scoring.`,
+        image: data.imageUrl || "ipfs://bafybeibkvvab3fnqmbhgoeilxbkszyvjehu6wa55d7b2ymifpbdp73zhje",
         properties: {
-          area_id: data.areaId,
+          // Basic Forest Info
+          area_id: data.areaId || data.id,
           location: data.location,
+          coordinates: data.coordinates,
           area_size: data.area,
+          forest_type: data.forestType || data.type || "Mixed",
           purchase_price_hbar: data.totalPrice,
           owner: data.buyer,
-          asset_type: "Forest Area Certificate",
-          sustainability_rating: "A+"
-        }
+          asset_type: "Dynamic Forest Certificate",
+          
+          // NEW: IoT Sensor Data (Real-time DePIN)
+          iot_data: data.iotData ? {
+            temperature: data.iotData.sensors.temperature,
+            humidity: data.iotData.sensors.humidity,
+            soil_moisture: data.iotData.sensors.soilMoisture,
+            air_quality_index: data.iotData.sensors.airQuality,
+            co2_level: data.iotData.sensors.co2Level,
+            light_intensity: data.iotData.sensors.lightIntensity,
+            device_id: data.iotData.deviceId,
+            last_reading: data.iotData.timestamp
+          } : null,
+          
+          // NEW: AI-Powered Regeneration Score
+          regeneration_score: data.regenerationScore ? {
+            overall_score: data.regenerationScore.score.overall,
+            vegetation_density: data.regenerationScore.factors.vegetationDensity,
+            soil_health: data.regenerationScore.factors.soilHealth,
+            air_quality: data.regenerationScore.factors.airQuality,
+            water_availability: data.regenerationScore.factors.waterAvailability,
+            climate_conditions: data.regenerationScore.factors.climateConditions,
+            satellite_image_url: data.regenerationScore.satelliteImageUrl,
+            ndvi: data.regenerationScore.ndvi,
+            last_updated: data.regenerationScore.timestamp,
+            ai_analysis: data.regenerationScore.score.analysis
+          } : null,
+          
+          // NEW: HCS Topic for Real-time Updates
+          hcs_topic_id: data.hcsTopicId,
+          
+          // Metadata
+          sustainability_rating: data.regenerationScore 
+            ? (data.regenerationScore.score.overall >= 80 ? "A+" 
+              : data.regenerationScore.score.overall >= 60 ? "A" 
+              : data.regenerationScore.score.overall >= 40 ? "B" : "C")
+            : "Pending",
+          certification_status: "Verified",
+          minted_at: new Date().toISOString()
+        },
       };
     } else {
+      // Carbon Credit NFT (unchanged)
       metadata = {
         ...base,
         name: `Carbon Credit #${data.id}`,
@@ -126,7 +168,8 @@ async function createNFTMetadata(type, data) {
           owner: data.buyer,
           asset_type: "Carbon Credit",
           certification_standard: "Verified Carbon Standard (VCS)",
-          vintage_year: new Date().getFullYear()
+          vintage_year: new Date().getFullYear(),
+          minted_at: new Date().toISOString()
         }
       };
     }
@@ -137,7 +180,6 @@ async function createNFTMetadata(type, data) {
     throw new Error(`Failed to create NFT metadata: ${error.message}`);
   }
 }
-
 
 export {
   uploadImageToIPFS,
