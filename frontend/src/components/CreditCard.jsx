@@ -8,6 +8,7 @@ import {
   Shield,
   TreePine,
   Factory,
+  TrendingDown, // NEW: Added icon
 } from "lucide-react";
 
 export function CreditCard({ credit }) {
@@ -24,12 +25,13 @@ export function CreditCard({ credit }) {
     vintage: credit.creditVintageYear || new Date().getFullYear(),
     availableCredits: credit.amount || 0,
     totalCredits: credit.amount || 0,
+    // UPDATED: Price logic
     price: credit.price
       ? credit.price
       : credit.pricePerCredit !== undefined
       ? `${credit.pricePerCredit.toFixed(4)} HBAR`
-      : credit.pricePerHectare !== undefined
-      ? `${credit.pricePerHectare.toFixed(4)} HBAR`
+      : credit.pricePerShare !== undefined // <-- Fixed from pricePerHectare
+      ? `${credit.pricePerShare.toFixed(4)} HBAR`
       : "N/A",
     priceChange: 0,
     type: credit.type || "carbon",
@@ -44,6 +46,10 @@ export function CreditCard({ credit }) {
     areaSize: credit.areaSize || null,
     ipfsDeedHash: credit.ipfsDeedHash || "",
     currentOwner: credit.currentOwner || "",
+    // --- NEW: Forest-specific data ---
+    regenerationScore: credit.regenerationScore || 0,
+    baselineSequestration: credit.baselineSequestration || 0,
+    potentialSequestration: credit.potentialSequestration || 0,
   };
 
   function getDefaultImage(type) {
@@ -110,8 +116,12 @@ export function CreditCard({ credit }) {
               ? `${mappedCredit.location}, ${
                   mappedCredit.projectCountry || "Unknown"
                 } • ${mappedCredit.co2Reduction.toLocaleString()} tons CO₂`
-              : `Region: ${mappedCredit.location},    
-                  Area: ${mappedCredit.areaSize || "Unknown"} ha`}
+              : `Region: ${mappedCredit.location}, 
+                   Area: ${
+                     mappedCredit.areaSize
+                       ? mappedCredit.areaSize.toLocaleString() + " sq. m" // UPDATED: Unit
+                       : "Unknown"
+                   }`}
           </span>
         </div>
 
@@ -168,13 +178,50 @@ export function CreditCard({ credit }) {
           </div>
         )}
 
+        {/* --- NEW: Forest Data Block --- */}
+        {mappedCredit.type === "forest" && (
+          <div className="border-t border-slate-700 mt-4 pt-4 mb-4 space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-400 flex items-center">
+                <Star className="w-4 h-4 mr-1.5 text-yellow-400" />
+                Regen Score
+              </span>
+              <span className="font-medium text-yellow-400">
+                {mappedCredit.regenerationScore} / 1000
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-400 flex items-center">
+                <TrendingDown className="w-4 h-4 mr-1.5 text-blue-400" />
+                Baseline
+              </span>
+              <span className="font-medium text-slate-200">
+                {mappedCredit.baselineSequestration.toLocaleString()}
+                <span className="text-slate-400 text-xs"> CO2/yr</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-400 flex items-center">
+                <TrendingUp className="w-4 h-4 mr-1.5 text-emerald-400" />
+                Potential
+              </span>
+              <span className="font-medium text-emerald-400">
+                {mappedCredit.potentialSequestration.toLocaleString()}
+                <span className="text-slate-400 text-xs"> CO2/yr</span>
+              </span>
+            </div>
+          </div>
+        )}
+        {/* --- END: New Block --- */}
+
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-2xl font-bold text-white">
               {mappedCredit.price}
             </div>
-            <div className="text-slate-400 texett-sm">
-              {mappedCredit.type === "carbon" ? "per ton CO₂" : "per hectare"}
+            <div className="text-slate-400 text-sm">
+              {/* UPDATED: Price label */}
+              {mappedCredit.type === "carbon" ? "per ton CO₂" : "per share"}
             </div>
           </div>
           <div
@@ -246,12 +293,6 @@ export function CreditCard({ credit }) {
             >
               View on Registry →
             </a>
-          </div>
-        )}
-
-        {mappedCredit.type === "forest" && mappedCredit.currentOwner && (
-          <div className="mt-2 text-slate-400 text-xs">
-            Current Owner: {mappedCredit.currentOwner}
           </div>
         )}
       </div>

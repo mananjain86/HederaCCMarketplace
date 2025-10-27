@@ -1,30 +1,53 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import {
-  TreePine, MapPin, Ruler, Hash, DollarSign, Globe, ChevronLeft, ChevronRight, CheckCircle, FileText
+  TreePine,
+  MapPin,
+  Ruler,
+  Hash,
+  Globe,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  FileText,
+  Award, // NEW
+  Shield, // NEW
+  PieChart, // NEW
+  TrendingDown, // NEW
+  TrendingUp, // NEW
 } from "lucide-react";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorMessage } from "./ErrorMessage";
+// UPDATED: Import the new ABI
 import abi from "../abi/ForestTokenMarketplace.json";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
+// UPDATED: Renamed component to better reflect its new role
 export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // UPDATED: Form state with new fields
   const [formData, setFormData] = useState({
     location: "",
     gpsCoordinates: "",
     areaSize: "",
     ipfsDeedHash: "",
-    price: "",
+    htsTokenId: "", // NEW
+    serial: "", // NEW
+    totalShares: "", // NEW
+    baseline: "", // NEW
+    potential: "", // NEW
   });
   const navigate = useNavigate();
 
+  // UPDATED: New 3-step process
   const steps = [
-    { id: 1, title: "Forest Information", icon: TreePine },
-    { id: 2, title: "Pricing & Documentation", icon: DollarSign },
+    { id: 1, title: "Core Forest Details", icon: TreePine },
+    { id: 2, title: "Token & Shares", icon: Award },
+    { id: 3, title: "Sequestration Data", icon: TrendingUp },
   ];
 
   const handleInputChange = (field, value) => {
@@ -33,18 +56,30 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     setError("");
   };
 
+  // UPDATED: Validation logic for new 3-step form
   const validateStep = (step) => {
     const errors = {};
     if (step === 1) {
       if (!formData.location) errors.location = "Location is required";
-      if (!formData.gpsCoordinates) errors.gpsCoordinates = "GPS coordinates required";
+      if (!formData.gpsCoordinates)
+        errors.gpsCoordinates = "GPS coordinates required";
       if (!formData.areaSize || parseInt(formData.areaSize) <= 0)
         errors.areaSize = "Area size must be greater than 0";
+      if (!formData.ipfsDeedHash)
+        errors.ipfsDeedHash = "Deed hash/IPFS link required";
     }
     if (step === 2) {
-      if (!formData.ipfsDeedHash) errors.ipfsDeedHash = "Deed hash/IPFS link required";
-      if (!formData.price || parseFloat(formData.price) <= 0)
-        errors.price = "Price must be greater than 0";
+      if (!formData.htsTokenId) errors.htsTokenId = "HTS Token ID is required";
+      if (!formData.serial || BigInt(formData.serial) <= 0)
+        errors.serial = "Serial number must be greater than 0";
+      if (!formData.totalShares || BigInt(formData.totalShares) <= 0)
+        errors.totalShares = "Total shares must be greater than 0";
+    }
+    if (step === 3) {
+      if (formData.baseline === "" || BigInt(formData.baseline) < 0)
+        errors.baseline = "Baseline must be 0 or greater";
+      if (formData.potential === "" || BigInt(formData.potential) < 0)
+        errors.potential = "Potential must be 0 or greater";
     }
     setFieldErrors(errors);
     return { isValid: Object.keys(errors).length === 0, errors };
@@ -71,7 +106,9 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     }
   };
 
+  // UPDATED: handleSubmit to call the new registerForest function
   const handleSubmit = async () => {
+    // Validate the final step before submitting
     const validation = validateStep(currentStep);
     if (!validation.isValid) {
       setError("Please correct all errors before submitting.");
@@ -88,11 +125,15 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
 
+      // UPDATED: Use the new .env variable for the new contract
       const ForestContractAddress =
         import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
-        "0xYourForestMarketplaceAddress";
+        "0xD8a0C3B0CB1FDc61262772eE502a97C74dbA86B9";
+
+      // UPDATED: Use the new ABI
       const contract = new ethers.Contract(ForestContractAddress, abi, signer);
 
+      // 1. Assemble the AreaInfo struct
       const info = {
         location: formData.location,
         gpsCoordinates: formData.gpsCoordinates,
@@ -100,18 +141,38 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         ipfsDeedHash: formData.ipfsDeedHash,
       };
 
-      const price = ethers.parseUnits(formData.price,8);
+      // 2. Get all other arguments
+      const htsTokenId = formData.htsTokenId;
+      const serial = BigInt(formData.serial);
+      const totalShares = BigInt(formData.totalShares);
+      const baseline = BigInt(formData.baseline);
+      const potential = BigInt(formData.potential);
 
-      console.log("Submitting:", { info, price });
+      console.log("Submitting:", {
+        htsTokenId,
+        serial,
+        info,
+        totalShares,
+        baseline,
+        potential,
+      });
 
-      const tx = await contract.listForestArea(info, price);
+      // 3. Call the new contract function
+      const tx = await contract.registerForest(
+        htsTokenId,
+        serial,
+        info,
+        totalShares,
+        baseline,
+        potential
+      );
 
       console.log("Transaction hash:", tx.hash);
       await tx.wait();
       console.log("Transaction confirmed.");
 
       onRegistrationComplete?.({
-        message: "Forest area listed successfully!",
+        message: "Forest area registered successfully!",
         forestData: formData,
         transactionHash: tx.hash,
       });
@@ -120,12 +181,13 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
       console.error("Registration error:", err);
       if (err.code === 4001) {
         setError("Transaction was rejected by user.");
-      } else if (err.code === -32603) {
-        setError("Internal JSON-RPC error. Please try again.");
+      } else if (err.reason) {
+        // UPDATED: Show clearer contract revert reasons
+        setError(`Registration failed: ${err.reason}`);
       } else if (err.message.includes("insufficient funds")) {
         setError("Insufficient funds for gas fees.");
       } else {
-        setError(`Listing failed: ${err.message || "Please try again."}`);
+        setError(`Registration failed: ${err.message || "Please try again."}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -171,6 +233,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     </div>
   );
 
+  // UPDATED: Renders 3 steps
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-8">
       {steps.map((step, index) => (
@@ -200,13 +263,14 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     </div>
   );
 
+  // UPDATED: Step 1 now includes IPFS hash
   const renderStep1 = () => (
     <div className="space-y-6">
       <h3 className="text-2xl font-bold text-white mb-2 text-center">
-        Forest Information
+        Core Forest Details
       </h3>
       <p className="text-slate-400 mb-6 text-center">
-        Provide the basic details of the forest area
+        Provide the basic location and documentation details.
       </p>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -214,7 +278,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           "location",
           "Location",
           "text",
-          "Example Forest",
+          "e.g., Amazon Rainforest Sector 4A",
           true,
           MapPin
         )}
@@ -222,13 +286,13 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           "gpsCoordinates",
           "GPS Coordinates",
           "text",
-          "12.9716° N, 77.5946° E",
+          "e.g., 3.4653° S, 62.2159° W",
           true,
           Globe
         )}
       </div>
 
-      <div>
+      <div className="grid md:grid-cols-2 gap-6">
         {renderInputWithError(
           "areaSize",
           "Area Size (sq. meters)",
@@ -237,20 +301,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           true,
           Ruler
         )}
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <h3 className="text-2xl font-bold text-white mb-2 text-center">
-        Pricing & Documentation
-      </h3>
-      <p className="text-slate-400 mb-6 text-center">
-        Upload deed details and set your listing price
-      </p>
-
-      <div className="grid md:grid-cols-2 gap-6">
         {renderInputWithError(
           "ipfsDeedHash",
           "IPFS Deed Hash/Link",
@@ -259,13 +309,82 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           true,
           FileText
         )}
+      </div>
+    </div>
+  );
+
+  // NEW: Step 2 for Token & Share info
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-white mb-2 text-center">
+        Token & Share Details
+      </h3>
+      <p className="text-slate-400 mb-6 text-center">
+        Enter the HTS token info and fractionalization details.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-6">
         {renderInputWithError(
-          "price",
-          "Price (HBAR)",
+          "htsTokenId",
+          "HTS Token ID",
           "text",
-          "1.5",
+          "e.g., 0.0.123456",
           true,
-          DollarSign
+          Award
+        )}
+        {renderInputWithError(
+          "serial",
+          "Serial Number",
+          "number",
+          "1",
+          true,
+          Shield
+        )}
+      </div>
+
+      <div>
+        {renderInputWithError(
+          "totalShares",
+          "Total Shares",
+          "number",
+          "10000",
+          true,
+          PieChart
+        )}
+        <p className="text-sm text-slate-400 mt-2 ml-1">
+          The total number of fractional units this NFT will be divided into
+          (e.g., 10,000 shares).
+        </p>
+      </div>
+    </div>
+  );
+
+  // NEW: Step 3 for Sequestration data (replaces old step 2)
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-white mb-2 text-center">
+        Sequestration Data
+      </h3>
+      <p className="text-slate-400 mb-6 text-center">
+        Provide the carbon sequestration projections for this area.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {renderInputWithError(
+          "baseline",
+          "Baseline Sequestration (per year)",
+          "number",
+          "50000",
+          true,
+          TrendingDown
+        )}
+        {renderInputWithError(
+          "potential",
+          "Potential Sequestration (per year)",
+          "number",
+          "150000",
+          true,
+          TrendingUp
         )}
       </div>
     </div>
@@ -284,8 +403,9 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
               <span>Back to Marketplace</span>
             </button>
             <div className="text-center">
+              {/* UPDATED: Title */}
               <h2 className="text-3xl font-bold text-white">
-                Forest Seller Registration
+                Register New Forest Area
               </h2>
               <p className="text-slate-400 mt-1">
                 Step {currentStep} of {steps.length}
@@ -301,6 +421,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           <div className="mb-8">
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
           </div>
 
           <div className="flex justify-between items-center">
@@ -334,12 +455,13 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
                 {isSubmitting ? (
                   <>
                     <LoadingSpinner size="sm" />
-                    <span>Listing Area...</span>
+                    <span>Registering Area...</span>
                   </>
                 ) : (
                   <>
                     <Hash className="h-5 w-5" />
-                    <span>List Forest Area</span>
+                    {/* UPDATED: Button text */}
+                    <span>Register Forest Area</span>
                   </>
                 )}
               </button>

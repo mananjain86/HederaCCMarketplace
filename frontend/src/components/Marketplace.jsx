@@ -7,21 +7,78 @@ import { ErrorMessage } from "./ErrorMessage";
 
 // --- Load ABI from local files ---
 import CONTRACT_ABI from "../abi/CarbonCreditMarketplace.json";
-import ForestABI from "../abi/ForestTokenMarketplace.json";
+// UPDATED: Import new forest ABI
+import FOREST_ABI from "../abi/ForestTokenMarketplace.json";
 
 const CARBON_CONTRACT_ADDRESS =
   import.meta.env.VITE_CARBON_CONTRACT_ADDRESS ||
   "0x2b22Ed957d4A0D7cF11Fe049e936a94b2EF05Fb6";
 const FOREST_CONTRACT_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
-  "0x9A0b748B6A706eAb1C4Bf8541684C1eE41F0031D";
+  "0xD8a0C3B0CB1FDc61262772eE502a97C74dbA86B9"; 
+
 const RPC_URL = "https://testnet.hashio.io/api";
 
-// Add HBAR conversion helper
-const HBAR_TO_TINYBAR = 100000000;
-const formatHBAR = (tinybars) => {
-  const hbar = Number(tinybars) / HBAR_TO_TINYBAR;
-  return hbar.toFixed(2);
+// UPDATED: Use BigInt for HBAR constant
+const HBAR_TO_TINYBAR = 100_000_000n;
+
+// UPDATED: New fetchForestData helper for the new contract
+const fetchForestData = async (contract, id) => {
+  try {
+    const [forest, remaining] = await Promise.all([
+      contract.forests(id),
+      contract.remainingShares(id),
+    ]);
+
+    if (!forest.active || forest.forestId.toString() === "0") {
+      return null;
+    }
+
+    const regenScore = Number(forest.regenerationScore);
+    const BASE_PRICE_TINYBAR = 100_000n;
+    let pricePerShareTinybar;
+
+    if (regenScore > 0) {
+      pricePerShareTinybar = (BigInt(regenScore) * BASE_PRICE_TINYBAR) / 10n;
+    } else {
+      pricePerShareTinybar = BASE_PRICE_TINYBAR;
+    }
+
+    const pricePerShareHBAR = parseFloat(
+      ethers.formatUnits(pricePerShareTinybar, 8)
+    );
+    const totalShares = Number(forest.totalShares);
+    const sharesAvailable = Number(remaining);
+    const sharesSold = totalShares - sharesAvailable;
+
+    return {
+      id: id.toString(),
+      seller: "N/A (Direct Sale)",
+      currentOwner: "N/A (Fractional)",
+      pricePerShare: pricePerShareHBAR,
+      isActive: forest.active,
+      projectName: forest.info.location || `Forest #${id}`,
+      projectRegion: forest.info.location || "Unknown",
+      areaSize: Number(forest.info.areaSize),
+      ipfsDeedHash: forest.info.ipfsDeedHash,
+      projectCountry: "Unknown",
+      forestType: "Dynamic Reforestation",
+      conservationStatus: `Regen Score: ${regenScore}`, // This was already here
+      type: "forest",
+      totalShares: totalShares,
+      sharesAvailable: sharesAvailable,
+      sharesSold: sharesSold,
+      regenerationScore: regenScore, 
+      
+      baselineSequestration: Number(forest.baselineSequestrationPerYear),
+      potentialSequestration: Number(forest.potentialSequestrationPerYear),
+      htsTokenId: forest.htsTokenId, // Pass the token ID
+      // --- END OF NEW DATA ---
+    };
+  } catch (err) {
+    console.error(`Error fetching forest data for ID ${id}:`, err);
+    return null;
+  }
 };
 
 function Marketplace({ onViewCompany }) {
@@ -51,13 +108,14 @@ function Marketplace({ onViewCompany }) {
 
       const provider = new ethers.JsonRpcProvider(RPC_URL);
 
-      // --- Carbon Marketplace ---
+      // --- Carbon Marketplace (Unchanged) ---
       const carbonContract = new ethers.Contract(
         CARBON_CONTRACT_ADDRESS,
         CONTRACT_ABI,
         provider
       );
-      const activeCarbonIds = await carbonContract.getActiveCarbonCreditListings();
+      const activeCarbonIds =
+        await carbonContract.getActiveCarbonCreditListings();
       const carbonListings = await Promise.all(
         activeCarbonIds.map(async (idBN) => {
           const id = idBN.toString();
@@ -70,7 +128,7 @@ function Marketplace({ onViewCompany }) {
             id,
             seller: listing[1],
             amount: Number(listing[2]),
-            pricePerCredit: parseFloat(ethers.formatUnits(listing[3],8)),
+            pricePerCredit: parseFloat(ethers.formatUnits(listing[3], 8)),
             isActive: listing[4],
             projectName: basicInfo[0] || `Project ${id}`,
             projectType: basicInfo[1] || "Carbon Credit",
@@ -90,67 +148,55 @@ function Marketplace({ onViewCompany }) {
         })
       );
 
-      // --- Forest Marketplace ---
+      // --- Forest Marketplace (UPDATED) ---
       const forestContract = new ethers.Contract(
-        FOREST_CONTRACT_ADDRESS,
-        ForestABI,
+        FOREST_CONTRACT_ADDRESS, // Uses new address
+        FOREST_ABI, // Uses new ABI
         provider
       );
-      const activeForestIds = await forestContract.getActiveListings();
+      const nextIdBN = await forestContract.nextForestId();
+      const nextId = Number(nextIdBN);
+      const forestPromises = [];
 
-      const forestListings = await Promise.all(
-        activeForestIds.map(async (idBN) => {
-          try {
-            const id = idBN.toString();
-            const listing = await forestContract.getListingDetails(id);
-
-            // Forest info is mainly in listing[5]
-            const infoRaw = listing[5] || {};
-            const info = Array.isArray(infoRaw) ? infoRaw : infoRaw.info || [];
-
-            return {
-              id,
-              seller: listing[1],
-              currentOwner: listing[2],
-              pricePerHectare: parseFloat(ethers.formatUnits(listing[3],8 || 0)),
-              isActive: listing[4] || false,
-              projectName: info[0] || `Forest Project ${id}`,
-              projectRegion: info[1] || "Unknown",
-              areaSize: info[2] ? Number(info[2]) : null,
-              ipfsDeedHash: info[3] || "",
-              projectCountry: "Unknown",
-              forestType: "General Forest",
-              conservationStatus: "Unspecified",
-              type: "forest",
-            };
-          } catch (err) {
-            console.error(`Error fetching forest listing ${idBN}:`, err);
-            return null;
-          }
-        })
+      for (let i = 1; i < nextId; i++) {
+        // fetchForestData helper is now updated for the new contract
+        forestPromises.push(fetchForestData(forestContract, i));
+      }
+      const validForestListings = (await Promise.all(forestPromises)).filter(
+        Boolean
       );
-
-      const validForestListings = forestListings.filter(Boolean);
 
       // --- Combine both listings ---
       const fetchedListings = [...carbonListings, ...validForestListings];
       setListings(fetchedListings);
-      // --- Analytics (carbon credits only) ---
+
+      // --- MODIFIED: Analytics ---
       const totalCredits = carbonListings.reduce((sum, l) => sum + l.amount, 0);
       const activeProjects = carbonListings.length + validForestListings.length;
-      const totalValueLocked = carbonListings.reduce(
+
+      // Calculate TVL for carbon credits
+      const carbonTVL = carbonListings.reduce(
         (sum, l) => sum + l.amount * l.pricePerCredit,
         0
       );
+
+      // UPDATED: Calculate TVL for forests (value of *sold* shares)
+      const forestTVL = validForestListings.reduce((sum, f) => {
+        // We now use the 'sharesSold' property from the new fetchForestData
+        return sum + f.sharesSold * f.pricePerShare;
+      }, 0);
+
       const verifiedCount = carbonListings.filter((l) => l.isVerified).length;
+      const carbonOnlyVerified =
+        carbonListings.length > 0
+          ? (verifiedCount / carbonListings.length) * 100
+          : 0;
 
       setAnalytics({
         totalCredits,
         activeProjects,
-        totalValueLocked,
-        verificationRate: activeProjects
-          ? Math.round((verifiedCount / activeProjects) * 100)
-          : 0,
+        totalValueLocked: carbonTVL + forestTVL,
+        verificationRate: Math.round(carbonOnlyVerified),
       });
     } catch (err) {
       console.error("Error fetching listings:", err);
@@ -158,7 +204,7 @@ function Marketplace({ onViewCompany }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // useCallback dependency list is empty, correct for this logic
 
   useEffect(() => {
     fetchListings();
@@ -198,24 +244,33 @@ function Marketplace({ onViewCompany }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Analytics Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* UPDATED: Fixed Card 1 to show totalCredits */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="text-2xl font-bold text-emerald-400">
             {analytics.totalCredits.toLocaleString()}
           </div>
           <div className="text-slate-400">Total Credits Available</div>
         </div>
+        
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="text-2xl font-bold text-emerald-400">
             {analytics.activeProjects}
           </div>
           <div className="text-slate-400">Active Listings</div>
         </div>
+        
+        {/* UPDATED: Fixed Card 3 formatting to match Card 1's original style */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="text-2xl font-bold text-emerald-400">
-            {analytics.totalValueLocked.toFixed(2)} HBAR
+            {analytics.totalValueLocked.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{" "}
+            HBAR
           </div>
           <div className="text-slate-400">Total Value Locked</div>
         </div>
+        
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
           <div className="text-2xl font-bold text-emerald-400">
             {analytics.verificationRate}%
@@ -224,7 +279,7 @@ function Marketplace({ onViewCompany }) {
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Filters (Unchanged) */}
       <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 mb-8 border border-slate-700/50">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
@@ -281,10 +336,11 @@ function Marketplace({ onViewCompany }) {
             key={`${credit.type}-${credit.id}`}
             credit={{
               ...credit,
+              // UPDATED: Fixed typo from pricePerHectare to pricePerShare
               price: credit.pricePerCredit
                 ? `${credit.pricePerCredit.toFixed(4)} HBAR`
-                : credit.pricePerHectare
-                ? `${credit.pricePerHectare.toFixed(4)} HBAR`
+                : credit.pricePerShare // <-- This is the fix
+                ? `${credit.pricePerShare.toFixed(4)} HBAR`
                 : "N/A",
             }}
             onViewCompany={onViewCompany}
