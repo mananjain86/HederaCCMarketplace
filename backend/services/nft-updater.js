@@ -102,20 +102,3 @@ export async function batchUpdateForestNFTs(nfts, topicId) {
   
   return results;
 }
-
-/**
- * Schedule automatic NFT updates (e.g., daily)
- */
-export function scheduleNFTUpdates(nfts, topicId, intervalHours = 24) {
-  const intervalMs = intervalHours * 60 * 60 * 1000;
-  
-  console.log(`⏰ Scheduling NFT updates every ${intervalHours} hours`);
-  
-  const intervalId = setInterval(async () => {
-    console.log("\n🔄 Running scheduled NFT updates...");
-    const results = await batchUpdateForestNFTs(nfts, topicId);
-    console.log(`✅ Updated ${results.filter(r => r.success).length}/${results.length} NFTs`);
-  }, intervalMs);
-  
-  return intervalId;
-}

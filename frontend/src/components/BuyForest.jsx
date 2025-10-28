@@ -28,9 +28,13 @@ export function BuyForest() {
   const [statusMessage, setStatusMessage] = useState("");
   const [txHash, setTxHash] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [sharesToBuy, setSharesToBuy] = useState(1);
+  const [maxShares, setMaxShares] = useState(0);
+  const [pricePerShare, setPricePerShare] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   const { toast } = useToast();
 
-  // Fetch forest listing details
+  // Fetch forest details (only when id changes)
   useEffect(() => {
     async function fetchForest() {
       try {
@@ -41,33 +45,50 @@ export function BuyForest() {
           ForestABI,
           provider
         );
-        const listing = await contract.getListingDetails(id);
-        const parsed = {
-          listingId: Number(listing.listingId),
-          seller: listing.seller,
-          currentOwner: listing.currentOwner,
-          // keep raw on-chain price (tinybars) for exact payment math and a human display value
-          priceRaw: listing.price, // bigint in tinybars
-          price: parseFloat(ethers.formatUnits(listing.price, 8)), // HBAR human-friendly
-          isActive: listing.isActive,
-          location: listing.info.location,
-          gpsCoordinates: listing.info.gpsCoordinates,
-          areaSize: Number(listing.info.areaSize),
-          ipfsDeedHash: listing.info.ipfsDeedHash,
-        };
-        setForest(parsed);
+        // Get forest details
+        const forestData = await contract.forests(id);
+        // Get remaining shares
+        const remaining = await contract.remainingShares(id);
+        setMaxShares(Number(remaining));
+        // Calculate price per share (same as contract logic)
+        let pricePerShareWei = forestData.regenerationScore > 0
+          ? (Number(forestData.regenerationScore) * 1e15) / 10
+          : 1e15;
+        setPricePerShare(pricePerShareWei);
+
+        setForest({
+          forestId: Number(forestData.forestId),
+          htsTokenId: forestData.htsTokenId,
+          serial: Number(forestData.serial),
+          location: forestData.info.location,
+          gpsCoordinates: forestData.info.gpsCoordinates,
+          areaSize: Number(forestData.info.areaSize),
+          ipfsDeedHash: forestData.info.ipfsDeedHash,
+          totalShares: Number(forestData.totalShares),
+          baseline: Number(forestData.baselineSequestrationPerYear),
+          potential: Number(forestData.potentialSequestrationPerYear),
+          regenerationScore: Number(forestData.regenerationScore),
+          lastUpdated: Number(forestData.lastUpdated),
+          accumulatedYield: Number(forestData.accumulatedYield),
+          active: forestData.active,
+        });
       } catch (err) {
         console.error(err);
-        setError("Failed to load forest listing.");
+        setError("Failed to load forest details.");
       } finally {
         setLoading(false);
       }
     }
 
     if (id) fetchForest();
-  }, [id]);
+  }, [id]); // <-- Only depends on id
 
-  // Buy forest token
+  // Update total price when sharesToBuy or pricePerShare changes
+  useEffect(() => {
+    setTotalPrice(pricePerShare * sharesToBuy);
+  }, [sharesToBuy, pricePerShare]);
+
+  // Buy forest shares
   const handleBuy = async () => {
     try {
       setBuying(true);
@@ -78,7 +99,7 @@ export function BuyForest() {
         return;
       }
 
-      // --- 1️⃣ Fetch Company Details ---
+      // 1️⃣ Fetch Company Details
       setStatusMessage("Fetching your company details...");
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -92,44 +113,58 @@ export function BuyForest() {
 
       const buyerHederaId = companyDetails.hederaAccountId;
 
-      // --- 2️⃣ Confirm MetaMask Transaction ---
+      // 2️⃣ Confirm MetaMask Transaction
       setStatusMessage("Waiting for MetaMask confirmation...");
       const forestContract = new ethers.Contract(FOREST_CONTRACT_ADDRESS, ForestABI, signer);
 
-      // ⚠️ Fix: Convert price (tinybars → 18-decimal HBAR “wei”)
-      // 1 tinybar = 10^10 wei equivalent on EVM
-      const totalTinybars = BigInt(forest.priceRaw);
-      const totalCostWei = totalTinybars * 10_000_000_000n; // multiply by 1e10
+      const pricePerShareTinybars = BigInt(pricePerShare); // from contract, tinybars (8 decimals)
+      const totalCostTinybars = pricePerShareTinybars * BigInt(sharesToBuy);
 
-      console.log("💰 totalCostWei (in wei):", totalCostWei.toString());
-      console.log("💰 totalCost in HBAR:", ethers.formatEther(totalCostWei));
+      // Convert tinybars to wei (18 decimals) for EVM
+      const totalCostWei = totalCostTinybars * 10_000_000_00n; // 10^10
 
-      // --- 3️⃣ Execute Transaction ---
-      const tx = await forestContract.buyForestArea(forest.listingId, { value: totalCostWei });
+      const tx = await forestContract.buyForestShares(
+        forest.forestId,
+        sharesToBuy,
+        { value: totalCostWei }
+      ); 
       setTxHash(tx.hash);
       setStatusMessage("Processing transaction...");
       const receipt = await tx.wait();
       console.log("✅ Hedera transaction successful:", receipt.hash);
 
-      // --- 4️⃣ Backend NFT Tokenization ---
+      // 4️⃣ Backend NFT Tokenization (mint forest NFT)
       setStatusMessage("Minting your Hedera NFT deed...");
       const payload = {
-        buyerHederaId,
-        ethereumTxHash: receipt.hash,
-        buyerEthAddress: address,
-        location: forest.location,
-        areaSize: forest.areaSize,
-        price: forest.price,
-        ipfsDeedHash: forest.ipfsDeedHash,
+        forestData: {
+          forestId: forest.forestId,
+          htsTokenId: forest.htsTokenId,
+          serial: forest.serial,
+          location: forest.location,
+          gpsCoordinates: forest.gpsCoordinates,
+          areaSize: forest.areaSize,
+          ipfsDeedHash: forest.ipfsDeedHash,
+          totalShares: forest.totalShares,
+          baseline: forest.baseline,
+          potential: forest.potential,
+          regenerationScore: forest.regenerationScore,
+          lastUpdated: forest.lastUpdated,
+          accumulatedYield: forest.accumulatedYield,
+          active: forest.active,
+          sharesBought: sharesToBuy,
+          price: ethers.formatEther(totalPrice.toString()),
+          buyerEthAddress: address,
+          ethereumTxHash: receipt.hash,
+        },
+        buyerAccountId: buyerHederaId,
       };
 
-      const response = await axios.post(`${BACKEND_URL}/api/tokenize-forest-purchase`, payload);
+      const response = await axios.post(`${BACKEND_URL}/api/nft/mint-forest`, payload);
 
       if (!response.data.success) {
         throw new Error(response.data.error || "Backend tokenization failed.");
       }
 
-      console.log("✅ Hedera tokenization successful:", response.data);
       setStatusMessage("Purchase complete!");
       setShowModal(true);
 
@@ -147,7 +182,6 @@ export function BuyForest() {
       setStatusMessage("");
     }
   };
-
 
   if (loading)
     return (
@@ -175,7 +209,7 @@ export function BuyForest() {
       <div className="max-w-4xl w-full p-6 rounded-2xl bg-slate-800/70 backdrop-blur-md shadow-lg">
         <div className="flex items-center space-x-3 mb-6">
           <TreePine className="h-12 w-12 text-green-400" />
-          <h1 className="text-3xl font-bold">Buy Forest Token #{forest.listingId}</h1>
+          <h1 className="text-3xl font-bold">Buy Forest Shares #{forest.forestId}</h1>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -188,13 +222,37 @@ export function BuyForest() {
             <p>{forest.areaSize} ha</p>
           </div>
           <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Price</p>
-            <p className="font-mono text-white">{forest.price} HBAR</p>
+            <p className="text-slate-300 text-sm">Shares Available</p>
+            <p>{maxShares}</p>
           </div>
           <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Current Owner</p>
-            <p>{forest.currentOwner}</p>
+            <p className="text-slate-300 text-sm">Price per Share</p>
+            <p className="font-mono text-white">{ethers.formatEther(pricePerShare.toString())} HBAR</p>
           </div>
+        </div>
+
+        <div className="mb-6 flex items-center gap-4">
+          <label htmlFor="shares" className="text-slate-300">Shares to Buy:</label>
+          <input
+            id="shares"
+            type="number"
+            min={1}
+            max={maxShares}
+            value={sharesToBuy}
+            onChange={e => setSharesToBuy(Math.max(1, Math.min(maxShares, Number(e.target.value))))}
+            className="w-24 px-2 py-1 rounded bg-slate-700 text-white border border-slate-600"
+            disabled={buying}
+          />
+          <span className="text-slate-400">/ {maxShares} shares</span>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-lg">
+            <span className="font-semibold">Total Price:</span>{" "}
+            <span className="font-mono text-emerald-400">
+              {ethers.formatEther(totalPrice.toString())} HBAR
+            </span>
+          </p>
         </div>
 
         {forest.ipfsDeedHash && (
@@ -212,21 +270,20 @@ export function BuyForest() {
 
         <button
           onClick={handleBuy}
-          disabled={!forest.isActive || buying}
-          className={`w-full py-3 text-lg font-bold rounded-lg transition-all ${
-            forest.isActive
+          disabled={!forest.active || buying || maxShares === 0}
+          className={`w-full py-3 text-lg font-bold rounded-lg transition-all ${forest.active && maxShares > 0
               ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
               : "bg-gray-600 cursor-not-allowed"
-          }`}
+            }`}
         >
-          {buying ? statusMessage : forest.isActive ? "Buy Forest Token" : "Sold"}
+          {buying ? statusMessage : forest.active && maxShares > 0 ? "Buy Shares" : "Sold Out"}
         </button>
 
         {txHash && (
           <p className="mt-4 text-sm text-emerald-300">
             Transaction Hash:{" "}
             <a
-              href={`https://testnet.hashio.io/api/${txHash}`}
+              href={`https://hashscan.io/testnet/transaction/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="underline"
@@ -244,9 +301,9 @@ export function BuyForest() {
             <CheckCircle className="h-6 w-6 text-white" />
             <div className="flex flex-col">
               <p className="font-bold">Purchase Successful!</p>
-              <p className="text-sm">Your forest token is now yours.</p>
+              <p className="text-sm">Your forest shares are now yours.</p>
               <button
-                onClick={() => navigate(`/forest/${forest.listingId}`)}
+                onClick={() => navigate(`/forest/${forest.forestId}`)}
                 className="mt-2 py-1 px-3 bg-white text-emerald-700 rounded-lg font-medium text-sm hover:bg-gray-100 transition"
               >
                 View Token Details

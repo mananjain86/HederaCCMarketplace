@@ -1,4 +1,4 @@
-import { getCurrentSensorData, startIoTSimulation } from "../hcs/iot-simulator.js";
+import { getCurrentSensorData } from "../hcs/iot-simulator.js";
 import { calculateRegenerationScore } from "../ai/regeneration-score.js";
 import { submitMessage } from "../hcs/consensus.js";
 
@@ -26,10 +26,6 @@ export async function monitorForest(forestData, iotTopicId, regenTopicId) {
       ...regenScore,
     });
     console.log("✅ Regeneration score submitted to HCS");
-
-    // Step 4: Start continuous IoT monitoring (optional)
-    // Uncomment to enable continuous monitoring every 15 minutes
-    // startIoTSimulation(forestData.id, forestData.location, topicId, 15);
 
     return {
       success: true,

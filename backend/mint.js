@@ -190,6 +190,8 @@ export async function mintNFT(data, type, buyerAccountId) {
     const serialNumber = mintRx.serials[0].toString();
     console.log(`✅ NFT minted! Serial: ${serialNumber}`);
 
+    await grantKyc(buyerAccountId, tokenId);
+
     // 3️⃣ Transfer NFT to buyer (buyer already associated via HashPack)
     console.log(`📤 Transferring NFT to buyer (${buyerAccountId})...`);
     const transferTx = await new TransferTransaction()

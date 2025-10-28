@@ -9,12 +9,11 @@ import {
   Users,
   User,
   ShieldPlus,
+  Radio, // NEW: Icon for relayer
 } from "lucide-react";
 import { ethers } from "ethers";
 import { useNavigate, Link } from "react-router-dom";
 import COMPANY_ABI from "../abi/HandleCompany.json";
-// NEW: Import your new contract's ABI
-// Make sure you create this file in your /abi/ folder
 import FOREST_ABI from "../abi/ForestTokenMarketplace.json";
 import { useToast } from "../hooks/useToast";
 
@@ -23,25 +22,26 @@ const COMPANY_ADDRESS =
   "0x6136a57179ddb0FeF580724263BDc73c96B31863";
 
 const FOREST_ADDRESS =
-  import.meta.env.VITE_FOREST_CONTRACT_ADDRESS || // <-- Make sure to set this in your .env
-  "0xD8a0C3B0CB1FDc61262772eE502a97C74dbA86B9"; 
-
+  import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
+  "0xD8a0C3B0CB1FDc61262772eE502a97C74dbA86B9";
 
 export function Navbar() {
   const [companyId, setCompanyId] = useState(null);
   const [account, setAccount] = useState(null);
   const [allAccounts, setAllAccounts] = useState([]);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [isOwner, setIsOwner] = useState(false); // This is now for the PLATFORM ADMIN
-  const [isGovernment, setIsGovernment] = useState(false); // NEW: State for the Government role
+  const [isOwner, setIsOwner] = useState(false);
+  const [isGovernment, setIsGovernment] = useState(false);
+  const [isRelayer, setIsRelayer] = useState(false); // NEW: State for relayer
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
-  const [showGovDropdown, setShowGovDropdown] = useState(false); // NEW: State for Government dropdown
+  const [showGovDropdown, setShowGovDropdown] = useState(false);
+  const [showRelayerDropdown, setShowRelayerDropdown] = useState(false); // NEW: Relayer dropdown
   const ownerDropdownRef = useRef(null);
-  const govDropdownRef = useRef(null); // NEW: Ref for Government dropdown
+  const govDropdownRef = useRef(null);
+  const relayerDropdownRef = useRef(null); // NEW: Ref for relayer dropdown
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // separate dropdown states
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showRegisterDropdown, setShowRegisterDropdown] = useState(false);
 
@@ -73,11 +73,12 @@ export function Navbar() {
     setIsRegistered(false);
     setAllAccounts([]);
     setIsOwner(false);
-    setIsGovernment(false); // NEW: Reset government state
+    setIsGovernment(false);
+    setIsRelayer(false); // NEW: Reset relayer state
     toast.info("Wallet disconnected successfully!");
   };
 
-  // UPDATED: This function now checks for the PLATFORM ADMIN (`owner`)
+  // Check platform admin (owner)
   const checkOwnership = async (addr) => {
     if (!addr || !window.ethereum) return;
     try {
@@ -87,7 +88,6 @@ export function Navbar() {
         FOREST_ABI,
         provider
       );
-      // This still works, as your new contract has a public `owner` variable
       const ownerAddress = await contract.owner();
       setIsOwner(ownerAddress.toLowerCase() === addr.toLowerCase());
     } catch (err) {
@@ -96,7 +96,7 @@ export function Navbar() {
     }
   };
 
-  // NEW: This function checks for the `governmentRegistrar` role
+  // Check government registrar
   const checkGovernmentStatus = async (addr) => {
     if (!addr || !window.ethereum) return;
     try {
@@ -106,7 +106,6 @@ export function Navbar() {
         FOREST_ABI,
         provider
       );
-      // Your new contract has a public `governmentRegistrar` variable
       const govAddress = await contract.governmentRegistrar();
       setIsGovernment(govAddress.toLowerCase() === addr.toLowerCase());
     } catch (err) {
@@ -115,7 +114,25 @@ export function Navbar() {
     }
   };
 
-  // Listen for account changes in MetaMask
+  // NEW: Check if account is a relayer
+  const checkRelayerStatus = async (addr) => {
+    if (!addr || !window.ethereum) return;
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(
+        FOREST_ADDRESS,
+        FOREST_ABI,
+        provider
+      );
+      const isRel = await contract.relayers(addr);
+      setIsRelayer(isRel);
+    } catch (err) {
+      console.error("Failed to check relayer status:", err);
+      setIsRelayer(false);
+    }
+  };
+
+  // Listen for account changes
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", (accounts) => {
@@ -127,13 +144,14 @@ export function Navbar() {
           setIsRegistered(false);
           setAllAccounts([]);
           setIsOwner(false);
-          setIsGovernment(false); // NEW: Reset on account change
+          setIsGovernment(false);
+          setIsRelayer(false); // NEW: Reset on account change
         }
       });
     }
   }, []);
 
-  // Check if account is registered as a company
+  // Check company registration
   const checkCompanyRegistration = async (addr) => {
     if (!addr || !window.ethereum) return;
     try {
@@ -171,7 +189,8 @@ export function Navbar() {
     if (account) {
       checkCompanyRegistration(account);
       checkOwnership(account);
-      checkGovernmentStatus(account); // NEW: Check government status on account load
+      checkGovernmentStatus(account);
+      checkRelayerStatus(account); // NEW: Check relayer status
     }
   }, [account]);
 
@@ -190,12 +209,18 @@ export function Navbar() {
       ) {
         setShowOwnerDropdown(false);
       }
-      // NEW: Add handler for government dropdown
       if (
         govDropdownRef.current &&
         !govDropdownRef.current.contains(event.target)
       ) {
         setShowGovDropdown(false);
+      }
+      // NEW: Add handler for relayer dropdown
+      if (
+        relayerDropdownRef.current &&
+        !relayerDropdownRef.current.contains(event.target)
+      ) {
+        setShowRelayerDropdown(false);
       }
       if (
         registerDropdownRef.current &&
@@ -228,6 +253,7 @@ export function Navbar() {
               </span>
             </div>
           </Link>
+
           {/* Nav Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
@@ -246,11 +272,11 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Wallet + Register/Profile/Owner */}
+          {/* Wallet + Role-based Dropdowns */}
           <div className="flex items-center space-x-4">
             {account ? (
               <>
-                {/* Profile or Register */}
+                {/* Register Dropdown (if not registered) */}
                 {isRegistered ? (
                   ""
                 ) : (
@@ -305,7 +331,42 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* NEW: Government Actions Dropdown */}
+                {/* NEW: Relayer Actions Dropdown */}
+                {isRelayer && (
+                  <div className="relative" ref={relayerDropdownRef}>
+                    <button
+                      onClick={() => setShowRelayerDropdown(!showRelayerDropdown)}
+                      className="border border-purple-400 text-purple-400 px-4 py-2 rounded-lg font-medium hover:bg-purple-400/10 transition-all flex items-center space-x-2"
+                    >
+                      <Radio className="h-4 w-4" />
+                      <span>Relayer Actions</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    {showRelayerDropdown && (
+                      <div className="absolute right-0 mt-2 w-72 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                        <button
+                          onClick={() => {
+                            navigate("/relayer-dashboard");
+                            setShowRelayerDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        >
+                          <TreePine className="h-5 w-5 text-purple-400" />
+                          <div>
+                            <div className="font-medium">
+                              Update Forest Regeneration
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              Sync IoT data and regeneration scores
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Government Actions Dropdown */}
                 {isGovernment && (
                   <div className="relative" ref={govDropdownRef}>
                     <button
@@ -319,7 +380,6 @@ export function Navbar() {
                       <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
                         <button
                           onClick={() => {
-                            // This link matches the `registerForest` function
                             navigate("/forest-seller-registration");
                             setShowGovDropdown(false);
                           }}
@@ -335,10 +395,9 @@ export function Navbar() {
                             </div>
                           </div>
                         </button>
-                        {/* NEW: Add pages for other government functions */}
                         <button
                           onClick={() => {
-                            navigate("/manage-relayers"); // You will need to create this page
+                            navigate("/manage-relayers");
                             setShowGovDropdown(false);
                           }}
                           className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
@@ -356,23 +415,18 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* UPDATED: Platform Admin Actions (formerly "Owner Actions") */}
+                {/* Platform Admin Actions */}
                 {isOwner && (
                   <div className="relative" ref={ownerDropdownRef}>
                     <button
                       onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
                       className="border border-yellow-400 text-yellow-400 px-4 py-2 rounded-lg font-medium hover:bg-yellow-400/10 transition-all flex items-center space-x-2"
                     >
-                      {/* UPDATED: Renamed to be more specific */}
                       <span>Admin Actions</span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showOwnerDropdown && (
                       <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
-                        {/* NOTE: "List New Forest Area" was REMOVED from here.
-                          It is now in the "Government Actions" dropdown.
-                          The remaining links are assumed to be for the platform admin.
-                        */}
                         <button
                           onClick={() => {
                             navigate("/grant-kyc");
@@ -384,7 +438,7 @@ export function Navbar() {
                           <div>
                             <div className="font-medium">Grant Token KYC</div>
                             <div className="text-sm text-slate-400">
-                              approve companies to trade tokens
+                              Approve companies to trade tokens
                             </div>
                           </div>
                         </button>
@@ -395,14 +449,13 @@ export function Navbar() {
                           }}
                           className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
                         >
-                          {/* UPDATED: Icon changed from TreePine */}
                           <ShieldPlus className="h-5 w-5 text-yellow-400" />
                           <div>
                             <div className="font-medium">
                               Verify Registered Companies
                             </div>
                             <div className="text-sm text-slate-400">
-                              check if the registered companies are not fake
+                              Check if registered companies are legitimate
                             </div>
                           </div>
                         </button>
@@ -413,21 +466,19 @@ export function Navbar() {
                           }}
                           className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
                         >
-                          {/* UPDATED: Icon changed from TreePine */}
                           <BarChart3 className="h-5 w-5 text-yellow-400" />
                           <div>
                             <div className="font-medium">
                               Manage Carbon Credits
                             </div>
                             <div className="text-sm text-slate-400">
-                              Approve carbon credits to a company for sale
+                              Approve carbon credits for sale
                             </div>
                           </div>
                         </button>
-                        {/* NEW: Add link for withdrawFees() */}
                         <button
                           onClick={() => {
-                            navigate("/withdraw-fees"); // You will need to create this page
+                            navigate("/withdraw-fees");
                             setShowOwnerDropdown(false);
                           }}
                           className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
@@ -447,7 +498,7 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* Account Actions Dropdown */}
+                {/* Account Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setOpen(!open)}
