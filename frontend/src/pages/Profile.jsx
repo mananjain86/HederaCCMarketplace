@@ -1,8 +1,6 @@
 // src/pages/CompanyProfile.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-// import { HashConnect } from "hashconnect";
-// import { LedgerId, TokenAssociateTransaction, AccountId } from "@hashgraph/sdk";
 import {
   ArrowLeft,
   Calendar,
@@ -13,15 +11,28 @@ import {
   BarChart,
   Leaf,
   Sparkles,
+  Award, // For claim button
+  Database, // For yield display
+  TreePine, // For Forest section header
 } from "lucide-react";
-import { LoadingSpinner } from "../components/LoadingSpinner";
+import { LoadingSpinner } from "../components/LoadingSpinner"; // Make sure you have this component
 import abi from "../abi/HandleCompany.json";
+// --- NEW: Import Forest Contract ABI ---
+import forestAbi from "../abi/ForestTokenMarketplace.json";
+import { useToast } from "../hooks/useToast"; // Import useToast
 
 // --- Constants ---
 const COMPANY_ADDRESS =
   import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS ||
-  "0x6136a57179ddb0FeF580724263BDc73c96B31863";
+  "0x6136a57179ddb0FeF580724263BDc73c96B31863"; // Ensure this is correct
 const COMPANY_ABI = abi;
+// --- NEW: Forest Contract Address ---
+const FOREST_ADDRESS =
+  import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
+  "YOUR_NEW_FOREST_CONTRACT_ADDRESS_HERE"; // Replace with your deployed address
+const FOREST_ABI = forestAbi;
+
+// --- Other constants (HashConnect, Token IDs - keep as needed) ---
 const CARBON_TOKEN_ID = import.meta.env.VITE_CARBON_TOKEN_ID || "0.0.7074735";
 const FOREST_TOKEN_ID = import.meta.env.VITE_FOREST_TOKEN_ID || "0.0.7074734";
 const PROJECT_ID =
@@ -35,199 +46,69 @@ const appMetadata = {
   url: window.location.origin,
 };
 
-// REMOVED static new HashConnect(...) here and instead will initialize dynamically
+// Main Component
 export default function CompanyProfile() {
   const [company, setCompany] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initial load state
   const [pairingData, setPairingData] = useState(null);
   const [isAssociating, setIsAssociating] = useState(false);
   const [isAssociated, setIsAssociated] = useState(false);
   const [isForestAssociated, setIsForestAssociated] = useState(false);
   const [isForestAssociating, setIsForestAssociating] = useState(false);
+  const { toast } = useToast();
 
-  // refs to hold dynamic imports / instances
+  // State for forest shares and claiming
+  const [ownedForestShares, setOwnedForestShares] = useState([]);
+  const [isClaiming, setIsClaiming] = useState({}); // Track claiming state per forest ID { [forestId]: boolean }
+
+  // Refs for dynamic imports
   const hashconnectRef = useRef(null);
   const sdkRef = useRef(null);
 
+  // --- Functions for HashConnect/Token Association (Keep or remove if not using HashConnect) ---
   const checkForestTokenAssociation = async (accountId) => {
+    if (!accountId || !FOREST_TOKEN_ID) return; // Add checks
     try {
       const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?token.id=${FOREST_TOKEN_ID}`;
       const response = await fetch(url);
+      if (!response.ok) throw new Error(`Mirror node query failed: ${response.status}`);
       const data = await response.json();
-      if (data && data.tokens && data.tokens.length > 0) {
-        setIsForestAssociated(true);
-      } else {
-        setIsForestAssociated(false);
-      }
+      setIsForestAssociated(data?.tokens?.length > 0);
     } catch (e) {
       console.error("Could not check Forest token association:", e);
-      setIsForestAssociated(false);
+      setIsForestAssociated(false); // Default to false on error
     }
   };
 
   const checkTokenAssociation = async (accountId) => {
+     if (!accountId || !CARBON_TOKEN_ID) return; // Add checks
     try {
       const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?token.id=${CARBON_TOKEN_ID}`;
       const response = await fetch(url);
+       if (!response.ok) throw new Error(`Mirror node query failed: ${response.status}`);
       const data = await response.json();
-      if (data && data.tokens && data.tokens.length > 0) {
-        setIsAssociated(true);
-      } else {
-        setIsAssociated(false);
-      }
+      setIsAssociated(data?.tokens?.length > 0);
     } catch (e) {
       console.error("Could not check token association:", e);
-      setIsAssociated(false);
+      setIsAssociated(false); // Default to false on error
     }
   };
-
-  const fetchCompanyData = useCallback(async () => {
-    if (!window.ethereum) return console.warn("MetaMask not found");
-    setLoading(true);
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const userAddress = accounts[0];
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(
-        COMPANY_ADDRESS,
-        COMPANY_ABI,
-        provider
-      );
-      const details = await contract.getCompanyDetails(userAddress);
-
-      if (!details.isRegistered) {
-        setCompany(null);
-        setLoading(false);
-        return;
-      } 
-      console.log("Verification Status (raw):", details.verificationStatus);
-      console.log("Verification Status (Number):", Number(details.verificationStatus));
-      
-      if (details.hederaAccountId) {
-        await checkTokenAssociation(details.hederaAccountId);
-        await checkForestTokenAssociation(details.hederaAccountId);
-      }
-      console.log("Hedera Account ID:", details.hederaAccountId);
-
-      const regulatory = await contract.getCompanyRegulatoryInfo(userAddress);
-      const emissions = await contract.getCompanyEmissionsSummary(userAddress);
-      const toSafeNumber = (value) => Number(value || 0);
-      const carbonCreditsOwned = toSafeNumber(details.carbonCreditsOwned);
-      const carbonFootprint =
-        toSafeNumber(emissions.scope1Emissions) +
-        toSafeNumber(emissions.scope2Emissions) +
-        toSafeNumber(emissions.scope3Emissions);
-      const creditsRequired = carbonFootprint - carbonCreditsOwned;
-
-      // Convert BigInt verification status to number for comparison
-      const verificationStatus = Number(details.verificationStatus);
-      
-      setCompany({
-        name: details.name,
-        hederaAccountId: details.hederaAccountId,
-        isRegistered: details.isRegistered,
-        verified: verificationStatus === 1, // 0 = Pending, 1 = Verified, 2 = Rejected, 3 = Suspended
-        verificationStatus: verificationStatus, // Store the actual status for more detailed checks if needed
-        registrationYear: new Date(
-          toSafeNumber(details.registrationTimestamp) * 1000
-        ).getFullYear(),
-        walletAddress: regulatory.walletAddress,
-        carbonFootprint: carbonFootprint,
-        carbonCreditsOwned: carbonCreditsOwned,
-        creditsRequired: creditsRequired > 0 ? creditsRequired : 0,
-        isCarbonNeutral: creditsRequired <= 0,
-      });
-    } catch (err) {
-      console.error("Failed to fetch company data:", err);
-      setCompany(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let topic = "";
-
-    const initHashConnect = async () => {
-      try {
-        // Browser shim: ensure "global" and Buffer exist before loading Node-targeted libs
-        if (typeof globalThis.global === "undefined") {
-          globalThis.global = globalThis;
-        }
-        if (typeof globalThis.Buffer === "undefined") {
-          // dynamic import of 'buffer' (install it if you haven't: npm i buffer)
-          try {
-            const bufferMod = await import("buffer");
-            globalThis.Buffer = bufferMod.Buffer;
-          } catch (e) {
-            console.warn("Buffer polyfill not available:", e);
-          }
-        }
-
-        // Dynamically import hashconnect and @hashgraph/sdk after shims
-        const hcModule = await import("hashconnect");
-        const sdkModule = await import("@hashgraph/sdk");
-
-        sdkRef.current = sdkModule;
-        const { HashConnect } = hcModule;
-        const { LedgerId } = sdkModule;
-
-        // create instance and store on ref
-        const instance = new HashConnect(LedgerId.TESTNET, PROJECT_ID, appMetadata, true);
-        hashconnectRef.current = instance;
-
-        // wire events to local state
-        instance.pairingEvent.on((newPairing) => setPairingData(newPairing));
-        instance.disconnectionEvent.on(() => setPairingData(null));
-
-        const initData = await instance.init();
-        if (initData && initData.topic) {
-          topic = initData.topic;
-        }
-        if (initData && initData.savedPairings && initData.savedPairings.length > 0) {
-          setPairingData(initData.savedPairings[0]);
-        }
-        console.log("HashConnect init successful");
-      } catch (err) {
-        console.error("HashConnect init error:", err);
-      }
-    };
-
-    fetchCompanyData();
-    initHashConnect();
-
-    const handleAccountsChanged = () => fetchCompanyData();
-    window.ethereum?.on("accountsChanged", handleAccountsChanged);
-
-    return () => {
-      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
-      if (topic && hashconnectRef.current) {
-        hashconnectRef.current.disconnect(topic);
-      }
-    };
-  }, [fetchCompanyData]);
 
   const openHashPairingModal = () => {
     const hc = hashconnectRef.current;
     if (!hc) {
-      alert("HashConnect not initialized yet. Please try again in a moment.");
+      toast.error("HashConnect not initialized yet. Please try again in a moment.");
       return;
     }
     hc.openPairingModal();
   };
 
   const handleAssociateForestToken = async () => {
-    if (!pairingData) {
-      openHashPairingModal();
-      return;
-    }
+    if (!sdkRef.current || !hashconnectRef.current) return toast.error("SDK or HashConnect not ready.");
+    if (!pairingData) return openHashPairingModal();
+
     const accountIdString = pairingData.accountIds?.[0];
-    if (!accountIdString) {
-      alert("No Hedera account found in pairing data.");
-      return;
-    }
+    if (!accountIdString) return toast.error("No Hedera account found in pairing data.");
 
     setIsForestAssociating(true);
     try {
@@ -240,81 +121,287 @@ export default function CompanyProfile() {
         .freezeWithSigner(signer);
       const response = await tx.executeWithSigner(signer);
       await response.getReceiptWithSigner(signer);
-
-      alert("Forest token successfully associated!");
+      toast.success("Forest token successfully associated!");
       setIsForestAssociated(true);
     } catch (err) {
       console.error("Forest Token Association Error:", err);
-      alert(
-        `Failed to associate Forest token: ${err?.message || "Please try again."}`
-      );
+      toast.error(`Failed to associate Forest token: ${err?.message || "Please try again."}`);
     } finally {
       setIsForestAssociating(false);
     }
   };
 
-  const handleAssociateToken = async () => {
-    if (!pairingData) {
-      openHashPairingModal();
-      return;
-    }
-    const accountIdString = pairingData.accountIds?.[0];
-    if (!accountIdString) {
-      alert("No Hedera account found in pairing data.");
-      return;
+   const handleAssociateToken = async () => {
+       if (!sdkRef.current || !hashconnectRef.current) return toast.error("SDK or HashConnect not ready.");
+       if (!pairingData) return openHashPairingModal();
+
+       const accountIdString = pairingData.accountIds?.[0];
+       if (!accountIdString) return toast.error("No Hedera account found in pairing data.");
+
+       setIsAssociating(true);
+       try {
+         const { AccountId, TokenAssociateTransaction } = sdkRef.current;
+         const accountId = AccountId.fromString(accountIdString);
+         const signer = hashconnectRef.current.getSigner(accountId);
+         const tx = await new TokenAssociateTransaction()
+           .setAccountId(accountId)
+           .setTokenIds([CARBON_TOKEN_ID])
+           .freezeWithSigner(signer);
+         const response = await tx.executeWithSigner(signer);
+         await response.getReceiptWithSigner(signer);
+         toast.success("Token successfully associated! You can now receive NFT receipts.");
+         setIsAssociated(true);
+       } catch (err) {
+         console.error("Token Association Error:", err);
+         toast.error(`Failed to associate token: ${err?.message || "Please try again."}`);
+       } finally {
+         setIsAssociating(false);
+       }
+     };
+  // --- END HashConnect Functions ---
+
+  // Fetches core company data AND owned forest shares
+  const fetchCompanyData = useCallback(async () => {
+    if (!window.ethereum) {
+       console.warn("MetaMask not found");
+       toast.error("MetaMask not found. Please install it."); // Add toast
+       setLoading(false); // Stop loading if no wallet
+       return;
     }
 
-    setIsAssociating(true);
+    // Don't reset loading to true if only re-fetching after claim
+    // setLoading(true); // Keep previous loading state for re-fetches
+
+    // Clear previous shares before fetching new ones
+    setOwnedForestShares([]);
+
     try {
-      const { AccountId, TokenAssociateTransaction } = sdkRef.current;
-      const accountId = AccountId.fromString(accountIdString);
-      const signer = hashconnectRef.current.getSigner(accountId);
-      const tx = await new TokenAssociateTransaction()
-        .setAccountId(accountId)
-        .setTokenIds([CARBON_TOKEN_ID])
-        .freezeWithSigner(signer);
-      const response = await tx.executeWithSigner(signer);
-      await response.getReceiptWithSigner(signer);
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      const userAddress = accounts[0];
+      const provider = new ethers.BrowserProvider(window.ethereum);
 
-      alert("Token successfully associated! You can now receive NFT receipts.");
-      setIsAssociated(true);
+      // --- 1. Fetch Core Company Data ---
+      const companyContract = new ethers.Contract(COMPANY_ADDRESS, COMPANY_ABI, provider);
+      const details = await companyContract.getCompanyDetails(userAddress);
+
+      if (!details.isRegistered) {
+        setCompany(null); // Clear company if not registered
+        setLoading(false); // Stop loading here if not registered
+        return; // Exit early
+      }
+
+      // Check token associations if Hedera ID exists
+      if (details.hederaAccountId && details.hederaAccountId !== "0.0.0") { // Check for valid ID
+        await checkTokenAssociation(details.hederaAccountId);
+        await checkForestTokenAssociation(details.hederaAccountId);
+      } else {
+         console.warn("Hedera Account ID not set for this company.");
+         // Reset association states if no Hedera ID
+         setIsAssociated(false);
+         setIsForestAssociated(false);
+      }
+
+      const regulatory = await companyContract.getCompanyRegulatoryInfo(userAddress);
+      const emissions = await companyContract.getCompanyEmissionsSummary(userAddress);
+      const toSafeNumber = (value) => Number(value || 0);
+      const carbonCreditsOwned = toSafeNumber(details.carbonCreditsOwned);
+      const carbonFootprint =
+        toSafeNumber(emissions.scope1Emissions) +
+        toSafeNumber(emissions.scope2Emissions) +
+        toSafeNumber(emissions.scope3Emissions);
+      const creditsRequired = Math.max(0, carbonFootprint - carbonCreditsOwned); // Simpler calculation
+      const verificationStatus = Number(details.verificationStatus);
+
+      setCompany({
+        name: details.name,
+        hederaAccountId: details.hederaAccountId,
+        isRegistered: details.isRegistered,
+        verified: verificationStatus === 1,
+        verificationStatus: verificationStatus,
+        registrationYear: details.registrationTimestamp > 0 ? new Date(toSafeNumber(details.registrationTimestamp) * 1000).getFullYear() : 'N/A',
+        walletAddress: regulatory.walletAddress,
+        carbonFootprint: carbonFootprint,
+        carbonCreditsOwned: carbonCreditsOwned,
+        creditsRequired: creditsRequired,
+        isCarbonNeutral: creditsRequired <= 0,
+      });
+
+      // --- 2. Fetch Owned Forest Shares ---
+      const forestContract = new ethers.Contract(FOREST_ADDRESS, FOREST_ABI, provider);
+      const nextId = await forestContract.nextForestId();
+      const ownedSharesDetails = [];
+
+      console.log(`Checking forest shares up to ID: ${Number(nextId) - 1}`);
+
+      for (let i = 1; i < Number(nextId); i++) {
+        try {
+          const sharesOwnedBI = await forestContract.shareBalance(i, userAddress);
+
+          if (sharesOwnedBI > 0n) { // Use BigInt comparison
+            console.log(`Found ${sharesOwnedBI} shares for Forest #${i}`);
+            const forest = await forestContract.forests(i);
+
+            // Ensure forest data is valid before proceeding
+            if (forest.forestId.toString() === "0" || !forest.active) {
+                console.warn(`Forest #${i} owned but data invalid or inactive.`);
+                continue; // Skip this forest
+            }
+
+            const totalSharesBI = BigInt(forest.totalShares);
+            const accumulatedYieldBI = BigInt(forest.accumulatedYield);
+            let claimableYieldBI = 0n;
+
+            // Calculate claimable yield using BigInt
+            if (totalSharesBI > 0n && accumulatedYieldBI > 0n) {
+              claimableYieldBI = (accumulatedYieldBI * sharesOwnedBI) / totalSharesBI;
+            }
+
+            ownedSharesDetails.push({
+              id: i,
+              location: forest.info.location || `Forest ${i}`, // Add fallback
+              sharesOwned: Number(sharesOwnedBI),
+              claimableYield: claimableYieldBI.toString(),
+            });
+          }
+        } catch (forestErr) {
+          console.warn(`Could not check/fetch details for Forest #${i}:`, forestErr);
+        }
+      }
+      setOwnedForestShares(ownedSharesDetails);
+      console.log("Owned Forest Shares Details:", ownedSharesDetails);
+
     } catch (err) {
-      console.error("Token Association Error:", err);
-      alert(
-        `Failed to associate token: ${err?.message || "Please try again."}`
-      );
+      console.error("Failed to fetch company data:", err);
+      setCompany(null);
+      setOwnedForestShares([]);
+      toast.error("Failed to load company profile.");
     } finally {
-      setIsAssociating(false);
+      setLoading(false); // Ensure loading is set to false in all cases
+    }
+  }, [toast]); // Dependency array includes toast
+
+  // Handle Claim Yield Button Click
+  const handleClaimYield = async (forestId) => {
+    setIsClaiming(prev => ({ ...prev, [forestId]: true }));
+    try {
+      if (!window.ethereum) {
+        toast.error("MetaMask not found.");
+        throw new Error("MetaMask not found");
+      }
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const forestContract = new ethers.Contract(FOREST_ADDRESS, FOREST_ABI, signer);
+
+      toast.info(`Sending claim transaction for Forest #${forestId}...`);
+      const tx = await forestContract.claimYield(forestId);
+
+      toast.info(`Waiting for confirmation (${tx.hash.slice(0, 6)})...`);
+      const receipt = await tx.wait(); // Wait for confirmation
+
+       if (receipt.status !== 1) { // Check if transaction failed on-chain
+            throw new Error("Transaction failed on-chain.");
+        }
+
+      toast.success(`Yield claimed successfully for Forest #${forestId}! Your credit balance should update shortly.`);
+
+      // Re-fetch ALL data after successful claim
+      await fetchCompanyData();
+
+    } catch (err) {
+      console.error(`Failed to claim yield for Forest #${forestId}:`, err);
+      const reason = err.reason || err.data?.message || err.message || "An unknown error occurred.";
+      toast.error(`Claim failed: ${reason}`);
+    } finally {
+      setIsClaiming(prev => ({ ...prev, [forestId]: false }));
     }
   };
 
-  if (loading) {
+  // Effect for Initialization and Account Changes
+  useEffect(() => {
+    let topic = ""; // Variable to hold topic for potential disconnect
+
+     const initHashConnect = async () => {
+         // ... (keep existing HashConnect init logic) ...
+          try {
+             if (typeof globalThis.global === "undefined") globalThis.global = globalThis;
+             if (typeof globalThis.Buffer === "undefined") {
+               try {
+                 const bufferMod = await import("buffer");
+                 globalThis.Buffer = bufferMod.Buffer;
+               } catch (e) { console.warn("Buffer polyfill not available:", e); }
+             }
+             const hcModule = await import("hashconnect");
+             const sdkModule = await import("@hashgraph/sdk");
+             sdkRef.current = sdkModule;
+             const { HashConnect } = hcModule;
+             const { LedgerId } = sdkModule;
+             const instance = new HashConnect(LedgerId.TESTNET, PROJECT_ID, appMetadata, true);
+             hashconnectRef.current = instance;
+             instance.pairingEvent.on(setPairingData);
+             instance.disconnectionEvent.on(() => setPairingData(null));
+             const initData = await instance.init();
+             if (initData?.topic) topic = initData.topic;
+             if (initData?.savedPairings?.length > 0) setPairingData(initData.savedPairings[0]);
+             console.log("HashConnect init successful");
+           } catch (err) { console.error("HashConnect init error:", err); }
+     };
+
+    fetchCompanyData(); // Initial fetch
+    initHashConnect(); // Initialize HashConnect
+
+    // Listener for MetaMask account changes
+    const handleAccountsChanged = (accounts) => {
+        console.log("MetaMask account changed, re-fetching data...");
+        if (accounts.length > 0) {
+            fetchCompanyData(); // Re-fetch data when account changes
+        } else {
+            // Handle disconnection case if needed
+            setCompany(null);
+            setOwnedForestShares([]);
+            setLoading(false);
+        }
+    };
+    window.ethereum?.on("accountsChanged", handleAccountsChanged);
+
+    // Cleanup function
+    return () => {
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+      // Optional: Disconnect HashConnect session on component unmount
+      // if (topic && hashconnectRef.current) {
+      //   hashconnectRef.current.disconnect(topic);
+      // }
+    };
+  }, [fetchCompanyData]); // fetchCompanyData is the main dependency
+
+  // --- JSX Rendering Logic ---
+
+  if (loading && !company) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <LoadingSpinner /> <span className="ml-3 text-emerald-400">Loading profile...</span>
       </div>
     );
   }
 
-  if (!company) {
+  if (!company && !loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center">
-        <div className="bg-slate-800/70 p-8 rounded-xl border border-slate-700/50">
+      <div className="min-h-screen flex items-center justify-center text-center bg-slate-900">
+        <div className="bg-slate-800/70 p-8 rounded-xl border border-slate-700/50 max-w-md">
           <AlertCircle className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Company Profile Not Found
-          </h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Company Profile Not Found</h2>
           <p className="text-slate-400">
-            The connected wallet address is not registered in our system. Please
-            register your company to view your profile.
+            The connected wallet address ({window.ethereum?.selectedAddress?.slice(0, 6)}...)
+            is not registered. Please register your company or connect the correct wallet.
           </p>
+          {/* Optional: Add a button to navigate to registration */}
         </div>
       </div>
     );
   }
-  console.log("Company Data:", company);
+
+  // Render profile if company data exists
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-white">
       <button
         onClick={() => window.history.back()}
         className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6"
@@ -323,200 +410,201 @@ export default function CompanyProfile() {
         <span>Back</span>
       </button>
 
+      {/* --- Company Header --- */}
       <div className="bg-gradient-to-r from-slate-800/70 to-slate-700/70 backdrop-blur-md rounded-xl p-8 mb-8 border border-slate-700/50">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">{company.name}</h1>
-              {company.verificationStatus === 1 ? (
-                <div className="flex items-center space-x-1 text-emerald-400 text-sm bg-emerald-900/50 px-2 py-1 rounded-full">
-                  <CheckCircle className="h-4 w-4" /> <span>Verified</span>
-                </div>
-              ) : company.verificationStatus === 2 ? (
-                <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-900/50 px-2 py-1 rounded-full">
-                  <AlertCircle className="h-4 w-4" /> <span>Rejected</span>
-                </div>
-              ) : company.verificationStatus === 3 ? (
-                <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-900/50 px-2 py-1 rounded-full">
-                  <AlertCircle className="h-4 w-4" /> <span>Suspended</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-1 text-yellow-400 text-sm bg-yellow-900/50 px-2 py-1 rounded-full">
-                  <AlertCircle className="h-4 w-4" />{" "}
-                  <span>Pending Verification</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center text-slate-400">
-              <Calendar className="h-4 w-4 mr-2" />
-              <span>Registered in {company.registrationYear}</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-mono text-slate-400">
-              Wallet Address
-            </div>
-            <div className="text-lg font-mono text-white break-all">
-              {company.walletAddress}
-            </div>
-          </div>
-        </div>
+         {/* ... (Existing header: Name, Verification Status, Wallet Address) ... */}
+         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+             <div className="flex-1">
+                 <div className="flex items-center flex-wrap gap-x-3 mb-2"> {/* Added flex-wrap */}
+                     <h1 className="text-3xl font-bold text-white">{company.name}</h1>
+                     {/* Verification Status Badge */}
+                     {company.verificationStatus === 1 ? (
+                         <div className="flex items-center space-x-1 text-emerald-400 text-sm bg-emerald-900/50 px-2 py-1 rounded-full"><CheckCircle className="h-4 w-4" /> <span>Verified</span></div>
+                     ) : company.verificationStatus === 2 ? (
+                         <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Rejected</span></div>
+                     ) : company.verificationStatus === 3 ? (
+                         <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Suspended</span></div>
+                     ) : (
+                         <div className="flex items-center space-x-1 text-yellow-400 text-sm bg-yellow-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Pending Verification</span></div>
+                     )}
+                 </div>
+                 <div className="flex items-center text-slate-400 text-sm"> {/* Reduced text size */}
+                     <Calendar className="h-4 w-4 mr-2" />
+                     <span>Registered in {company.registrationYear}</span>
+                 </div>
+             </div>
+             <div className="text-left lg:text-right w-full lg:w-auto mt-4 lg:mt-0"> {/* Adjusted alignment and width */}
+                 <div className="text-sm font-mono text-slate-400">EVM Wallet Address</div>
+                 <div className="text-base font-mono text-white break-all">{company.walletAddress}</div> {/* Reduced text size */}
+                 {company.hederaAccountId && company.hederaAccountId !== "0.0.0" && (
+                    <>
+                        <div className="text-sm font-mono text-slate-400 mt-2">Hedera Account ID</div>
+                        <div className="text-base font-mono text-white break-all">{company.hederaAccountId}</div>
+                    </>
+                 )}
+             </div>
+         </div>
       </div>
-      {!isForestAssociated ? (
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Enable Forest NFT Receipts
-              </h3>
-              <p className="text-slate-400 text-sm">
-                Connect your Hedera wallet and associate our Forest token to
-                receive NFT receipts for forest purchases.
-              </p>
-            </div>
-            <button
-              onClick={
-                pairingData ? handleAssociateForestToken : openHashPairingModal
-              }
-              disabled={isForestAssociating}
-              className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Leaf className="h-5 w-5" />
-              <span>
-                {pairingData
-                  ? isForestAssociating
-                    ? "Associating..."
-                    : "Enable Forest NFT Receipts"
-                  : "Connect Hedera Wallet"}
-              </span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-emerald-900/30 backdrop-blur-md rounded-xl p-6 border border-emerald-600/50 mb-8">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-6 w-6 text-emerald-400" />
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Forest NFT Receipts Enabled
-              </h3>
-              <p className="text-slate-400 text-sm">
-                Your Hedera account is successfully associated. You will now
-                receive Forest NFT receipts.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {!isAssociated ? (
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Enable Hedera NFT Receipts
-              </h3>
-              <p className="text-slate-400 text-sm">
-                Connect your Hedera wallet and associate our token to receive
-                unique NFT receipts for every purchase.
-              </p>
+      {/* --- Token Association Sections (Optional: Show only if Hedera ID exists) --- */}
+      {company.hederaAccountId && company.hederaAccountId !== "0.0.0" && (
+        <>
+          {!isForestAssociated ? (
+            <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
+               {/* ... Forest association button ... */}
+               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white">Enable Forest NFT Receipts</h3>
+                   <p className="text-slate-400 text-sm">Connect your Hedera wallet ({company.hederaAccountId}) and associate our Forest token ({FOREST_TOKEN_ID}) to receive NFT receipts for forest purchases.</p>
+                 </div>
+                 <button onClick={ pairingData ? handleAssociateForestToken : openHashPairingModal } disabled={isForestAssociating} className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                   <Leaf className="h-5 w-5" />
+                   <span>{pairingData ? (isForestAssociating ? "Associating..." : "Enable Forest NFTs") : "Connect Hedera Wallet"}</span>
+                 </button>
+               </div>
             </div>
-            <button
-              onClick={
-                pairingData ? handleAssociateToken : openHashPairingModal
-              }
-              disabled={isAssociating}
-              className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Sparkles className="h-5 w-5" />
-              <span>
-                {pairingData
-                  ? isAssociating
-                    ? "Associating..."
-                    : "Enable NFT Receipts"
-                  : "Connect Hedera Wallet"}
-              </span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-emerald-900/30 backdrop-blur-md rounded-xl p-6 border border-emerald-600/50 mb-8">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-6 w-6 text-emerald-400" />
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Carbon Credit Receipts Enabled
-              </h3>
-              <p className="text-slate-400 text-sm">
-                Your Hedera account is successfully associated. You will now
-                receive receipts for your purchases.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">
-              Carbon Footprint
-            </h3>
-            <BarChart className="h-5 w-5 text-red-400" />
-          </div>
-          <div className="text-3xl font-bold text-white mb-2">
-            {company.carbonFootprint.toLocaleString()}
-          </div>
-          <div className="text-slate-400 text-sm">tons CO₂/year</div>
-        </div>
-        <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">
-              Credits Purchased
-            </h3>
-            <Leaf className="h-5 w-5 text-emerald-400" />
-          </div>
-          <div className="text-3xl font-bold text-white mb-2">
-            {company.carbonCreditsOwned.toLocaleString()}
-          </div>
-          <div className="text-slate-400 text-sm">tons CO₂ offset</div>
-        </div>
-        <div
-          className={`bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border ${
-            company.isCarbonNeutral
-              ? "border-emerald-500/50"
-              : "border-slate-700/50"
-          }`}
-        >
-          {company.isCarbonNeutral ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Status</h3>
-                <ShieldCheck className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div className="text-3xl font-bold text-emerald-400 mb-2">
-                Carbon Neutral
-              </div>
-              <div className="text-slate-400 text-sm">
-                Footprint offset achieved!
-              </div>
-            </>
           ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">
-                  Credits to Offset
-                </h3>
-                <Target className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                {company.creditsRequired.toLocaleString()}
-              </div>
-              <div className="text-slate-400 text-sm">tons CO₂ needed</div>
-            </>
+            <div className="bg-emerald-900/30 backdrop-blur-md rounded-xl p-6 border border-emerald-600/50 mb-8">
+               {/* ... Forest associated confirmation ... */}
+                <div className="flex items-center gap-3">
+                 <CheckCircle className="h-6 w-6 text-emerald-400" />
+                 <div>
+                   <h3 className="text-lg font-semibold text-white">Forest NFT Receipts Enabled</h3>
+                   <p className="text-slate-400 text-sm">Your Hedera account ({company.hederaAccountId}) is associated with token {FOREST_TOKEN_ID}.</p>
+                 </div>
+               </div>
+            </div>
           )}
-        </div>
+          {!isAssociated ? (
+            <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 mb-8">
+                {/* ... Carbon association button ... */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white">Enable Carbon Credit NFT Receipts</h3>
+                   <p className="text-slate-400 text-sm">Connect your Hedera wallet ({company.hederaAccountId}) and associate our Carbon Credit token ({CARBON_TOKEN_ID}) to receive unique NFT receipts.</p>
+                 </div>
+                 <button onClick={ pairingData ? handleAssociateToken : openHashPairingModal } disabled={isAssociating} className="w-full md:w-auto bg-emerald-600 text-white py-2 px-5 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                   <Sparkles className="h-5 w-5" />
+                   <span>{pairingData ? (isAssociating ? "Associating..." : "Enable Carbon NFTs") : "Connect Hedera Wallet"}</span>
+                 </button>
+               </div>
+            </div>
+          ) : (
+            <div className="bg-emerald-900/30 backdrop-blur-md rounded-xl p-6 border border-emerald-600/50 mb-8">
+                {/* ... Carbon associated confirmation ... */}
+                 <div className="flex items-center gap-3">
+                 <CheckCircle className="h-6 w-6 text-emerald-400" />
+                 <div>
+                   <h3 className="text-lg font-semibold text-white">Carbon Credit Receipts Enabled</h3>
+                   <p className="text-slate-400 text-sm">Your Hedera account ({company.hederaAccountId}) is associated with token {CARBON_TOKEN_ID}.</p>
+                 </div>
+               </div>
+            </div>
+          )}
+        </>
+      )}
+
+
+      {/* --- Carbon Stats --- */}
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+         {/* ... (Existing Carbon Footprint, Credits Purchased, Status cards) ... */}
+          <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+             <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-white">Carbon Footprint</h3><BarChart className="h-5 w-5 text-red-400" /></div>
+             <div className="text-3xl font-bold text-white mb-2">{company.carbonFootprint.toLocaleString()}</div>
+             <div className="text-slate-400 text-sm">tons CO₂/year</div>
+           </div>
+           <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+             <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-white">Credits Balance</h3><Leaf className="h-5 w-5 text-emerald-400" /></div>
+             <div className="text-3xl font-bold text-white mb-2">{company.carbonCreditsOwned.toLocaleString()}</div>
+             <div className="text-slate-400 text-sm">tons CO₂ offset</div>
+           </div>
+           <div className={`bg-slate-800/70 backdrop-blur-md rounded-xl p-6 border ${ company.isCarbonNeutral ? "border-emerald-500/50" : "border-slate-700/50" }`}>
+               {company.isCarbonNeutral ? (
+                 <>
+                   <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-white">Status</h3><ShieldCheck className="h-5 w-5 text-emerald-400" /></div>
+                   <div className="text-3xl font-bold text-emerald-400 mb-2">Carbon Neutral</div>
+                   <div className="text-slate-400 text-sm">Footprint offset achieved!</div>
+                 </>
+               ) : (
+                 <>
+                   <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-white">Credits to Offset</h3><Target className="h-5 w-5 text-yellow-400" /></div>
+                   <div className="text-3xl font-bold text-white mb-2">{company.creditsRequired.toLocaleString()}</div>
+                   <div className="text-slate-400 text-sm">tons CO₂ needed</div>
+                 </>
+               )}
+           </div>
       </div>
+
+      {/* --- NEW: Forest Share Holdings Section --- */}
+      <div className="bg-slate-800/70 backdrop-blur-md rounded-xl p-8 border border-slate-700/50">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <TreePine className="h-6 w-6 text-emerald-400" />
+          Forest Share Holdings
+        </h2>
+        {loading && ownedForestShares.length === 0 && ( // Show loading indicator if still loading shares
+           <div className="text-center py-4 flex justify-center items-center gap-2 text-slate-400"><LoadingSpinner size="sm"/> Loading shares...</div>
+        )}
+        {!loading && ownedForestShares.length === 0 && (
+          <p className="text-slate-400 text-center py-4">
+            You currently do not own shares in any listed forest areas. Purchase shares from the marketplace.
+          </p>
+        )}
+        {ownedForestShares.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-left"> {/* Added min-width for smaller screens */}
+              <thead>
+                <tr className="border-b border-slate-600 text-slate-400 text-sm uppercase">
+                  <th className="py-3 px-4 font-semibold">Forest ID</th>
+                  <th className="py-3 px-4 font-semibold">Location</th>
+                  <th className="py-3 px-4 font-semibold text-right">Shares Owned</th>
+                  <th className="py-3 px-4 font-semibold text-right">Claimable Yield</th>
+                  <th className="py-3 px-4 font-semibold text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ownedForestShares.map((share) => {
+                  const claimableBI = BigInt(share.claimableYield);
+                  // Format claimable yield (assuming units represent smallest indivisible unit, like grams or kg*1000)
+                  // Let's display raw units for now, add formatting/conversion later if needed
+                  const claimableFormatted = claimableBI.toLocaleString();
+                  const canClaim = claimableBI > 0n;
+                  const currentlyClaiming = isClaiming[share.id];
+
+                  return (
+                    <tr key={share.id} className="border-b border-slate-700 hover:bg-slate-700/30 text-sm">
+                      <td className="py-4 px-4 text-white font-mono">#{share.id}</td>
+                      <td className="py-4 px-4 text-slate-300">{share.location}</td>
+                      <td className="py-4 px-4 text-white font-mono text-right">
+                        {share.sharesOwned.toLocaleString()}
+                      </td>
+                      <td className="py-4 px-4 text-emerald-400 font-mono text-right">
+                        {/* Add units label based on your contract logic */}
+                        {claimableFormatted} units
+                      </td>
+                      <td className="py-4 px-4 text-center">
+                        <button
+                          onClick={() => handleClaimYield(share.id)}
+                          disabled={!canClaim || currentlyClaiming || loading} // Disable if overall loading
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs py-2 px-3 rounded-lg font-semibold flex items-center justify-center space-x-1 transition-all hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed w-full min-w-[110px]" // Added min-width
+                        >
+                          {currentlyClaiming ? (
+                            <LoadingSpinner size="xs" /> // Smaller spinner
+                          ) : (
+                            <Award className="h-4 w-4" />
+                          )}
+                          <span>{currentlyClaiming ? "Claiming..." : "Claim Yield"}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {/* --- END NEW SECTION --- */}
+
     </div>
   );
 }
