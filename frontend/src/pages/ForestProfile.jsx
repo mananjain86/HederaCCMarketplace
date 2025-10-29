@@ -20,8 +20,8 @@ import {
   Database,
   Link as LinkIcon, // Alias Link to avoid name clash
 } from "lucide-react";
-import { LoadingSpinner } from "./LoadingSpinner"; // Assuming you have this
-import { ErrorMessage } from "./ErrorMessage"; // Assuming you have this
+import { LoadingSpinner } from "../components/LoadingSpinner"; // Assuming you have this
+import { ErrorMessage } from "../components/ErrorMessage"; // Assuming you have this
 
 // UPDATED: Import new ABI
 import ForestABI from "../abi/ForestTokenMarketplace.json";

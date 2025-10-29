@@ -11,8 +11,8 @@ import {
   TrendingUp,
   Hash
 } from 'lucide-react';
-import { LoadingSpinner } from './LoadingSpinner';
-import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { validateStep1, validateStep2 } from '../utils/validation';
 import { ethers } from 'ethers';
 import { useToast } from '../hooks/useToast';

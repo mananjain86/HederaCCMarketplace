@@ -16,8 +16,8 @@ import {
   TrendingDown, // NEW
   TrendingUp, // NEW
 } from "lucide-react";
-import { LoadingSpinner } from "./LoadingSpinner";
-import { ErrorMessage } from "./ErrorMessage";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { ErrorMessage } from "../components/ErrorMessage";
 // UPDATED: Import the new ABI
 import abi from "../abi/ForestTokenMarketplace.json";
 import { useNavigate } from "react-router-dom";

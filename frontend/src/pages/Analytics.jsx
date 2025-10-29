@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, Users, DollarSign, Globe, BarChart3, PieChart } from "lucide-react";
 import { ethers } from "ethers";
 import axios from "axios";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 import MARKETPLACE_ABI from "../abi/CarbonCreditMarketplace.json";
 

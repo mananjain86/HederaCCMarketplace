@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Search, TreePine, Factory } from "lucide-react";
 import { ethers } from "ethers";
-import { CreditCard } from "./CreditCard";
-import { LoadingSpinner } from "./LoadingSpinner";
-import { ErrorMessage } from "./ErrorMessage";
+import { CreditCard } from "../components/CreditCard";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { ErrorMessage } from "../components/ErrorMessage";
 
 // --- Load ABI from local files ---
 import CONTRACT_ABI from "../abi/CarbonCreditMarketplace.json";

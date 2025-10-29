@@ -3,8 +3,8 @@ import { ethers } from 'ethers';
 import {
   TreePine, Award, ChevronLeft, ChevronRight, Calendar, Zap, Scale, AlertCircle, Hash, MapPin, Globe, CheckCircle, Building2
 } from 'lucide-react';
-import { LoadingSpinner } from './LoadingSpinner';
-import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import abi from "../abi/CarbonCreditMarketplace.json";
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';

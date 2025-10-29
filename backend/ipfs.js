@@ -9,9 +9,9 @@ const pinata = new PinataSDK({
   pinataGateway: process.env.GATEWAY_URL
 });
 
-const IMAGE_BARREN = "ipfs://bafybeibarrenlandcid"; // replace with your barren land image CID
-const IMAGE_MIXED = "ipfs://bafybeimixedlandcid";   // replace with your mixed land image CID
-const IMAGE_GREEN = "ipfs://bafybeigreenlandcid";   // replace with your green land image CID
+const IMAGE_BARREN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafkreihnss2s7ilwikjmx2lxbtx44ikfrnor3g3avp5zajxcapbjjuhjze"; // replace with your barren land image CID
+const IMAGE_MIXED = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeiet5vzjkcbiy7r7crhsfij4oiwo7vliv2iryi6o2jdcy2bxvb67fu";   // replace with your mixed land image CID
+const IMAGE_GREEN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeicd7o7g7jtj4kjhmeqex45bhoth4ppokzlrdgzrzrzez2ulavcofe";   // replace with your green land image CID
 
 // Upload image file to IPFS
 const uploadImageToIPFS = async (req, res) => {

@@ -3,28 +3,28 @@ import { Routes, Route } from 'react-router-dom';
 
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { Marketplace } from './components/Marketplace';
-import { Analytics } from './components/Analytics';
+import { Marketplace } from './pages/Marketplace';
+import { Analytics } from './pages/Analytics';
 import { Footer } from './components/Footer';
-import ForestDAO from './components/ForestDAO';
-import { CompanyRegistration } from './components/CompanyRegistration';
-import { CarbonCreditSellerRegistration } from './components/CarbonCreditSellerRegistration';
+import ForestDAO from './pages/ForestDAO';
+import { CompanyRegistration } from './pages/CompanyRegistration';
+import { CarbonCreditSellerRegistration } from './pages/CarbonCreditSellerRegistration';
 import { RegistrationSuccess } from './components/RegistrationSuccess';
 import { SuccessMessage } from './components/SuccessMessage';
-import CompanyProfile from './components/Profile';
-import { SellerProfile } from './components/SellerProfile';
+import CompanyProfile from './pages/Profile';
+import { SellerProfile } from './pages/SellerProfile';
 import {Buy} from './components/Buy';
-import {ForestSellerRegistration} from './components/ForestSellerRegistration';
-import {ForestProfile} from './components/ForestProfile';
+import {ForestSellerRegistration} from './pages/ForestSellerRegistration';
+import {ForestProfile} from './pages/ForestProfile';
 import {BuyForest} from './components/BuyForest'; 
-import {CarbonCreditsManager} from './components/CarbonCreditsManager';
-import {CompanyVerificationManager} from './components/CompanyVerificationManager';
+import {CarbonCreditsManager} from './pages/CarbonCreditsManager';
+import {CompanyVerificationManager} from './pages/CompanyVerificationManager';
 import { ToastProvider } from './hooks/useToast';
 import { ToastContainer } from './components/Toast';
 import KycAdmin from './components/GrantKyc';
 import { ManageRelayers } from './components/ManageRelayer';
 import { WithdrawFees } from './components/WithdrawFees';
-import RelayerDashboard from './components/RelayerDashboard';
+import RelayerDashboard from './pages/RelayerDashboard';
 
 function App() {
   const [analytics, setAnalytics] = useState({

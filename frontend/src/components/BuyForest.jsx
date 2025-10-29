@@ -215,8 +215,7 @@ export function BuyForest() {
   if (loading)
     return (
       <div className="w-screen h-screen flex items-center justify-center text-emerald-400 bg-slate-900">
-        <LoadingSpinner />
-        <span className="ml-2">Loading forest data...</span>
+        <LoadingSpinner message="Loading forest data..." />
       </div>
     );
   if (error && !buying)
@@ -325,8 +324,7 @@ export function BuyForest() {
         >
           {buying ? (
             <>
-              <LoadingSpinner size="sm" />
-              <span className="ml-2">{statusMessage}</span>
+              <LoadingSpinner message={statusMessage} size="sm" />
             </>
           ) : forest.active && maxShares > 0 ? (
             "Buy Shares"

@@ -13,7 +13,6 @@ import {
   TokenGrantKycTransaction
 } from "@hashgraph/sdk";
 import { createNFTMetadata } from "./ipfs.js"; // must return { success, metadataCid, metadataUrl }
-import { monitorForest } from "./services/forest-monitor.js";
 
 // Helper: parse key type (ED25519 or ECDSA)
 function parsePrivateKey(str) {

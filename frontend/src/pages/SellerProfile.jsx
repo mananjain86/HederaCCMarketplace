@@ -5,8 +5,8 @@ import {
     FileText, Link as LinkIcon, ShieldCheck, Globe, BookOpen, Hash 
 } from 'lucide-react';
 import { ethers } from 'ethers';
-import { LoadingSpinner } from './LoadingSpinner';
-import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 
 // --- Load ABI from local file ---
 import CONTRACT_ABI from '../abi/CarbonCreditMarketplace.json';
