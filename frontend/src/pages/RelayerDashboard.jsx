@@ -26,7 +26,7 @@ const FOREST_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
   "YOUR_NEW_FOREST_CONTRACT_ADDRESS_HERE"; // Replace with your deployed address
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 export default function RelayerDashboard() {
   const [account, setAccount] = useState(null);
