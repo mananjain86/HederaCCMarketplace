@@ -136,37 +136,6 @@ export async function mintNFT(data, type, buyerAccountId) {
 
     // NEW: If type is "forest", add IoT and regeneration data
     let dynamicData = { ...data };
-    if (type === "forest") {
-      console.log("📡 Collecting IoT sensor data and regeneration score...");
-
-      // HCS Topic IDs (replace with actual topic IDs after creation)
-      const iotTopicId = process.env.IOT_TOPIC_ID || "0.0.XXXXXXX";
-      const regenTopicId = process.env.REGEN_TOPIC_ID || "0.0.YYYYYYY";
-
-      const monitoringData = await monitorForest(
-        {
-          id: data.id || `FOREST-${Date.now()}`,
-          name: data.name,
-          location: data.location,
-          coordinates: data.coordinates,
-          area: data.area,
-          type: data.forestType,
-        },
-        iotTopicId,
-        regenTopicId
-      );
-
-      dynamicData = {
-        ...data,
-        iotData: monitoringData.iotData,
-        regenerationScore: monitoringData.regenerationScore,
-        hcsTopics: {
-          iot: iotTopicId,
-          regeneration: regenTopicId,
-        },
-      };
-    }
-
     console.log("📄 Creating metadata and uploading to IPFS...");
 
     // Create metadata with dynamic data
@@ -180,22 +149,22 @@ export async function mintNFT(data, type, buyerAccountId) {
     // 2️⃣ Mint NFT
     console.log("🪙 Minting NFT...");
     const mintTx = await new TokenMintTransaction()
-      .setTokenId(tokenId)
+      .setTokenId(config.tokenId)
       .setMetadata([metadataBuffer])
       .freezeWith(client)
-      .sign(supplyKey);
+      .sign(config.supplyKey);
 
     const mintSubmit = await mintTx.execute(client);
     const mintRx = await mintSubmit.getReceipt(client);
     const serialNumber = mintRx.serials[0].toString();
     console.log(`✅ NFT minted! Serial: ${serialNumber}`);
 
-    await grantKyc(buyerAccountId, tokenId);
+    await grantKyc(buyerAccountId, config.tokenId);
 
     // 3️⃣ Transfer NFT to buyer (buyer already associated via HashPack)
     console.log(`📤 Transferring NFT to buyer (${buyerAccountId})...`);
     const transferTx = await new TransferTransaction()
-      .addNftTransfer(tokenId, serialNumber, operatorId, buyerAccountId)
+      .addNftTransfer(config.tokenId, serialNumber, operatorId, buyerAccountId)
       .freezeWith(client)
       .sign(operatorKey);
 
@@ -205,7 +174,6 @@ export async function mintNFT(data, type, buyerAccountId) {
 
     return {
       success: transferRx.status.toString() === "SUCCESS",
-      tokenId,
       serialNumber,
       metadataCid: metadataResult.metadataCid,
       metadataUrl: metadataResult.metadataUrl,

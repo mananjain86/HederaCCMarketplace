@@ -100,75 +100,62 @@ async function createNFTMetadata(type, data) {
     let metadata;
 
     if (type === "forest") {
-      // --- Dynamic image selection based on regeneration score ---
-      let regenScore = data?.regenerationScore?.score?.overall;
-      let imageUrl = IMAGE_MIXED; // default
+    // --- Dynamic image selection ---
+    // UPDATED: data.regenerationScore is now a simple number (e.g., 850)
+    let regenScore = data.regenerationScore;
+    let imageUrl = IMAGE_MIXED; // default
 
-      if (typeof regenScore === "number") {
-        if (regenScore < 30) imageUrl = IMAGE_BARREN;
-        else if (regenScore > 75) imageUrl = IMAGE_GREEN;
+    if (typeof regenScore === "number") {
+        // UPDATED: Logic is now for a score out of 1000
+        if (regenScore < 300) imageUrl = IMAGE_BARREN;
+        else if (regenScore > 750) imageUrl = IMAGE_GREEN;
         else imageUrl = IMAGE_MIXED;
-      } else {
-        // fallback to previous or default image
-        imageUrl = data.imageUrl || IMAGE_MIXED;
-      }
+    } else {
+        imageUrl = IMAGE_MIXED; // Fallback
+    }
 
-      metadata = {
+    metadata = {
         ...base,
-        name: data.name || `Forest Area #${data.areaId || data.id}`,
+        name: data.name || `Forest Shares (${data.sharesBought}) - ${data.location}`,
         creator: "Carbon Chain Inc.",
-        description: `Dynamic Forest Certificate for ${data.area} hectares in ${data.location}. Real-time monitoring via IoT sensors and AI-powered regeneration scoring.`,
+        // UPDATED: Description uses new fields
+        description: data.description || `Fractional ownership certificate for ${data.sharesBought} shares in ${data.location}, linked to Forest ID ${data.forestId}.`,
         image: imageUrl,
         properties: {
-          // Basic Forest Info
-          area_id: data.areaId || data.id,
-          location: data.location,
-          coordinates: data.coordinates,
-          area_size: data.area,
-          forest_type: data.forestType || data.type || "Mixed",
-          purchase_price_hbar: data.totalPrice,
-          owner: data.buyer,
-          asset_type: "Dynamic Forest Certificate",
-          
-          // NEW: IoT Sensor Data (Real-time DePIN)
-          iot_data: data.iotData ? {
-            temperature: data.iotData.sensors.temperature,
-            humidity: data.iotData.sensors.humidity,
-            soil_moisture: data.iotData.sensors.soilMoisture,
-            air_quality_index: data.iotData.sensors.airQuality,
-            co2_level: data.iotData.sensors.co2Level,
-            light_intensity: data.iotData.sensors.lightIntensity,
-            device_id: data.iotData.deviceId,
-            last_reading: data.iotData.timestamp
-          } : null,
-          
-          // NEW: AI-Powered Regeneration Score
-          regeneration_score: data.regenerationScore ? {
-            overall_score: data.regenerationScore.score.overall,
-            vegetation_density: data.regenerationScore.factors.vegetationDensity,
-            soil_health: data.regenerationScore.factors.soilHealth,
-            air_quality: data.regenerationScore.factors.airQuality,
-            water_availability: data.regenerationScore.factors.waterAvailability,
-            climate_conditions: data.regenerationScore.factors.climateConditions,
-            satellite_image_url: data.regenerationScore.satelliteImageUrl,
-            ndvi: data.regenerationScore.ndvi,
-            last_updated: data.regenerationScore.timestamp,
-            ai_analysis: data.regenerationScore.score.analysis
-          } : null,
-          
-          // NEW: HCS Topic for Real-time Updates
-          hcs_topic_id: data.hcsTopicId,
-          
-          // Metadata
-          sustainability_rating: data.regenerationScore 
-            ? (data.regenerationScore.score.overall >= 80 ? "A+" 
-              : data.regenerationScore.score.overall >= 60 ? "A" 
-              : data.regenerationScore.score.overall >= 40 ? "B" : "C")
-            : "Pending",
-          certification_status: "Verified",
-          minted_at: new Date().toISOString()
+            // --- Share Info ---
+            asset_type: "Forest Share Certificate",
+            forest_id: data.forestId,
+            shares_bought: data.sharesBought,
+
+            // --- Original Forest Info ---
+            location: data.location,
+            total_forest_area_sq_m: data.areaSize, // Clarified unit
+            original_nft_id: data.originalNftId,
+            ipfs_deed_hash: data.ipfsDeedHash,
+
+            // --- Purchase Info ---
+            owner_account_id: data.buyerAccountId,
+            owner_eth_address: data.buyerEthAddress,
+            price_paid_hbar: data.pricePaid,
+            purchase_tx_hash: data.purchaseTxHash,
+            
+            // --- Regeneration & Sequestration Data ---
+            regeneration_score: data.regenerationScore,
+            baseline_sequestration_c02_yr: data.baselineSequestration,
+            potential_sequestration_c02_yr: data.potentialSequestration,
+            
+            // --- Metadata ---
+            // UPDATED: Logic is for a score out of 1000
+            sustainability_rating: data.regenerationScore 
+                ? (data.regenerationScore >= 800 ? "A+" 
+                : data.regenerationScore >= 600 ? "A" 
+                : data.regenerationScore >= 400 ? "B" : "C")
+                : "Pending",
+            certification_status: "Verified",
+            minted_at: new Date().toISOString()
         },
-      };
+    };
+
     } else {
       // Carbon Credit NFT (unchanged)
       metadata = {

@@ -18,13 +18,13 @@ export async function monitorForest(forestData, iotTopicId, regenTopicId) {
     // Step 2: Calculate regeneration score using Gemini AI + satellite data
     const regenScore = await calculateRegenerationScore(forestData, iotData);
     console.log(`✅ Regeneration score calculated: ${regenScore.score.overall}/100`);
-
-    // Step 3: Submit regeneration score to same HCS topic (tagged as "regeneration")
-    await submitMessage(regenTopicId, {
+    const messagePayload = JSON.stringify({
       forestId: forestData.id,
       forestName: forestData.name,
       ...regenScore,
     });
+    // Step 3: Submit regeneration score to same HCS topic (tagged as "regeneration")
+    await submitMessage(regenTopicId,messagePayload );
     console.log("✅ Regeneration score submitted to HCS");
 
     return {

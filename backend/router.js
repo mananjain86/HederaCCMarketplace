@@ -53,20 +53,6 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Mint a new forest NFT
-router.post('/nft/mint-forest', async (req, res) => {
-  try {
-    const { forestData, buyerAccountId } = req.body;
-    if (!forestData || !buyerAccountId) {
-      return res.status(400).json({ success: false, message: "Missing forestData or buyerAccountId" });
-    }
-    const result = await mintNFT(forestData, "forest", buyerAccountId);
-    res.json({ success: true, ...result });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // Update an existing forest NFT's metadata (IoT, regeneration, etc)
 router.post('/nft/update-forest', async (req, res) => {
   try {
@@ -182,6 +168,154 @@ router.post("/grant-kyc", async (req, res) => {
   } catch (error) {
     console.error("❌ KYC Granting API Error:", error.message);
     res.status(500).json({ error: "Failed to grant KYC.", message: error.message });
+  }
+});
+
+router.post("/tokenize-purchase", async (req, res) => {
+  try {
+    const { buyerHederaId, amount, ethereumTxHash, buyerEthAddress, projectName } = req.body;
+
+    if (!buyerHederaId || !amount || !ethereumTxHash) {
+      return res.status(400).json({ success: false, error: "Missing required fields." });
+    }
+
+    console.log(`🚀 Starting Hedera tokenization for ETH tx: ${ethereumTxHash}`);
+
+    // Step 1: Create the NFT Metadata and upload to IPFS
+    const metadataPayload = {
+      id: ethereumTxHash, // Use ETH tx hash as a unique ID
+      amount: amount,
+      totalPrice: "N/A (Paid on Ethereum)",
+      buyer: buyerHederaId,
+      name: projectName,
+      // Add any other relevant details
+    };
+    // Note: The 'createNFTMetadata' function in ipfs.js is for NFTs, 
+    // but you want to mint a FUNGIBLE token. You'll need to adapt this logic.
+    // For now, let's assume you're creating an NFT receipt.
+    
+    // Step 2: Mint the NFT on Hedera
+    // We pass "carbon-credit" as the type to mint.js
+    const mintResult = await mintNFT(metadataPayload, "carbon-credit", buyerHederaId);
+    if (!mintResult.success) {
+      throw new Error("Hedera NFT minting failed.");
+    }
+    console.log(`✅ Minted NFT ${mintResult.tokenId}-${mintResult.serialNumber}`);
+
+    // Step 3: Submit a record to the Hedera Consensus Service
+    const consensusMessage = JSON.stringify({
+      type: "carbon_credit_purchase_receipt",
+      ethereumTxHash,
+      buyerEthAddress,
+      buyerHederaId,
+      amount,
+      nftId: `${mintResult.tokenId}@${mintResult.serialNumber}`,
+      timestamp: new Date().toISOString(),
+    });
+
+    const HCS_TOPIC_ID = process.env.HCS_TOPIC_ID; // Add your Topic ID to .env
+    await submitMessage(HCS_TOPIC_ID, consensusMessage);
+    console.log(`✅ Message submitted to HCS Topic ${HCS_TOPIC_ID}`);
+
+    res.status(200).json({ success: true, ...mintResult });
+
+  } catch (err) {
+    console.error("❌ Tokenization API Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post("/tokenize-forest-purchase", async (req, res) => {
+  try {
+    // UPDATED: Deconstruct the new nested req.body structure
+    const { forestData, buyerAccountId } = req.body;
+
+    // First-level validation
+    if (!forestData || !buyerAccountId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Missing required fields: forestData or buyerAccountId." 
+      });
+    }
+
+    // Deconstruct the nested forestData object
+    const {
+      forestId,
+      ethereumTxHash,
+      buyerEthAddress,
+      location,
+      areaSize,
+      price,
+      ipfsDeedHash,
+      sharesBought,
+      htsTokenId,
+      serial,
+      regenerationScore,
+      baseline,
+      potential
+    } = forestData;
+
+    // UPDATED: Validation for the new fields
+    if (!buyerAccountId || !ethereumTxHash || !location || !areaSize || !sharesBought) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Missing required fields inside forestData." 
+      });
+    }
+
+    console.log(`🚀 Starting Hedera tokenization for ${sharesBought} shares of Forest #${forestId}`);
+
+    // UPDATED: Build a richer metadata payload for the NFT
+    const metadataPayload = {
+      type: "Forest Share",
+      description: `Fractional ownership of ${sharesBought} shares for ${location}.`,
+      forestId: forestId,
+      location: location,
+      areaSize: areaSize,
+      sharesBought: sharesBought,
+      pricePaid: price,
+      buyerAccountId: buyerAccountId,
+      buyerEthAddress: buyerEthAddress,
+      purchaseTxHash: ethereumTxHash,
+      originalNftId: `${htsTokenId}@${serial}`, // Link to the original forest NFT
+      regenerationScore: regenerationScore,
+      baselineSequestration: baseline,
+      potentialSequestration: potential,
+      ipfsDeedHash: ipfsDeedHash // Link to the original deed
+    };
+    
+    // UPDATED: Pass the correct buyerAccountId
+    const mintResult = await mintNFT(metadataPayload, "forest", buyerAccountId);
+    
+    if (!mintResult.success) {
+      throw new Error(mintResult.error || "Hedera NFT minting failed.");
+    }
+    
+    console.log(`✅ Minted Forest Share NFT ${mintResult.tokenId}-${mintResult.serialNumber}`);
+    
+    // UPDATED: Consensus message with richer data
+    const consensusMessage = JSON.stringify({
+      type: "forest_share_purchase_receipt",
+      ethereumTxHash,
+      buyerEthAddress,
+      buyerHederaId: buyerAccountId,
+      forestId: forestId,
+      location,
+      sharesBought,
+      pricePaid: price,
+      hederaNftId: `${mintResult.tokenId}@${mintResult.serialNumber}`,
+      timestamp: new Date().toISOString(),
+    });
+
+    const HCS_TOPIC_ID = process.env.HCS_TOPIC_ID;
+    await submitMessage(HCS_TOPIC_ID, consensusMessage);
+    console.log(`✅ Message submitted to HCS Topic ${HCS_TOPIC_ID}`);
+
+    res.status(200).json({ success: true, ...mintResult });
+
+  } catch (err) {
+    console.error("❌ Tokenization API Error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
