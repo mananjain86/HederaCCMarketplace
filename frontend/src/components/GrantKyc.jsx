@@ -4,6 +4,7 @@ import { ShieldCheck } from "lucide-react";
 
 // You should get this from your contract or .env file
 const CARBON_TOKEN_ID = "0.0.7074735"; 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 export default function KycAdmin() {
   const [accountId, setAccountId] = useState("");
@@ -20,7 +21,7 @@ export default function KycAdmin() {
     setMessage("");
 
     try {
-      const response = await fetch("https://carbonchain-backend.onrender.com/api/grant-kyc", {
+      const response = await fetch(`${BACKEND_URL}/api/grant-kyc`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

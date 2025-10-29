@@ -20,7 +20,7 @@ const COMPANY_ADDRESS =
   import.meta.env.VITE_COMPANY_CONTRACT_ADDRESS ||
   "0x178b7C2cf7361120Ab911844e995dbd0991A3cBf";
 const RPC_URL = "https://testnet.hashio.io/api";
-const BACKEND_URL = "https://carbonchain-backend.onrender.com";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 // -----------------
 export function BuyForest() {

@@ -23,7 +23,7 @@ const COMPANY_ADDRESS =
 // -----------------------------------------------------------
 
 const RPC_URL = "https://testnet.hashio.io/api";
-const BACKEND_URL = "https://carbonchain-backend.onrender.com";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 export function Buy() {
   const { projectId } = useParams();
