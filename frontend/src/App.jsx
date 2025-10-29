@@ -24,6 +24,7 @@ import { ToastContainer } from './components/Toast';
 import KycAdmin from './components/GrantKyc';
 import { ManageRelayers } from './components/ManageRelayer';
 import { WithdrawFees } from './components/WithdrawFees';
+import {DocsPage} from './components/Docs';
 function App() {
   const [analytics, setAnalytics] = useState({
     totalCredits: 500000,
@@ -161,6 +162,7 @@ function App() {
             <Route path="/grant-kyc" element={<KycAdmin />} />
             <Route path="/manage-relayers" element={<ManageRelayers />} />
             <Route path="/withdraw-fees" element={<WithdrawFees />} />
+            <Route path="/documentation" element={<DocsPage />} />
           </Routes>
         </main>
         <Footer />
