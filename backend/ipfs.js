@@ -9,6 +9,10 @@ const pinata = new PinataSDK({
   pinataGateway: process.env.GATEWAY_URL
 });
 
+const IMAGE_BARREN = "ipfs://bafybeibarrenlandcid"; // replace with your barren land image CID
+const IMAGE_MIXED = "ipfs://bafybeimixedlandcid";   // replace with your mixed land image CID
+const IMAGE_GREEN = "ipfs://bafybeigreenlandcid";   // replace with your green land image CID
+
 // Upload image file to IPFS
 const uploadImageToIPFS = async (req, res) => {
   try {
@@ -96,13 +100,25 @@ async function createNFTMetadata(type, data) {
     let metadata;
 
     if (type === "forest") {
-      // Dynamic Forest NFT with IoT and AI regeneration score
+      // --- Dynamic image selection based on regeneration score ---
+      let regenScore = data?.regenerationScore?.score?.overall;
+      let imageUrl = IMAGE_MIXED; // default
+
+      if (typeof regenScore === "number") {
+        if (regenScore < 30) imageUrl = IMAGE_BARREN;
+        else if (regenScore > 75) imageUrl = IMAGE_GREEN;
+        else imageUrl = IMAGE_MIXED;
+      } else {
+        // fallback to previous or default image
+        imageUrl = data.imageUrl || IMAGE_MIXED;
+      }
+
       metadata = {
         ...base,
         name: data.name || `Forest Area #${data.areaId || data.id}`,
         creator: "Carbon Chain Inc.",
         description: `Dynamic Forest Certificate for ${data.area} hectares in ${data.location}. Real-time monitoring via IoT sensors and AI-powered regeneration scoring.`,
-        image: data.imageUrl || "ipfs://bafybeibkvvab3fnqmbhgoeilxbkszyvjehu6wa55d7b2ymifpbdp73zhje",
+        image: imageUrl,
         properties: {
           // Basic Forest Info
           area_id: data.areaId || data.id,

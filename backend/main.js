@@ -77,7 +77,7 @@ async function buyCredits(buyerAccountId, creditAmount, price, topicId) {
  * @param {string} location - Forest location details
  * @param {string} topicId - Topic ID for consensus service
  * @returns {Object} Transaction result and NFT details
- */
+ */ 
 async function buyForestArea(buyerAccountId, areaSize, price, location, topicId) {
     try {
         console.log(`Initiating forest area purchase: ${areaSize} hectares at ${location}`);

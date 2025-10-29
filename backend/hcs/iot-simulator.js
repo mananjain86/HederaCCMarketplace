@@ -1,4 +1,6 @@
 import { submitMessage } from "./consensus.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Simulate realistic IoT sensor data for forest monitoring
 export function generateSensorData(forestId, location) {
@@ -28,34 +30,28 @@ export function generateSensorData(forestId, location) {
   };
 }
 
-// Submit IoT data to HCS at regular intervals
-export async function startIoTSimulation(forestId, location, topicId, intervalMinutes = 15) {
-  console.log(`🌲 Starting IoT simulation for forest ${forestId}`);
-  console.log(`📡 Submitting data every ${intervalMinutes} minutes to topic ${topicId}`);
-
-  // Submit initial data
-  const initialData = generateSensorData(forestId, location);
-  await submitMessage(topicId, initialData);
-  console.log("✅ Initial sensor data submitted");
-
-  // Set up interval for continuous monitoring
-  const intervalMs = intervalMinutes * 60 * 1000;
-  const intervalId = setInterval(async () => {
-    try {
-      const sensorData = generateSensorData(forestId, location);
-      await submitMessage(topicId, sensorData);
-      console.log(`📊 Sensor data submitted at ${sensorData.timestamp}`);
-    } catch (error) {
-      console.error("Error submitting sensor data:", error);
-    }
-  }, intervalMs);
-
-  return intervalId;
-}
 
 // Get current sensor reading (for immediate use)
-export async function getCurrentSensorData(forestId, location, topicId) {
+export async function getCurrentSensorData(forestId, location, topicId = null) {
   const data = generateSensorData(forestId, location);
-  await submitMessage(topicId, data);
+  
+  // Use provided topicId or fall back to env variable
+  const topic = topicId || process.env.IOT_TOPIC_ID || process.env.FOREST_TOPIC_ID;
+  
+  if (!topic) {
+    console.error("❌ No HCS topic ID provided");
+    throw new Error("HCS topic ID is required");
+  }
+
+  try {
+    // Convert object to JSON string before submitting to HCS
+    const jsonString = JSON.stringify(data);
+    await submitMessage(topic, jsonString);
+    console.log("✅ IoT data submitted to HCS topic:", topic);
+  } catch (error) {
+    console.error("❌ Failed to submit IoT data to HCS:", error);
+    throw error;
+  }
+  
   return data;
 }
