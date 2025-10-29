@@ -174,6 +174,7 @@ export async function mintNFT(data, type, buyerAccountId) {
     return {
       success: transferRx.status.toString() === "SUCCESS",
       serialNumber,
+
       metadataCid: metadataResult.metadataCid,
       metadataUrl: metadataResult.metadataUrl,
     };

@@ -9,9 +9,9 @@ const pinata = new PinataSDK({
   pinataGateway: process.env.GATEWAY_URL
 });
 
-const IMAGE_BARREN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafkreihnss2s7ilwikjmx2lxbtx44ikfrnor3g3avp5zajxcapbjjuhjze"; // replace with your barren land image CID
-const IMAGE_MIXED = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeiet5vzjkcbiy7r7crhsfij4oiwo7vliv2iryi6o2jdcy2bxvb67fu";   // replace with your mixed land image CID
-const IMAGE_GREEN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeicd7o7g7jtj4kjhmeqex45bhoth4ppokzlrdgzrzrzez2ulavcofe";   // replace with your green land image CID
+const IMAGE_BARREN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafkreihnss2s7ilwikjmx2lxbtx44ikfrnor3g3avp5zajxcapbjjuhjze";
+const IMAGE_MIXED = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeiet5vzjkcbiy7r7crhsfij4oiwo7vliv2iryi6o2jdcy2bxvb67fu";   
+const IMAGE_GREEN = "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeicd7o7g7jtj4kjhmeqex45bhoth4ppokzlrdgzrzrzez2ulavcofe";   
 
 // Upload image file to IPFS
 const uploadImageToIPFS = async (req, res) => {
@@ -100,19 +100,24 @@ async function createNFTMetadata(type, data) {
     let metadata;
 
     if (type === "forest") {
-    // --- Dynamic image selection ---
-    // UPDATED: data.regenerationScore is now a simple number (e.g., 850)
+  
     let regenScore = data.regenerationScore;
-    let imageUrl = IMAGE_MIXED; // default
+    let imageUrl = IMAGE_MIXED; 
 
     if (typeof regenScore === "number") {
-        // UPDATED: Logic is now for a score out of 1000
         if (regenScore < 300) imageUrl = IMAGE_BARREN;
         else if (regenScore > 750) imageUrl = IMAGE_GREEN;
         else imageUrl = IMAGE_MIXED;
     } else {
         imageUrl = IMAGE_MIXED; // Fallback
     }
+    let sustainabilityRating = "Pending";
+       if (typeof regenScore === "number") {
+           if (regenScore >= 800) sustainabilityRating = "A+";
+           else if (regenScore >= 600) sustainabilityRating = "A";
+           else if (regenScore >= 400) sustainabilityRating = "B";
+           else sustainabilityRating = "C";
+       }
 
     metadata = {
         ...base,
@@ -121,6 +126,17 @@ async function createNFTMetadata(type, data) {
         // UPDATED: Description uses new fields
         description: data.description || `Fractional ownership certificate for ${data.sharesBought} shares in ${data.location}, linked to Forest ID ${data.forestId}.`,
         image: imageUrl,
+        attributes: [
+          { trait_type: "Asset Type", value: "Forest Share Certificate" },
+          { trait_type: "Forest ID", value: String(data.forestId || "N/A") },
+          { trait_type: "Location", value: String(data.location || "Unknown") },
+          { trait_type: "Shares Bought", value: String(data.sharesBought || "N/A") },
+          { trait_type: "Regeneration Score", value: String(regenScore ?? "Pending"), display_type: "number" },
+          { trait_type: "Baseline Sequestration (CO2/yr)", value: String(data.baselineSequestration || 0), display_type: "number" },
+          { trait_type: "Potential Sequestration (CO2/yr)", value: String(data.potentialSequestration || 0), display_type: "number" },
+          { trait_type: "Sustainability Rating", value: sustainabilityRating }, // USE IT HERE
+          { trait_type: "Original NFT ID", value: String(data.originalNftId || "N/A") },
+        ],
         properties: {
             // --- Share Info ---
             asset_type: "Forest Share Certificate",
