@@ -8,7 +8,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: [ "http://localhost:5173","https://carbonchain.onrender.com"],
+  origin: [ "http://localhost:5173","https://carbonchain-qupo.onrender.com"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
