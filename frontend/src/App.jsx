@@ -25,6 +25,7 @@ import KycAdmin from './components/GrantKyc';
 import { ManageRelayers } from './components/ManageRelayer';
 import { WithdrawFees } from './components/WithdrawFees';
 import RelayerDashboard from './pages/RelayerDashboard';
+import { DocsPage } from './pages/Docs';
 
 function App() {
   const [analytics, setAnalytics] = useState({
@@ -165,6 +166,7 @@ function App() {
             <Route path="/withdraw-fees" element={<WithdrawFees />} />
             <Route path="/relayer-dashboard" element={<RelayerDashboard />} />
             <Route path="/dao" element={<ForestDAO />} />
+            <Route path="/documentation" element={<DocsPage />} />
           </Routes>
         </main>
         <Footer />
