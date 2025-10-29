@@ -162,8 +162,7 @@ export function ForestProfile() {
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen bg-slate-900 text-emerald-400">
-        <LoadingSpinner />
-        <span className="ml-2">Loading forest details...</span>
+        <LoadingSpinner message="Loading forest details..." />
       </div>
     );
   if (error)

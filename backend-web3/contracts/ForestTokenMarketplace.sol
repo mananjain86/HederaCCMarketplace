@@ -295,7 +295,7 @@ contract DynamicForestFractionalMarketplaceDAO_Final {
         }
 
         emit YieldClaimed(_forestId, msg.sender, claimable);
-    }
+    } 
 
     // ------------------ DAO: Proposals & Voting ------------------
     /// @notice Create a proposal for a forest (must hold shares)

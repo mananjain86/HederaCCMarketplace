@@ -11,7 +11,6 @@ export function LoadingSpinner({ message = 'Loading...' }) {
         </div>
         <div className="text-center">
           <div className="text-lg font-medium text-white mb-2">{message}</div>
-          <div className="text-slate-400 text-sm">Fetching real environmental data from multiple APIs...</div>
         </div>
         <div className="flex space-x-2">
           <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>

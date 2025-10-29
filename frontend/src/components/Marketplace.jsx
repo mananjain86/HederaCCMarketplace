@@ -226,8 +226,7 @@ function Marketplace({ onViewCompany }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-slate-900">
-        <LoadingSpinner />
-        <p className="ml-3 text-emerald-400">Loading listings...</p>
+        <LoadingSpinner message="Loading listings..." />
       </div>
     );
   }

@@ -454,8 +454,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
               >
                 {isSubmitting ? (
                   <>
-                    <LoadingSpinner size="sm" />
-                    <span>Registering Area...</span>
+                    <LoadingSpinner message="Registering Area..." size="sm" />
                   </>
                 ) : (
                   <>

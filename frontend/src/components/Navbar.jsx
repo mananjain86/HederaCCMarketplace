@@ -270,6 +270,14 @@ export function Navbar() {
               <BarChart3 className="h-4 w-4" />
               <span>Analytics</span>
             </Link>
+            <Link
+              to="/dao"
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>DAO</span>
+            </Link>
+
           </div>
 
           {/* Wallet + Role-based Dropdowns */}

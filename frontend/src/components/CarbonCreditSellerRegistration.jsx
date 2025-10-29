@@ -395,8 +395,7 @@ export function CarbonCreditSellerRegistration({ onBack, onRegistrationComplete 
               >
                 {isSubmitting ? (
                   <>
-                    <LoadingSpinner size="sm" />
-                    <span>Listing Credits...</span>
+                    <LoadingSpinner message="Listing Credits..." size="sm" />
                   </>
                 ) : (
                   <>

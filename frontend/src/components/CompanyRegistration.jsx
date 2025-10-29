@@ -374,8 +374,7 @@ export function CompanyRegistration({ onBack, onRegistrationComplete }) {
               >
                 {isSubmitting ? (
                   <>
-                    <LoadingSpinner size="sm" />
-                    <span>Registering...</span>
+                    <LoadingSpinner message="Registering..." size="sm" />
                   </>
                 ) : (
                   <>

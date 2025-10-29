@@ -6,7 +6,7 @@ import { Hero } from './components/Hero';
 import { Marketplace } from './components/Marketplace';
 import { Analytics } from './components/Analytics';
 import { Footer } from './components/Footer';
-import { APITestPanel } from './components/APITestPanel';
+import ForestDAO from './components/ForestDAO';
 import { CompanyRegistration } from './components/CompanyRegistration';
 import { CarbonCreditSellerRegistration } from './components/CarbonCreditSellerRegistration';
 import { RegistrationSuccess } from './components/RegistrationSuccess';
@@ -164,6 +164,7 @@ function App() {
             <Route path="/manage-relayers" element={<ManageRelayers />} />
             <Route path="/withdraw-fees" element={<WithdrawFees />} />
             <Route path="/relayer-dashboard" element={<RelayerDashboard />} />
+            <Route path="/dao" element={<ForestDAO />} />
           </Routes>
         </main>
         <Footer />
