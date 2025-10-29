@@ -179,7 +179,7 @@ async function createNFTMetadata(type, data) {
         name: `Carbon Credit #${data.id}`,
         creator: "Carbon Chain Inc.",
         description: `Tradable carbon credit representing ${data.amount} tons of CO₂ offset.`,
-        image: "ipfs://bafybeigyi6bpq2httfil2jbrgolqcnecd5i7t3vyqjq3bqj4tsethyuay4",
+        image: "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeief5fyhdznvmo4hs2umclotujorfq33lh33rbycd5uskutt34k36i",
         properties: {
           credit_id: data.id,
           co2_offset_tons: data.amount,
