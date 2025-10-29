@@ -4,36 +4,42 @@ import "dotenv/config";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-function parseSingleDMS(dmsStr) {
-  if (typeof dmsStr !== "string") return null;
-  const regex = /(\d{1,3})[°º˚]\s*(\d{1,2})?['′]?\s*([NSEW])/i;
-  const match = dmsStr.trim().match(regex);
-  if (!match) return null;
-  let deg = parseInt(match[1], 10);
-  let min = match[2] ? parseInt(match[2], 10) : 0;
-  let dir = match[3].toUpperCase();
-  let val = deg + min / 60;
-  if (dir === "S" || dir === "W") val = -val;
-  return val;
+function parseSingleDMS(valueStr, dirStr) {
+  if (typeof valueStr !== "string" || typeof dirStr !== "string") return null;
+  // Remove degree symbol and parse float
+  const value = parseFloat(valueStr.replace(/[^\d.-]/g, ""));
+  if (isNaN(value)) return null;
+  const dir = dirStr.trim().toUpperCase();
+  if (dir === "S" || dir === "W") return -value;
+  return value;
 }
 
-// Helper: Parse DMS string like "43°00′N 41°01′E" to {lat, lng}
+// Helper: Parse DMS array like [ '3.4653°', 'S', '62.2159°', 'W' ] to {lat, lng}
 function parseDMS(str) {
-  if (typeof str !== "string") return null;
-  // Split into two parts (lat and lng)
-  const parts = str.split(/[\s,]+/).filter(Boolean);
-  if (parts.length < 2) return null;
-  const lat = parseSingleDMS(parts[0]);
-  const lng = parseSingleDMS(parts[1]);
-  if (typeof lat !== "number" || typeof lng !== "number" || isNaN(lat) || isNaN(lng)) return null;
-  return { lat, lng };
+  if (typeof str === "string") {
+    // fallback to old logic for string input
+    const parts = str.split(/[\s,]+/).filter(Boolean);
+    if (parts.length < 2) return null;
+    // Try to detect if it's in the new array-like format
+    if (parts.length === 4 && ['N','S','E','W'].includes(parts[1].toUpperCase()) && ['N','S','E','W'].includes(parts[3].toUpperCase())) {
+      const lat = parseSingleDMS(parts[0], parts[1]);
+      const lng = parseSingleDMS(parts[2], parts[3]);
+      if (typeof lat !== "number" || typeof lng !== "number" || isNaN(lat) || isNaN(lng)) return null;
+      return { lat, lng };
+    }
+    // fallback: try old DMS logic
+    const lat = parseSingleDMS(parts[0], parts[1]);
+    const lng = parseSingleDMS(parts[2], parts[3]);
+    if (typeof lat !== "number" || typeof lng !== "number" || isNaN(lat) || isNaN(lng)) return null;
+    return { lat, lng };
+  }
+  return null;
 }
 
 // Calculate regeneration score using AI analysis
 export async function calculateRegenerationScore(forestData, iotData) {
   try {
     console.log("🤖 Calculating regeneration score with AI...");
-
     // Prepare coordinates - handle different input formats
     let coordinates;
     if (forestData.coordinates) {

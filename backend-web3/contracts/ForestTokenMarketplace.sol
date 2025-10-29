@@ -53,6 +53,9 @@ contract DynamicForestFractionalMarketplaceDAO_Final {
     mapping(uint256 => mapping(address => uint256)) public shareBalance; // forestId => address => shares owned
     mapping(uint256 => mapping(uint256 => Proposal)) private forestProposals; // forestId => proposalId => Proposal
     mapping(uint256 => uint256) public forestNextProposalId;
+    mapping(uint256 => uint256) public totalGeneratedYield; // total yield ever generated per forest
+    mapping(uint256 => mapping(address => uint256)) public claimedSoFar; // total claimed by each user per forest
+    
 
     uint256 public nextForestId = 1;
 
@@ -265,6 +268,7 @@ contract DynamicForestFractionalMarketplaceDAO_Final {
         // regenScore is scaled 0..1000 representing 0..100% (per-mille)
         uint256 yieldGenerated = (_newScore * _baseline * delta) / (1000 * yearSeconds);
         f.accumulatedYield += yieldGenerated;
+        totalGeneratedYield[_forestId] = f.accumulatedYield;
         f.regenerationScore = _newScore;
         f.baselineSequestrationPerYear = _baseline;
         f.potentialSequestrationPerYear = _potential;
@@ -281,21 +285,41 @@ contract DynamicForestFractionalMarketplaceDAO_Final {
         require(userShares > 0, "No ownership");
 
         uint256 sharePercent = (userShares * 1e18) / f.totalShares;
-        uint256 claimable = (f.accumulatedYield * sharePercent) / 1e18;
-        require(claimable > 0, "No yield");
 
-        f.accumulatedYield -= claimable;
-        // Record last claimed time in owner entry
-        Ownership[] storage owners = forestOwners[_forestId];
-        for (uint256 i = 0; i < owners.length; i++) {
-            if (owners[i].holder == msg.sender) {
-                owners[i].lastClaimed = block.timestamp;
-                break;
-            }
-        }
+        // Calculate total claimable yield since last claim
+        uint256 totalYield = totalGeneratedYield[_forestId];
+        uint256 previouslyClaimed = claimedSoFar[_forestId][msg.sender];
+        require(totalYield > previouslyClaimed, "Already claimed up to date");
 
-        emit YieldClaimed(_forestId, msg.sender, claimable);
-    } 
+        uint256 newClaim = ((totalYield - previouslyClaimed) * sharePercent) / 1e18;
+        require(newClaim > 0, "No new yield to claim");
+
+        // Update claimed tracking
+        claimedSoFar[_forestId][msg.sender] = totalYield;
+
+        // ✅ Update HandleCompany to reflect new carbon credits earned
+        // This requires the marketplace contract to be set as an authorized caller in HandleCompany
+        handleCompanyContract.updateCreditBalance(msg.sender, newClaim);
+
+        emit YieldClaimed(_forestId, msg.sender, newClaim);
+    }
+    function getClaimableYield(uint256 _forestId, address _user) 
+        external 
+        view 
+        returns (uint256 claimable) 
+    {
+        ForestArea storage f = forests[_forestId];
+        uint256 userShares = shareBalance[_forestId][_user];
+        if (userShares == 0) return 0;
+
+        uint256 sharePercent = (userShares * 1e18) / f.totalShares;
+        uint256 totalYield = totalGeneratedYield[_forestId];
+        uint256 previouslyClaimed = claimedSoFar[_forestId][_user];
+
+        if (totalYield <= previouslyClaimed) return 0;
+
+        claimable = ((totalYield - previouslyClaimed) * sharePercent) / 1e18;
+    }
 
     // ------------------ DAO: Proposals & Voting ------------------
     /// @notice Create a proposal for a forest (must hold shares)

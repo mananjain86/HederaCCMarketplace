@@ -31,6 +31,7 @@ const FOREST_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
   "YOUR_NEW_FOREST_CONTRACT_ADDRESS_HERE"; // Replace with your deployed address
 const FOREST_ABI = forestAbi;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 // --- Other constants (HashConnect, Token IDs - keep as needed) ---
 const CARBON_TOKEN_ID = import.meta.env.VITE_CARBON_TOKEN_ID || "0.0.7074735";
@@ -296,15 +297,54 @@ export default function CompanyProfile() {
       const tx = await forestContract.claimYield(forestId);
 
       toast.info(`Waiting for confirmation (${tx.hash.slice(0, 6)})...`);
-      const receipt = await tx.wait(); // Wait for confirmation
+      const receipt = await tx.wait();
 
-       if (receipt.status !== 1) { // Check if transaction failed on-chain
-            throw new Error("Transaction failed on-chain.");
-        }
+      if (receipt.status !== 1) {
+        throw new Error("Transaction failed on-chain.");
+      }
 
-      toast.success(`Yield claimed successfully for Forest #${forestId}! Your credit balance should update shortly.`);
+      // --- Mint Carbon Credit NFT Receipt ---
+      // Find the claimed forest share info
+      const claimedShare = ownedForestShares.find(s => s.id === forestId);
+      if (!claimedShare) throw new Error("Could not find claimed forest share info.");
 
-      // Re-fetch ALL data after successful claim
+      // Get user address and company Hedera ID
+      const userAddress = await signer.getAddress();
+      const companyContract = new ethers.Contract(COMPANY_ADDRESS, COMPANY_ABI, provider);
+      const companyDetails = await companyContract.getCompanyDetails(userAddress);
+      const buyerHederaId = companyDetails.hederaAccountId;
+
+      // Prepare payload for backend NFT minting (carbon credit NFT)
+      const payload = {
+        buyerHederaId,
+        amount: claimedShare.claimableYield, // or the actual claimed amount
+        ethereumTxHash: receipt.hash,
+        buyerEthAddress: userAddress,
+        projectName: claimedShare.location || `Forest #${forestId}`,
+      };
+
+      // Call backend to mint carbon credit NFT
+      const response = await fetch(`${BACKEND_URL}/api/tokenize-purchase`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(res => res.json());
+
+      if (response.success) {
+        toast.success(`Yield claimed and Carbon Credit NFT minted! Token ID: ${response.tokenId}`);
+      } else {
+        throw new Error(response.error || "Backend tokenization failed.");
+      }
+
+      // --- Update only the claimed forest share's yield locally ---
+      setOwnedForestShares(prevShares =>
+        prevShares.map(s =>
+          s.id === forestId
+            ? { ...s, claimableYield: "0" } // Set claimableYield to zero after claim
+            : s
+        )
+      );
+
       await fetchCompanyData();
 
     } catch (err) {

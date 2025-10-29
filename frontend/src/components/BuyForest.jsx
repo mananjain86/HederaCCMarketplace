@@ -8,7 +8,7 @@ import ForestABI from "../abi/ForestTokenMarketplace.json";
 import CompanyABI from "../abi/HandleCompany.json";
 import { useToast } from "../hooks/useToast";
 // You will need these components, make sure they are in your project
-import { LoadingSpinner } from "./LoadingSpinner"; 
+import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorMessage } from "./ErrorMessage";
 
 // --- Constants ---
@@ -51,14 +51,14 @@ export function BuyForest() {
           ForestABI, // NEW ABI
           provider
         );
-        
+
         const forestData = await contract.forests(id);
         const remaining = await contract.remainingShares(id);
-        
+
         if (forestData.forestId.toString() === "0") {
           throw new Error("Forest area not found.");
         }
-        
+
         setMaxShares(Number(remaining));
 
         // Calculate price per share using BigInt, matching contract logic
@@ -86,7 +86,7 @@ export function BuyForest() {
           potential: Number(forestData.potentialSequestrationPerYear),
           regenerationScore: Number(forestData.regenerationScore),
           lastUpdated: Number(forestData.lastUpdated),
-          accumulatedYield: forestData.accumulatedYield.toString(), 
+          accumulatedYield: forestData.accumulatedYield.toString(),
           active: forestData.active,
         });
       } catch (err) {
@@ -158,7 +158,7 @@ export function BuyForest() {
       console.log(`Sending tx to buy ${sharesToBuy} shares...`);
       console.log(`Sending value: ${totalCostWei_BI.toString()} "Wei"`);
       console.log(`This is ${ethers.formatEther(totalCostWei_BI)} HBAR`);
-      
+
       const tx = await forestContract.buyForestShares(
         forest.forestId,
         sharesToBuy,
@@ -174,7 +174,7 @@ export function BuyForest() {
       setStatusMessage("Minting your Hedera NFT deed...");
       const payload = {
         forestData: {
-          ...forest, 
+          ...forest,
           sharesBought: sharesToBuy,
           price: ethers.formatEther(totalCostWei_BI),
           buyerEthAddress: address,
@@ -259,7 +259,7 @@ export function BuyForest() {
             <p className="text-slate-300 text-sm">Price per Share</p>
             <p className="font-mono text-white">
               {/* Format the 18-decimal "wei" price to Ether/HBAR */
-              ethers.formatEther(pricePerShare)} HBAR
+                ethers.formatEther(pricePerShare)} HBAR
             </p>
           </div>
         </div>
@@ -320,7 +320,7 @@ export function BuyForest() {
             forest.active && maxShares > 0
               ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
               : "bg-gray-600 cursor-not-allowed"
-          }`}
+            }`}
         >
           {buying ? (
             <>
