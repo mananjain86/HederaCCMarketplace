@@ -94,42 +94,42 @@ export function WithdrawFees() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 text-[#1b4332] p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-emerald-400 mb-6">
+        <h1 className="text-4xl font-extrabold mb-6">
           Withdraw Platform Fees
         </h1>
-        <p className="text-slate-400 mb-8">
+        <p className="text-[#3a5a40]/70 mb-8">
           Withdraw the accumulated platform fees from the marketplace contract.
-          This action can only be performed by the{" "}
-          <strong className="text-yellow-400">Platform Admin</strong> account.
+          This action can only be performed by the{' '}
+          <strong className="text-yellow-600">Platform Admin</strong> account.
         </p>
 
         {/* Section 1: Current Balance */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 shadow-xl mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-emerald-300">
+        <div className="bg-white/70 backdrop-blur-xl p-8 rounded-2xl border border-[#3a5a40]/20 shadow-2xl mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-[#40916c]">
             Available Fees
           </h2>
           {isBalanceLoading ? (
-            <div className="h-12 bg-slate-700 rounded-lg animate-pulse" />
+            <div className="h-12 bg-[#b7e4c7]/40 rounded-xl animate-pulse" />
           ) : (
-            <div className="text-4xl font-mono text-emerald-400 break-all">
+            <div className="text-4xl font-mono text-[#40916c] break-all">
               {ethers.formatEther(balance)}
-              <span className="text-2xl text-slate-400 ml-2">ETH</span>
+              <span className="text-2xl text-[#3a5a40]/60 ml-2">ETH</span>
             </div>
           )}
-          <p className="text-slate-500 mt-2">
+          <p className="text-[#3a5a40]/40 mt-2">
             Raw Balance: {balance} Wei
           </p>
         </div>
 
         {/* Section 2: Withdraw Action */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 shadow-xl">
-          <h2 className="text-2xl font-semibold mb-4 text-emerald-300">
+        <div className="bg-white/70 backdrop-blur-xl p-8 rounded-2xl border border-[#3a5a40]/20 shadow-2xl">
+          <h2 className="text-2xl font-bold mb-4 text-[#40916c]">
             Withdraw Funds
           </h2>
           <div className="flex flex-col space-y-4">
-            <label htmlFor="recipient" className="font-medium text-slate-300">
+            <label htmlFor="recipient" className="font-bold text-[#3a5a40]">
               Recipient Address
             </label>
             <input
@@ -138,16 +138,16 @@ export function WithdrawFees() {
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="Enter recipient address (0x...)"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white/60 border border-[#3a5a40]/20 rounded-xl px-4 py-3 text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
             />
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[#3a5a40]/60">
               Fees will be sent to this address. Defaults to your connected
               wallet.
             </p>
             <button
               onClick={handleWithdraw}
               disabled={isLoading || isBalanceLoading || balance === "0"}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-lg"
             >
               <Download className="h-5 w-5" />
               <span>

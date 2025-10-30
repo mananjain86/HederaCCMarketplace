@@ -15,6 +15,7 @@
     "axios": "^1.12.2",
     "dotenv": "^17.2.2",
     "ethers": "^6.15.0",
+    "framer-motion": "^12.23.24",
     "hashconnect": "^0.2.9",
     "lucide-react": "^0.344.0",
     "pinata": "^2.5.0",

@@ -417,23 +417,22 @@ export default function CompanyProfile() {
 
   if (loading && !company) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <LoadingSpinner /> <span className="ml-3 text-emerald-400">Loading profile...</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea]">
+        <LoadingSpinner /> <span className="ml-3 text-[#4a6741]">Loading profile...</span>
       </div>
     );
   }
 
   if (!company && !loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center bg-slate-900">
-        <div className="bg-slate-800/70 p-8 rounded-xl border border-slate-700/50 max-w-md">
-          <AlertCircle className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Company Profile Not Found</h2>
-          <p className="text-slate-400">
+      <div className="min-h-screen flex items-center justify-center text-center bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea]">
+        <div className="bg-white/50 backdrop-blur-xl p-8 rounded-3xl border border-[#3a5a40]/20 max-w-md">
+          <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-[#1b4332] mb-2">Company Profile Not Found</h2>
+          <p className="text-[#3a5a40]/80">
             The connected wallet address ({window.ethereum?.selectedAddress?.slice(0, 6)}...)
             is not registered. Please register your company or connect the correct wallet.
           </p>
-          {/* Optional: Add a button to navigate to registration */}
         </div>
       </div>
     );
@@ -441,50 +440,76 @@ export default function CompanyProfile() {
 
   // Render profile if company data exists
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-white">
-      <button
-        onClick={() => window.history.back()}
-        className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 mb-6"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        <span>Back</span>
-      </button>
-
-      {/* --- Company Header --- */}
-      <div className="bg-gradient-to-r from-slate-800/70 to-slate-700/70 backdrop-blur-md rounded-xl p-8 mb-8 border border-slate-700/50">
-         {/* ... (Existing header: Name, Verification Status, Wallet Address) ... */}
-         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-             <div className="flex-1">
-                 <div className="flex items-center flex-wrap gap-x-3 mb-2"> {/* Added flex-wrap */}
-                     <h1 className="text-3xl font-bold text-white">{company.name}</h1>
-                     {/* Verification Status Badge */}
-                     {company.verificationStatus === 1 ? (
-                         <div className="flex items-center space-x-1 text-emerald-400 text-sm bg-emerald-900/50 px-2 py-1 rounded-full"><CheckCircle className="h-4 w-4" /> <span>Verified</span></div>
-                     ) : company.verificationStatus === 2 ? (
-                         <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Rejected</span></div>
-                     ) : company.verificationStatus === 3 ? (
-                         <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Suspended</span></div>
-                     ) : (
-                         <div className="flex items-center space-x-1 text-yellow-400 text-sm bg-yellow-900/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Pending Verification</span></div>
-                     )}
-                 </div>
-                 <div className="flex items-center text-slate-400 text-sm"> {/* Reduced text size */}
-                     <Calendar className="h-4 w-4 mr-2" />
-                     <span>Registered in {company.registrationYear}</span>
-                 </div>
-             </div>
-             <div className="text-left lg:text-right w-full lg:w-auto mt-4 lg:mt-0"> {/* Adjusted alignment and width */}
-                 <div className="text-sm font-mono text-slate-400">EVM Wallet Address</div>
-                 <div className="text-base font-mono text-white break-all">{company.walletAddress}</div> {/* Reduced text size */}
-                 {company.hederaAccountId && company.hederaAccountId !== "0.0.0" && (
-                    <>
-                        <div className="text-sm font-mono text-slate-400 mt-2">Hedera Account ID</div>
-                        <div className="text-base font-mono text-white break-all">{company.hederaAccountId}</div>
-                    </>
-                 )}
-             </div>
-         </div>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] min-h-screen text-[#0f2d1c]">
+      {/* --- Subtle Gradient Green Backgrounds (copied from Home) --- */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div
+          className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{
+            background:
+              "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)",
+          }}
+        />
       </div>
+      {/* --- End Gradient Backgrounds --- */}
+
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-16">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center space-x-2 text-[#4a6741] hover:text-[#1b4332] mb-6 font-bold"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>Back</span>
+        </button>
+
+        {/* --- Company Header --- */}
+        <div className="bg-white/50 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-[#3a5a40]/20">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            <div className="flex-1">
+              <div className="flex items-center flex-wrap gap-x-3 mb-2">
+                <h1 className="text-3xl font-bold text-[#1b4332]">{company.name}</h1>
+                {/* Verification Status Badge */}
+                {company.verificationStatus === 1 ? (
+                  <div className="flex items-center space-x-1 text-[#4a6741] text-sm bg-[#b7e4c7]/50 px-2 py-1 rounded-full"><CheckCircle className="h-4 w-4" /> <span>Verified</span></div>
+                ) : company.verificationStatus === 2 ? (
+                  <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Rejected</span></div>
+                ) : company.verificationStatus === 3 ? (
+                  <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Suspended</span></div>
+                ) : (
+                  <div className="flex items-center space-x-1 text-yellow-500 text-sm bg-yellow-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Pending Verification</span></div>
+                )}
+              </div>
+              <div className="flex items-center text-[#3a5a40]/80 text-sm">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Registered in {company.registrationYear}</span>
+              </div>
+            </div>
+            <div className="text-left lg:text-right w-full lg:w-auto mt-4 lg:mt-0">
+              <div className="text-sm font-mono text-[#3a5a40]/80">EVM Wallet Address</div>
+              <div className="text-base font-mono text-[#1b4332] break-all">{company.walletAddress}</div>
+              {company.hederaAccountId && company.hederaAccountId !== "0.0.0" && (
+                <>
+                  <div className="text-sm font-mono text-[#3a5a40]/80 mt-2">Hedera Account ID</div>
+                  <div className="text-base font-mono text-[#1b4332] break-all">{company.hederaAccountId}</div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
 
       {/* --- Token Association Sections (Optional: Show only if Hedera ID exists) --- */}
       {company.hederaAccountId && company.hederaAccountId !== "0.0.0" && (
@@ -645,6 +670,7 @@ export default function CompanyProfile() {
       </div>
       {/* --- END NEW SECTION --- */}
 
-    </div>
-  );
+        </main>
+      </div>
+    );
 }

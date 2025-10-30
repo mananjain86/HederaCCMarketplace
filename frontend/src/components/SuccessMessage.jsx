@@ -3,20 +3,20 @@ import { CheckCircle, ExternalLink } from 'lucide-react';
 
 export function SuccessMessage({ message, transactionHash, onClose }) {
   return (
-    <div className="bg-emerald-900/50 border border-emerald-500 rounded-lg p-4 mb-6">
+    <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/20 rounded-2xl p-6 mb-6 shadow-2xl text-[#1b4332]">
       <div className="flex items-start space-x-3">
-        <CheckCircle className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <CheckCircle className="h-6 w-6 text-[#40916c] flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h4 className="text-emerald-300 font-medium mb-1">Success!</h4>
-          <p className="text-emerald-100 text-sm mb-2">{message}</p>
+          <h4 className="text-[#40916c] font-bold mb-1">Success!</h4>
+          <p className="text-[#1b4332] text-sm mb-2 font-semibold">{message}</p>
           {transactionHash && (
             <div className="flex items-center space-x-2 text-xs">
-              <span className="text-emerald-300">Transaction:</span>
+              <span className="text-[#3a5a40]/70">Transaction:</span>
               <a 
                 href={`https://etherscan.io/tx/${transactionHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 flex items-center space-x-1"
+                className="text-[#40916c] hover:text-[#1b4332] flex items-center space-x-1 font-mono"
               >
                 <span>{transactionHash.slice(0, 10)}...{transactionHash.slice(-8)}</span>
                 <ExternalLink className="h-3 w-3" />
@@ -27,9 +27,9 @@ export function SuccessMessage({ message, transactionHash, onClose }) {
         {onClose && (
           <button 
             onClick={onClose}
-            className="text-emerald-400 hover:text-emerald-300"
+            className="text-[#40916c] hover:text-[#1b4332] text-xl font-bold px-2 rounded-full focus:outline-none focus:ring-2 focus:ring-[#40916c]"
+            aria-label="Close success message"
           >
-            <span className="sr-only">Close</span>
             ×
           </button>
         )}

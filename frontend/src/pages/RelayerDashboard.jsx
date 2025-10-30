@@ -12,20 +12,17 @@ import {
   Droplets,
   Wind,
   Thermometer,
-  Hash, // Added for Forest ID input
-  Star, // Added for AI Score input
-  TrendingDown, // Added for Baseline input
+  Hash,
+  Star,
+  TrendingDown,
 } from "lucide-react";
-// UPDATED: Ensure this points to your NEW contract ABI
 import FOREST_ABI from "../abi/ForestTokenMarketplace.json";
 import { useToast } from "../hooks/useToast";
-import { LoadingSpinner } from "../components/LoadingSpinner"; // Make sure you have this component
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
-// UPDATED: Use the correct .env variable for the NEW contract address
 const FOREST_ADDRESS =
   import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
-  "YOUR_NEW_FOREST_CONTRACT_ADDRESS_HERE"; // Replace with your deployed address
-
+  "YOUR_NEW_FOREST_CONTRACT_ADDRESS_HERE";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://carbonchain-backend.onrender.com";
 
 export default function RelayerDashboard() {
@@ -47,7 +44,6 @@ export default function RelayerDashboard() {
 
   // Fetch registered forests
   const fetchForests = async () => {
-    // ... (keep existing fetchForests logic, but update ABI used) ...
      if (!window.ethereum) {
        toast.error("Please install MetaMask");
        return;
@@ -104,7 +100,6 @@ export default function RelayerDashboard() {
   // Connect wallet and check relayer status
   useEffect(() => {
     const init = async () => {
-      // ... (keep existing init logic, but update ABI used) ...
        if (!window.ethereum) {
          toast.error("Please install MetaMask");
          return;
@@ -322,16 +317,15 @@ export default function RelayerDashboard() {
   // ... (keep the JSX for Access Denied) ...
    if (!isRelayer && account) {
      return (
-       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 pt-20">
+       <div className="min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] pt-20">
          <div className="max-w-4xl mx-auto px-4">
-           <div className="bg-slate-800/50 backdrop-blur-sm border border-red-500/30 rounded-xl p-8 text-center">
+           <div className="bg-white/60 backdrop-blur-xl border border-red-400/30 rounded-3xl p-10 text-center shadow-xl">
              <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-             <h2 className="text-2xl font-bold text-white mb-2">
+             <h2 className="text-2xl font-bold text-[#1b4332] mb-2">
                Access Denied
              </h2>
-             <p className="text-slate-300">
-               You are not authorized as a relayer. Please contact the government
-               registrar.
+             <p className="text-[#3a5a40]">
+               You are not authorized as a relayer. Please contact the government registrar.
              </p>
            </div>
          </div>
@@ -340,42 +334,51 @@ export default function RelayerDashboard() {
    }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 pt-20">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] pt-20 overflow-hidden">
+      {/* --- Subtle Gradient Green Backgrounds (Home style) --- */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{ background: "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)" }} />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         {/* Header */}
         <div className="mb-8">
-          {/* ... (keep existing header JSX) ... */}
-           <div className="flex items-center justify-between">
-             <div>
-               <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                 <Radio className="h-10 w-10 text-purple-400" />
-                 Relayer Dashboard
-               </h1>
-               <p className="text-slate-300">
-                 Update forest regeneration scores and sync IoT data to blockchain
-               </p>
-             </div>
-             <button
-               onClick={fetchForests}
-               disabled={loading}
-               className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-             >
-               {loading ? (
-                 <Loader2 className="h-5 w-5 animate-spin" />
-               ) : (
-                 <RefreshCw className="h-5 w-5" />
-               )}
-               Refresh Forests
-             </button>
-           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-extrabold text-[#1b4332] mb-2 flex items-center gap-3">
+                <Radio className="h-10 w-10 text-[#40916c]" />
+                Relayer Dashboard
+              </h1>
+              <p className="text-[#3a5a40]">
+                Update forest regeneration scores and sync IoT data to blockchain
+              </p>
+            </div>
+            <button
+              onClick={fetchForests}
+              disabled={loading}
+              className="bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+              Refresh Forests
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Forest List */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <TreePine className="h-6 w-6 text-emerald-400" />
+            <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#1b4332] mb-4 flex items-center gap-2">
+                <TreePine className="h-6 w-6 text-[#40916c]" />
                 Registered Forests ({forests.length})
               </h2>
 

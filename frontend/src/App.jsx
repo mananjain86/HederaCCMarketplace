@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
+import { Home } from './pages/Home';
 import { Marketplace } from './pages/Marketplace';
 import { Analytics } from './pages/Analytics';
 import { Footer } from './components/Footer';
@@ -139,15 +139,8 @@ function App() {
         <Navbar />
         <main className="flex-1">
           <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <Hero analytics={analytics} />
-                  <Marketplace carbonCredits={carbonCredits} analytics={analytics} />
-                </>
-              }
-            />
+            <Route path="/" element={<Home analytics={analytics} />}/>
+            <Route path="/marketplace" element={<Marketplace carbonCredits={carbonCredits} analytics={analytics} />} />
             <Route path="/analytics" element={<Analytics analytics={analytics} />} />
             <Route path="/register" element={<CompanyRegistration />} />
             <Route path="/register-seller" element={<CarbonCreditSellerRegistration />} />

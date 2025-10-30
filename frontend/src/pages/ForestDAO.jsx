@@ -199,17 +199,17 @@ export default function ForestDAO() {
     </div>
   );
 
-  // Section 2: Create Proposal (unchanged)
+  // Section 2: Create Proposal (restyled)
   const renderCreateProposal = () => (
-    <div className="mb-10 p-4 bg-slate-700/60 rounded-lg">
-      <h2 className="text-xl text-white mb-2">Create Proposal</h2>
-      <div className="mb-2">
-        <label className="text-slate-300 mr-2">Forest ID:</label>
+    <div className="mb-10 p-6 bg-white/70 rounded-2xl border border-[#3a5a40]/10 shadow-sm">
+      <h2 className="text-xl font-bold text-[#1b4332] mb-4">Create Proposal</h2>
+      <div className="mb-4 flex flex-col md:flex-row md:items-center gap-4">
+        <label className="text-[#3a5a40] font-semibold">Forest ID:</label>
         <input
           type="number"
           value={createForestId}
           onChange={e => setCreateForestId(e.target.value)}
-          className="w-40 px-3 py-2 rounded bg-slate-800 text-white border border-slate-600"
+          className="w-40 px-4 py-3 rounded-xl bg-white/70 text-[#1b4332] border border-[#3a5a40]/20 placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all"
           placeholder="Enter Forest ID"
           disabled={creating}
         />
@@ -218,24 +218,24 @@ export default function ForestDAO() {
         type="text"
         value={newProposalDesc}
         onChange={e => setNewProposalDesc(e.target.value)}
-        className="w-full px-3 py-2 rounded bg-slate-800 text-white border border-slate-600 mb-2"
+        className="w-full px-4 py-3 rounded-xl bg-white/70 text-[#1b4332] border border-[#3a5a40]/20 placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all mb-4"
         placeholder="Proposal description"
         disabled={creating}
       />
-      <div className="flex items-center gap-4 mb-2">
-        <label className="text-slate-300">Duration (seconds):</label>
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+        <label className="text-[#3a5a40] font-semibold">Duration (seconds):</label>
         <input
           type="number"
           value={newProposalDuration}
           onChange={e => setNewProposalDuration(Number(e.target.value))}
-          className="w-32 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600"
+          className="w-32 px-4 py-3 rounded-xl bg-white/70 text-[#1b4332] border border-[#3a5a40]/20 placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all"
           disabled={creating}
         />
       </div>
       <button
         onClick={() => handleCreateProposal(createForestId)}
         disabled={creating || !newProposalDesc || !createForestId}
-        className="px-4 py-2 rounded bg-purple-600 text-white font-semibold hover:bg-purple-700"
+        className="px-6 py-3 rounded-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:from-gray-400 disabled:to-gray-300 disabled:cursor-not-allowed"
       >
         {creating ? "Creating..." : "Create Proposal"}
       </button>
@@ -297,16 +297,26 @@ export default function ForestDAO() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 py-10 px-4">
-      <div className="max-w-3xl mx-auto bg-slate-800/70 rounded-xl p-8 shadow-lg">
-        <h1 className="text-3xl font-bold text-white mb-6">🌲 Forest DAO Governance</h1>
-        <div className="mb-6">
-          <label className="block text-slate-300 mb-2">Forest ID:</label>
+    <div className="relative min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] text-[#0f2d1c] py-12 px-4 overflow-hidden">
+      {/* --- Subtle Gradient Green Backgrounds (Home style) --- */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{ background: "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)" }} />
+      </div>
+
+      <div className="relative z-10 max-w-3xl mx-auto bg-white/60 backdrop-blur-xl rounded-3xl p-10 shadow-xl border border-[#3a5a40]/20">
+        <h1 className="text-3xl font-extrabold text-[#1b4332] mb-8 tracking-tight flex items-center gap-2">🌲 Forest DAO Governance</h1>
+        <div className="mb-8">
+          <label className="block text-[#3a5a40] mb-2 font-semibold">Forest ID:</label>
           <input
             type="number"
             value={forestId}
             onChange={e => setForestId(e.target.value)}
-            className="w-40 px-3 py-2 rounded bg-slate-700 text-white border border-slate-600"
+            className="w-40 px-4 py-3 rounded-xl bg-white/70 text-[#1b4332] border border-[#3a5a40]/20 placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all"
             placeholder="Enter Forest ID"
           />
         </div>

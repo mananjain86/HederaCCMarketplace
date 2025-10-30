@@ -10,26 +10,23 @@ import {
   ChevronRight,
   CheckCircle,
   FileText,
-  Award, // NEW
-  Shield, // NEW
-  PieChart, // NEW
-  TrendingDown, // NEW
-  TrendingUp, // NEW
+  Award,
+  Shield,
+  PieChart,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { ErrorMessage } from "../components/ErrorMessage";
-// UPDATED: Import the new ABI
 import abi from "../abi/ForestTokenMarketplace.json";
 import { useNavigate } from "react-router-dom";
 
-// UPDATED: Renamed component to better reflect its new role
 export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // UPDATED: Form state with new fields
   const [formData, setFormData] = useState({
     location: "",
     gpsCoordinates: "",
@@ -43,7 +40,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
   });
   const navigate = useNavigate();
 
-  // UPDATED: New 3-step process
   const steps = [
     { id: 1, title: "Core Forest Details", icon: TreePine },
     { id: 2, title: "Token & Shares", icon: Award },
@@ -56,7 +52,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     setError("");
   };
 
-  // UPDATED: Validation logic for new 3-step form
   const validateStep = (step) => {
     const errors = {};
     if (step === 1) {
@@ -106,9 +101,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     }
   };
 
-  // UPDATED: handleSubmit to call the new registerForest function
   const handleSubmit = async () => {
-    // Validate the final step before submitting
     const validation = validateStep(currentStep);
     if (!validation.isValid) {
       setError("Please correct all errors before submitting.");
@@ -125,15 +118,12 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
 
-      // UPDATED: Use the new .env variable for the new contract
       const ForestContractAddress =
         import.meta.env.VITE_FOREST_CONTRACT_ADDRESS ||
         "0xD8a0C3B0CB1FDc61262772eE502a97C74dbA86B9";
 
-      // UPDATED: Use the new ABI
       const contract = new ethers.Contract(ForestContractAddress, abi, signer);
 
-      // 1. Assemble the AreaInfo struct
       const info = {
         location: formData.location,
         gpsCoordinates: formData.gpsCoordinates,
@@ -141,7 +131,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         ipfsDeedHash: formData.ipfsDeedHash,
       };
 
-      // 2. Get all other arguments
       const htsTokenId = formData.htsTokenId;
       const serial = BigInt(formData.serial);
       const totalShares = BigInt(formData.totalShares);
@@ -157,7 +146,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
         potential,
       });
 
-      // 3. Call the new contract function
       const tx = await contract.registerForest(
         htsTokenId,
         serial,
@@ -182,7 +170,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
       if (err.code === 4001) {
         setError("Transaction was rejected by user.");
       } else if (err.reason) {
-        // UPDATED: Show clearer contract revert reasons
         setError(`Registration failed: ${err.reason}`);
       } else if (err.message.includes("insufficient funds")) {
         setError("Insufficient funds for gas fees.");
@@ -204,12 +191,12 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
     Icon = null
   ) => (
     <div>
-      <label className="block text-sm font-medium text-emerald-300 mb-2">
+      <label className="block text-sm font-semibold text-[#1b4332] mb-2">
         {label} {required && "*"}
       </label>
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
+          <Icon className="absolute left-3 top-3.5 h-5 w-5 text-[#3a5a40]/60" />
         )}
         <input
           type={type}
@@ -217,32 +204,32 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           onChange={(e) => handleInputChange(field, e.target.value)}
           className={`w-full ${
             Icon ? "pl-11" : "pl-4"
-          } pr-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:ring-1 transition-colors ${
+          } pr-4 py-3 bg-white/70 border rounded-xl text-[#1b4332] placeholder-[#3a5a40]/40 focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all ${
             fieldErrors[field]
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : "border-slate-600 focus:border-emerald-500 focus:ring-emerald-500"
+              ? "border-red-400 focus:border-red-500 focus:ring-red-400"
+              : "border-[#3a5a40]/20"
           }`}
           placeholder={placeholder}
         />
       </div>
       {fieldErrors[field] && (
-        <p className="mt-1 text-sm text-red-400 flex items-center">
+        <p className="mt-1 text-sm text-red-500 flex items-center font-semibold">
           {fieldErrors[field]}
         </p>
       )}
     </div>
   );
 
-  // UPDATED: Renders 3 steps
+  // --- Stepper ---
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-8">
       {steps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div
-            className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+            className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all text-lg font-bold ${
               currentStep >= step.id
-                ? "bg-emerald-500 border-emerald-500 text-white"
-                : "border-slate-600 text-slate-400"
+                ? "bg-gradient-to-r from-[#1b4332] to-[#40916c] border-[#40916c] text-white shadow-lg"
+                : "border-[#3a5a40]/30 text-[#3a5a40] bg-white/60"
             }`}
           >
             {currentStep > step.id ? (
@@ -254,7 +241,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
           {index < steps.length - 1 && (
             <div
               className={`h-0.5 w-16 mx-2 transition-all ${
-                currentStep > step.id ? "bg-emerald-500" : "bg-slate-600"
+                currentStep > step.id ? "bg-[#40916c]" : "bg-[#3a5a40]/30"
               }`}
             />
           )}
@@ -391,23 +378,32 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-slate-900 to-emerald-900 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-8">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] text-[#0f2d1c] py-12 px-4 overflow-hidden">
+      {/* --- Subtle Gradient Green Backgrounds (Home style) --- */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{ background: "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)" }} />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-[#3a5a40]/20 p-10 shadow-xl">
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={onBack}
-              className="flex items-center space-x-2 text-emerald-300 hover:text-emerald-200 transition-colors"
+              className="flex items-center space-x-2 text-[#40916c] hover:text-[#1b4332] transition-colors font-semibold"
             >
               <ChevronLeft className="h-5 w-5" />
               <span>Back to Marketplace</span>
             </button>
             <div className="text-center">
-              {/* UPDATED: Title */}
-              <h2 className="text-3xl font-bold text-white">
+              <h2 className="text-3xl font-extrabold text-[#1b4332] tracking-tight">
                 Register New Forest Area
               </h2>
-              <p className="text-slate-400 mt-1">
+              <p className="text-[#3a5a40] mt-1">
                 Step {currentStep} of {steps.length}
               </p>
             </div>
@@ -428,10 +424,10 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              className={`flex items-center space-x-2 px-6 py-3 rounded-full font-bold transition-all ${
                 currentStep === 1
-                  ? "text-slate-500 cursor-not-allowed"
-                  : "text-emerald-300 hover:bg-emerald-500/20"
+                  ? "text-[#3a5a40]/40 cursor-not-allowed"
+                  : "text-[#40916c] hover:bg-[#b7e4c7]/30"
               }`}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -441,7 +437,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
             {currentStep < steps.length ? (
               <button
                 onClick={nextStep}
-                className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all"
+                className="flex items-center space-x-2 bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-8 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all"
               >
                 <span>Next</span>
                 <ChevronRight className="h-5 w-5" />
@@ -450,7 +446,7 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-8 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -459,7 +455,6 @@ export function ForestSellerRegistration({ onBack, onRegistrationComplete }) {
                 ) : (
                   <>
                     <Hash className="h-5 w-5" />
-                    {/* UPDATED: Button text */}
                     <span>Register Forest Area</span>
                   </>
                 )}

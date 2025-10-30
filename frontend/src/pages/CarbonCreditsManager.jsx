@@ -68,65 +68,95 @@ const CarbonCreditsManager = () => {
     };
 
     return (
-        <div className="p-10 rounded-xl bg-slate-800/70 backdrop-blur-sm shadow-xl border border-yellow-700 max-w-2xl mx-auto mt-10 mb-10"> {/* Increased padding and max-width */}
-            <h3 className="text-3xl font-bold text-yellow-300 mb-10 text-center"> {/* Increased text size and margin */}
-                Approve Carbon Credits
-            </h3>
+        <div className="relative overflow-hidden bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] min-h-screen text-[#0f2d1c] flex items-center justify-center py-16">
+            {/* --- Subtle Gradient Green Backgrounds (copied from Home) --- */}
+            <div className="pointer-events-none absolute inset-0 z-0">
+                <div
+                    className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+                    style={{
+                        background:
+                            "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+                    }}
+                />
+                <div
+                    className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+                    style={{
+                        background:
+                            "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+                    }}
+                />
+                <div
+                    className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+                    style={{
+                        background:
+                            "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)",
+                    }}
+                />
+            </div>
+            {/* --- End Gradient Backgrounds --- */}
 
-            <form onSubmit={handleAddCredits} className="space-y-8"> {/* Increased spacing */}
-                <div>
-                    <label htmlFor="companyAddress" className="block text-base font-medium text-yellow-100 mb-2"> {/* Increased text size */}
-                        Company Address:
-                    </label>
-                    <input
-                        type="text"
-                        id="companyAddress"
-                        value={companyAddress}
-                        onChange={(e) => setCompanyAddress(e.target.value)}
-                        placeholder="0x..."
-                        required
-                        className={`w-full px-4 py-3 border rounded-md shadow-sm bg-slate-700 text-white text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 ${ // Increased padding and text size
-                            companyAddress && !validateAddress(companyAddress)
-                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                                : 'border-slate-600 focus:border-yellow-500'
-                        }`}
-                    />
-                    {companyAddress && !validateAddress(companyAddress) && (
-                        <p className="mt-2 text-sm text-red-400">Invalid Ethereum address</p>
-                    )}
-                </div>
+            <main className="relative z-10 w-full max-w-2xl mx-auto">
+                <div className="p-10 rounded-3xl bg-white/50 backdrop-blur-xl shadow-xl border border-[#3a5a40]/20">
+                    <h3 className="text-3xl font-extrabold text-[#1b4332] mb-10 text-center tracking-tight">
+                        Approve Carbon Credits
+                    </h3>
 
-                <div>
-                    <label htmlFor="creditAmount" className="block text-base font-medium text-yellow-100 mb-2"> {/* Increased text size */}
-                        Credit Amount:
-                    </label>
-                    <input
-                        type="number"
-                        id="creditAmount"
-                        value={creditAmount}
-                        onChange={(e) => setCreditAmount(e.target.value)}
-                        placeholder="Enter amount"
-                        min="1"
-                        required
-                        className="w-full px-4 py-3 border border-slate-600 rounded-md shadow-sm bg-slate-700 text-white text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500" // Increased padding and text size
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={loading || !validateAddress(companyAddress) || !creditAmount}
-                    className="w-full px-4 py-3 text-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-semibold rounded-md hover:from-yellow-600 hover:to-amber-600 disabled:from-gray-600 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-slate-800" // Increased text size
-                >
-                    {loading ? (
-                        <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                            Adding Credits...
+                    <form onSubmit={handleAddCredits} className="space-y-8">
+                        <div>
+                            <label htmlFor="companyAddress" className="block text-base font-semibold text-[#1b4332] mb-2">
+                                Company Address:
+                            </label>
+                            <input
+                                type="text"
+                                id="companyAddress"
+                                value={companyAddress}
+                                onChange={(e) => setCompanyAddress(e.target.value)}
+                                placeholder="0x..."
+                                required
+                                className={`w-full px-4 py-3 border rounded-xl shadow-sm bg-white/70 text-[#1b4332] text-lg placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all ${
+                                    companyAddress && !validateAddress(companyAddress)
+                                        ? 'border-red-400 focus:border-red-500 focus:ring-red-400'
+                                        : 'border-[#3a5a40]/20'
+                                }`}
+                            />
+                            {companyAddress && !validateAddress(companyAddress) && (
+                                <p className="mt-2 text-base text-red-500 font-semibold">Invalid Ethereum address</p>
+                            )}
                         </div>
-                    ) : (
-                        'Approve Carbon Credits'
-                    )}
-                </button>
-            </form>
+
+                        <div>
+                            <label htmlFor="creditAmount" className="block text-base font-semibold text-[#1b4332] mb-2">
+                                Credit Amount:
+                            </label>
+                            <input
+                                type="number"
+                                id="creditAmount"
+                                value={creditAmount}
+                                onChange={(e) => setCreditAmount(e.target.value)}
+                                placeholder="Enter amount"
+                                min="1"
+                                required
+                                className="w-full px-4 py-3 border rounded-xl shadow-sm bg-white/70 text-[#1b4332] text-lg placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-[#4a6741] transition-all"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading || !validateAddress(companyAddress) || !creditAmount}
+                            className="w-full px-4 py-3 text-lg bg-gradient-to-r from-[#1b4332] to-[#3a5a40] text-white font-bold rounded-full hover:from-[#3a5a40] hover:to-[#1b4332] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:ring-offset-2 focus:ring-offset-white disabled:from-gray-400 disabled:to-gray-300 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                                    Adding Credits...
+                                </div>
+                            ) : (
+                                'Approve Carbon Credits'
+                            )}
+                        </button>
+                    </form>
+                </div>
+            </main>
         </div>
     );
 };

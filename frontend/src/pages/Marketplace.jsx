@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, TreePine, Factory } from "lucide-react";
+import { Search, TreePine, Factory, BarChart3, Award, TrendingUp, Sparkles } from "lucide-react";
 import { ethers } from "ethers";
 import { CreditCard } from "../components/CreditCard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
@@ -81,6 +81,7 @@ const fetchForestData = async (contract, id) => {
   }
 };
 
+
 function Marketplace({ onViewCompany }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -94,6 +95,13 @@ function Marketplace({ onViewCompany }) {
     totalValueLocked: 0,
     verificationRate: 0,
   });
+  // For animated background
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (e) => setMousePosition({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -225,7 +233,7 @@ function Marketplace({ onViewCompany }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-slate-900">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea]">
         <LoadingSpinner message="Loading listings..." />
       </div>
     );
@@ -233,125 +241,159 @@ function Marketplace({ onViewCompany }) {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-slate-900">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea]">
         <ErrorMessage message={error} />
       </div>
     );
   }
 
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Analytics Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* UPDATED: Fixed Card 1 to show totalCredits */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="text-2xl font-bold text-emerald-400">
-            {analytics.totalCredits.toLocaleString()}
-          </div>
-          <div className="text-slate-400">Total Credits Available</div>
-        </div>
-        
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="text-2xl font-bold text-emerald-400">
-            {analytics.activeProjects}
-          </div>
-          <div className="text-slate-400">Active Listings</div>
-        </div>
-        
-        {/* UPDATED: Fixed Card 3 formatting to match Card 1's original style */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="text-2xl font-bold text-emerald-400">
-            {analytics.totalValueLocked.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
-            HBAR
-          </div>
-          <div className="text-slate-400">Total Value Locked</div>
-        </div>
-        
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
-          <div className="text-2xl font-bold text-emerald-400">
-            {analytics.verificationRate}%
-          </div>
-          <div className="text-slate-400">Verification Rate</div>
-        </div>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] min-h-screen text-[#0f2d1c]">
+      {/* --- Subtle Gradient Green Backgrounds (copied from Home) --- */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div
+          className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{
+            background:
+              "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)",
+          }}
+        />
+      </div>
+      {/* --- End Gradient Backgrounds --- */}
+
+      {/* Background layers (animated sunlight, leaves) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
+        <div
+          className="absolute w-[900px] h-[900px] rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 20%, rgba(255,248,225,0.3), transparent 70%)",
+            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
+          }}
+        />
+        <div
+          className="absolute w-[800px] h-[800px] rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle at 70% 80%, rgba(74,103,65,0.2), transparent 80%)",
+            transform: `translate(-${mousePosition.x * 0.01}px, -${mousePosition.y * 0.01}px)`,
+          }}
+        />
       </div>
 
-      {/* Search and Filters (Unchanged) */}
-      <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 mb-8 border border-slate-700/50">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-            <input
-              type="text"
-              placeholder="Search projects, locations, or issuers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-16">
+        {/* Analytics Dashboard */}
+        <section className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="group p-8 rounded-3xl bg-white/50 backdrop-blur-xl border border-[#3a5a40]/20 hover:border-[#3a5a40]/40 transition-all shadow-xl">
+              <div className="flex items-center gap-3 mb-2">
+                <BarChart3 className="w-6 h-6 text-[#4a6741]" />
+                <span className="text-lg font-semibold text-[#1b4332]">Total Credits</span>
+              </div>
+              <div className="text-3xl font-extrabold text-[#1b4332]">{analytics.totalCredits.toLocaleString()}</div>
+            </div>
+            <div className="group p-8 rounded-3xl bg-white/50 backdrop-blur-xl border border-[#3a5a40]/20 hover:border-[#3a5a40]/40 transition-all shadow-xl">
+              <div className="flex items-center gap-3 mb-2">
+                <Award className="w-6 h-6 text-[#4a6741]" />
+                <span className="text-lg font-semibold text-[#1b4332]">Active Listings</span>
+              </div>
+              <div className="text-3xl font-extrabold text-[#1b4332]">{analytics.activeProjects}</div>
+            </div>
+            <div className="group p-8 rounded-3xl bg-white/50 backdrop-blur-xl border border-[#3a5a40]/20 hover:border-[#3a5a40]/40 transition-all shadow-xl">
+              <div className="flex items-center gap-3 mb-2">
+                <TrendingUp className="w-6 h-6 text-[#4a6741]" />
+                <span className="text-lg font-semibold text-[#1b4332]">Total Value Locked</span>
+              </div>
+              <div className="text-3xl font-extrabold text-[#1b4332]">
+                {analytics.totalValueLocked.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} HBAR
+              </div>
+            </div>
+            <div className="group p-8 rounded-3xl bg-white/50 backdrop-blur-xl border border-[#3a5a40]/20 hover:border-[#3a5a40]/40 transition-all shadow-xl">
+              <div className="flex items-center gap-3 mb-2">
+                <Sparkles className="w-6 h-6 text-[#4a6741]" />
+                <span className="text-lg font-semibold text-[#1b4332]">Verification Rate</span>
+              </div>
+              <div className="text-3xl font-extrabold text-[#1b4332]">{analytics.verificationRate}%</div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilterType("all")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                filterType === "all"
-                  ? "bg-emerald-500 text-white"
-                  : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilterType("carbon")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
-                filterType === "carbon"
-                  ? "bg-emerald-500 text-white"
-                  : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
-              }`}
-            >
-              <Factory className="h-4 w-4" />
-              <span>Carbon Credits</span>
-            </button>
-            <button
-              onClick={() => setFilterType("forest")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
-                filterType === "forest"
-                  ? "bg-emerald-500 text-white"
-                  : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
-              }`}
-            >
-              <TreePine className="h-4 w-4" />
-              <span>Forest Tokens</span>
-            </button>
+        </section>
+
+        {/* Search and Filters */}
+        <section className="mb-12">
+          <div className="bg-white/50 backdrop-blur-xl rounded-3xl border border-[#3a5a40]/20 p-8 flex flex-col lg:flex-row gap-4 items-center">
+            <div className="flex-1 relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3a5a40] h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search projects, locations, or issuers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-transparent border border-[#3a5a40]/20 rounded-lg text-[#1b4332] placeholder-[#3a5a40]/60 focus:outline-none focus:ring-2 focus:ring-[#4a6741] focus:border-transparent"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`px-6 py-2 rounded-full font-bold text-lg transition-all ${filterType === 'all' ? 'bg-gradient-to-r from-[#1b4332] to-[#3a5a40] text-white shadow-lg' : 'bg-white/70 border border-[#3a5a40]/20 text-[#1b4332] hover:bg-[#1b4332]/10'}`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilterType('carbon')}
+                className={`px-6 py-2 rounded-full font-bold text-lg flex items-center gap-2 transition-all ${filterType === 'carbon' ? 'bg-gradient-to-r from-[#1b4332] to-[#3a5a40] text-white shadow-lg' : 'bg-white/70 border border-[#3a5a40]/20 text-[#1b4332] hover:bg-[#1b4332]/10'}`}
+              >
+                <Factory className="h-5 w-5" /> Carbon Credits
+              </button>
+              <button
+                onClick={() => setFilterType('forest')}
+                className={`px-6 py-2 rounded-full font-bold text-lg flex items-center gap-2 transition-all ${filterType === 'forest' ? 'bg-gradient-to-r from-[#1b4332] to-[#3a5a40] text-white shadow-lg' : 'bg-white/70 border border-[#3a5a40]/20 text-[#1b4332] hover:bg-[#1b4332]/10'}`}
+              >
+                <TreePine className="h-5 w-5" /> Forest Tokens
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Credits Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCredits.map((credit) => (
-          <CreditCard
-            key={`${credit.type}-${credit.id}`}
-            credit={{
-              ...credit,
-              // UPDATED: Fixed typo from pricePerHectare to pricePerShare
-              price: credit.pricePerCredit
-                ? `${credit.pricePerCredit.toFixed(4)} HBAR`
-                : credit.pricePerShare // <-- This is the fix
-                ? `${credit.pricePerShare.toFixed(4)} HBAR`
-                : "N/A",
-            }}
-            onViewCompany={onViewCompany}
-          />
-        ))}
-      </div>
-
-      {filteredCredits.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
-          No credits found. Try adjusting your search or filters.
-        </div>
-      )}
+        {/* Credits Grid */}
+        <section>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {filteredCredits.map((credit) => (
+              <CreditCard
+                key={`${credit.type}-${credit.id}`}
+                credit={{
+                  ...credit,
+                  price: credit.pricePerCredit
+                    ? `${credit.pricePerCredit.toFixed(4)} HBAR`
+                    : credit.pricePerShare
+                    ? `${credit.pricePerShare.toFixed(4)} HBAR`
+                    : 'N/A',
+                }}
+                onViewCompany={onViewCompany}
+              />
+            ))}
+          </div>
+          {filteredCredits.length === 0 && (
+            <div className="text-center py-12 text-[#3a5a40]/70 text-xl">
+              No credits found. Try adjusting your search or filters.
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

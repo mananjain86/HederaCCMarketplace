@@ -76,21 +76,21 @@ export function ManageRelayers() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 text-[#1b4332] p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-emerald-400 mb-6">
+        <h1 className="text-4xl font-extrabold mb-6">
           Manage Relayers
         </h1>
-        <p className="text-slate-400 mb-8">
+        <p className="text-[#3a5a40]/70 mb-8">
           Authorize or revoke addresses that can act as an oracle/relayer to
-          update forest data. This action can only be performed by the{" "}
-          <strong className="text-blue-400">Government Registrar</strong>{" "}
+          update forest data. This action can only be performed by the{' '}
+          <strong className="text-[#40916c]">Government Registrar</strong>{' '}
           account.
         </p>
 
         {/* Section 1: Add/Remove Relayer */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 shadow-xl mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-emerald-300">
+        <div className="bg-white/70 backdrop-blur-xl p-8 rounded-2xl border border-[#3a5a40]/20 shadow-2xl mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-[#40916c]">
             Set Relayer Status
           </h2>
           <div className="flex flex-col space-y-4">
@@ -99,13 +99,13 @@ export function ManageRelayers() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Enter relayer address (0x...)"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white/60 border border-[#3a5a40]/20 rounded-xl px-4 py-3 text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
             />
             <div className="flex space-x-4">
               <button
                 onClick={() => updateRelayerStatus(true)}
                 disabled={isLoading}
-                className="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="flex-1 bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-lg"
               >
                 <ShieldCheck className="h-5 w-5" />
                 <span>{isLoading ? "Authorizing..." : "Authorize Relayer"}</span>
@@ -113,7 +113,7 @@ export function ManageRelayers() {
               <button
                 onClick={() => updateRelayerStatus(false)}
                 disabled={isLoading}
-                className="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-700 text-white px-6 py-3 rounded-full font-bold hover:from-red-600 hover:to-red-800 transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-lg"
               >
                 <ShieldOff className="h-5 w-5" />
                 <span>{isLoading ? "Revoking..." : "Revoke Relayer"}</span>
@@ -123,8 +123,8 @@ export function ManageRelayers() {
         </div>
 
         {/* Section 2: Check Relayer Status */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 shadow-xl">
-          <h2 className="text-2xl font-semibold mb-4 text-emerald-300">
+        <div className="bg-white/70 backdrop-blur-xl p-8 rounded-2xl border border-[#3a5a40]/20 shadow-2xl">
+          <h2 className="text-2xl font-bold mb-4 text-[#40916c]">
             Check Relayer Status
           </h2>
           <div className="flex flex-col space-y-4">
@@ -133,12 +133,12 @@ export function ManageRelayers() {
               value={checkAddress}
               onChange={(e) => setCheckAddress(e.target.value)}
               placeholder="Enter address to check (0x...)"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white/60 border border-[#3a5a40]/20 rounded-xl px-4 py-3 text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
             />
             <button
               onClick={checkRelayerStatus}
               disabled={isChecking}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:opacity-50 flex items-center justify-center space-x-2 shadow-lg"
             >
               <UserCheck className="h-5 w-5" />
               <span>{isChecking ? "Checking..." : "Check Status"}</span>
@@ -147,24 +147,24 @@ export function ManageRelayers() {
             {/* Status Display */}
             {isRelayer !== null && (
               <div
-                className={`p-4 rounded-lg flex items-center space-x-3 ${
+                className={`p-4 rounded-xl flex items-center space-x-3 border ${
                   isRelayer
-                    ? "bg-emerald-900 border border-emerald-700"
-                    : "bg-red-900 border border-red-700"
+                    ? "bg-[#b7e4c7]/60 border-[#40916c]/30"
+                    : "bg-red-100/60 border-red-400/30"
                 }`}
               >
                 {isRelayer ? (
-                  <ShieldCheck className="h-6 w-6 text-emerald-400" />
+                  <ShieldCheck className="h-6 w-6 text-[#40916c]" />
                 ) : (
                   <ShieldAlert className="h-6 w-6 text-red-400" />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium text-white">
+                  <p className="font-bold">
                     {checkAddress.slice(0, 10)}...{checkAddress.slice(-8)}
                   </p>
                   <p
                     className={
-                      isRelayer ? "text-emerald-400" : "text-red-400"
+                      isRelayer ? "text-[#40916c] font-semibold" : "text-red-500 font-semibold"
                     }
                   >
                     {isRelayer

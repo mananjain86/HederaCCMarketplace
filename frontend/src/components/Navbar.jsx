@@ -9,7 +9,7 @@ import {
   Users,
   User,
   ShieldPlus,
-  Radio, // NEW: Icon for relayer
+  Radio,
 } from "lucide-react";
 import { ethers } from "ethers";
 import { useNavigate, Link } from "react-router-dom";
@@ -32,13 +32,13 @@ export function Navbar() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isGovernment, setIsGovernment] = useState(false);
-  const [isRelayer, setIsRelayer] = useState(false); // NEW: State for relayer
+  const [isRelayer, setIsRelayer] = useState(false);
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
   const [showGovDropdown, setShowGovDropdown] = useState(false);
-  const [showRelayerDropdown, setShowRelayerDropdown] = useState(false); // NEW: Relayer dropdown
+  const [showRelayerDropdown, setShowRelayerDropdown] = useState(false);
   const ownerDropdownRef = useRef(null);
   const govDropdownRef = useRef(null);
-  const relayerDropdownRef = useRef(null); // NEW: Ref for relayer dropdown
+  const relayerDropdownRef = useRef(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -74,7 +74,7 @@ export function Navbar() {
     setAllAccounts([]);
     setIsOwner(false);
     setIsGovernment(false);
-    setIsRelayer(false); // NEW: Reset relayer state
+    setIsRelayer(false);
     toast.info("Wallet disconnected successfully!");
   };
 
@@ -114,7 +114,7 @@ export function Navbar() {
     }
   };
 
-  // NEW: Check if account is a relayer
+  // Check if account is a relayer
   const checkRelayerStatus = async (addr) => {
     if (!addr || !window.ethereum) return;
     try {
@@ -145,7 +145,7 @@ export function Navbar() {
           setAllAccounts([]);
           setIsOwner(false);
           setIsGovernment(false);
-          setIsRelayer(false); // NEW: Reset on account change
+          setIsRelayer(false);
         }
       });
     }
@@ -190,7 +190,7 @@ export function Navbar() {
       checkCompanyRegistration(account);
       checkOwnership(account);
       checkGovernmentStatus(account);
-      checkRelayerStatus(account); // NEW: Check relayer status
+      checkRelayerStatus(account);
     }
   }, [account]);
 
@@ -215,7 +215,6 @@ export function Navbar() {
       ) {
         setShowGovDropdown(false);
       }
-      // NEW: Add handler for relayer dropdown
       if (
         relayerDropdownRef.current &&
         !relayerDropdownRef.current.contains(event.target)
@@ -237,82 +236,77 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-slate-900/90 backdrop-blur-md border-b border-emerald-500/20 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="bg-white border-b border-[#3a5a40]/10 sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
+            className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-[#e8f1ea] transition-all"
           >
-            <div className="flex items-center space-x-2">
-              <Leaf className="h-8 w-8 text-emerald-400" />
-              <span className="text-2xl font-bold text-white">CarbonChain</span>
-              <span className="text-sm text-emerald-400 font-medium">
-                Marketplace
-              </span>
-            </div>
+            <Leaf className="h-9 w-9 text-[#4a6741]" />
+            <span className="text-2xl font-extrabold text-[#1b4332] tracking-tight">
+              CarbonChain
+            </span>
           </Link>
 
           {/* Nav Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-2">
             <Link
-              to="/"
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
+              to="/marketplace"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[#1b4332] font-medium hover:bg-[#e8f1ea] transition-all"
             >
-              <Building2 className="h-4 w-4" />
+              <Building2 className="h-5 w-5" />
               <span>Marketplace</span>
             </Link>
             <Link
               to="/analytics"
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[#1b4332] font-medium hover:bg-[#e8f1ea] transition-all"
             >
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-5 w-5" />
               <span>Analytics</span>
             </Link>
             <Link
               to="/dao"
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-emerald-300 hover:bg-emerald-500/20 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[#1b4332] font-medium hover:bg-[#e8f1ea] transition-all"
             >
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-5 w-5" />
               <span>DAO</span>
             </Link>
-
           </div>
 
           {/* Wallet + Role-based Dropdowns */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2">
             {account ? (
               <>
                 {/* Register Dropdown (if not registered) */}
-                {isRegistered ? (
-                  ""
-                ) : (
+                {!isRegistered && (
                   <div className="relative" ref={registerDropdownRef}>
                     <button
                       onClick={() =>
                         setShowRegisterDropdown(!showRegisterDropdown)
                       }
-                      className="border border-emerald-400 text-emerald-400 px-4 py-2 rounded-lg font-medium hover:bg-emerald-400/10 transition-all flex items-center space-x-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#4a6741] text-[#1b4332] font-semibold bg-white hover:bg-[#e8f1ea] transition-all"
                     >
+                      <Users className="h-5 w-5" />
                       <span>Register</span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showRegisterDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                      <div className="absolute right-0 mt-2 w-64 bg-white border border-[#3a5a40]/20 rounded-xl shadow-xl z-50">
                         <button
                           onClick={() => {
                             navigate("/register");
                             setShowRegisterDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#1b4332] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <Users className="h-5 w-5 text-emerald-400" />
+                          <Users className="h-5 w-5 text-[#4a6741]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Basic Company Registration
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#3a5a40]/70">
                               KYC/KYB and general company setup
                             </div>
                           </div>
@@ -322,14 +316,14 @@ export function Navbar() {
                             navigate("/register-seller");
                             setShowRegisterDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3 border-t border-slate-600"
+                          className="w-full text-left px-4 py-3 text-[#1b4332] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3 border-t border-[#3a5a40]/10"
                         >
-                          <TreePine className="h-5 w-5 text-emerald-400" />
+                          <TreePine className="h-5 w-5 text-[#4a6741]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Carbon Credit Seller
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#3a5a40]/70">
                               Register as a project developer
                             </div>
                           </div>
@@ -339,32 +333,32 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* NEW: Relayer Actions Dropdown */}
+                {/* Relayer Actions Dropdown */}
                 {isRelayer && (
                   <div className="relative" ref={relayerDropdownRef}>
                     <button
                       onClick={() => setShowRelayerDropdown(!showRelayerDropdown)}
-                      className="border border-purple-400 text-purple-400 px-4 py-2 rounded-lg font-medium hover:bg-purple-400/10 transition-all flex items-center space-x-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[purple] text-[purple] font-semibold bg-white hover:bg-[#e8f1ea] transition-all"
                     >
-                      <Radio className="h-4 w-4" />
-                      <span>Relayer Actions</span>
+                      <Radio className="h-5 w-5 text-[purple]" />
+                      <span>Relayer</span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showRelayerDropdown && (
-                      <div className="absolute right-0 mt-2 w-72 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                      <div className="absolute right-0 mt-2 w-72 bg-white border border-[purple]/20 rounded-xl shadow-xl z-50">
                         <button
                           onClick={() => {
                             navigate("/relayer-dashboard");
                             setShowRelayerDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[purple] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <TreePine className="h-5 w-5 text-purple-400" />
+                          <TreePine className="h-5 w-5 text-[purple]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Update Forest Regeneration
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[purple]">
                               Sync IoT data and regeneration scores
                             </div>
                           </div>
@@ -379,26 +373,27 @@ export function Navbar() {
                   <div className="relative" ref={govDropdownRef}>
                     <button
                       onClick={() => setShowGovDropdown(!showGovDropdown)}
-                      className="border border-blue-400 text-blue-400 px-4 py-2 rounded-lg font-medium hover:bg-blue-400/10 transition-all flex items-center space-x-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#2563eb] text-[#2563eb] font-semibold bg-white hover:bg-[#e0e7ff] transition-all"
                     >
-                      <span>Government Actions</span>
+                      <ShieldPlus className="h-5 w-5" />
+                      <span>Government</span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showGovDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                      <div className="absolute right-0 mt-2 w-64 bg-white border border-[#2563eb]/20 rounded-xl shadow-xl z-50">
                         <button
                           onClick={() => {
                             navigate("/forest-seller-registration");
                             setShowGovDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#2563eb] hover:bg-[#e0e7ff] transition-colors flex items-center gap-3"
                         >
-                          <TreePine className="h-5 w-5 text-blue-400" />
+                          <TreePine className="h-5 w-5 text-[#2563eb]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               List New Forest Area
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#2563eb]/70">
                               Create a new listing for sale
                             </div>
                           </div>
@@ -408,12 +403,12 @@ export function Navbar() {
                             navigate("/manage-relayers");
                             setShowGovDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#2563eb] hover:bg-[#e0e7ff] transition-colors flex items-center gap-3"
                         >
-                          <Users className="h-5 w-5 text-blue-400" />
+                          <Users className="h-5 w-5 text-[#2563eb]" />
                           <div>
-                            <div className="font-medium">Manage Relayers</div>
-                            <div className="text-sm text-slate-400">
+                            <div className="font-semibold">Manage Relayers</div>
+                            <div className="text-sm text-[#2563eb]/70">
                               Authorize or revoke oracles
                             </div>
                           </div>
@@ -428,24 +423,25 @@ export function Navbar() {
                   <div className="relative" ref={ownerDropdownRef}>
                     <button
                       onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
-                      className="border border-yellow-400 text-yellow-400 px-4 py-2 rounded-lg font-medium hover:bg-yellow-400/10 transition-all flex items-center space-x-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#eab308] text-[#eab308] font-semibold bg-white hover:bg-[#e8f1ea] transition-all"
                     >
-                      <span>Admin Actions</span>
+                      <ShieldPlus className="h-5 w-5" />
+                      <span>Admin</span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showOwnerDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                      <div className="absolute right-0 mt-2 w-64 bg-white border border-[#eab308]/20 rounded-xl shadow-xl z-50">
                         <button
                           onClick={() => {
                             navigate("/grant-kyc");
                             setShowOwnerDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#eab308] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <ShieldPlus className="h-5 w-5 text-yellow-400" />
+                          <ShieldPlus className="h-5 w-5 text-[#eab308]" />
                           <div>
-                            <div className="font-medium">Grant Token KYC</div>
-                            <div className="text-sm text-slate-400">
+                            <div className="font-semibold">Grant Token KYC</div>
+                            <div className="text-sm text-[#eab308]/70">
                               Approve companies to trade tokens
                             </div>
                           </div>
@@ -455,14 +451,14 @@ export function Navbar() {
                             navigate("/verify-company");
                             setShowOwnerDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#eab308] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <ShieldPlus className="h-5 w-5 text-yellow-400" />
+                          <ShieldPlus className="h-5 w-5 text-[#eab308]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Verify Registered Companies
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#eab308]/70">
                               Check if registered companies are legitimate
                             </div>
                           </div>
@@ -472,14 +468,14 @@ export function Navbar() {
                             navigate("/manage-credits");
                             setShowOwnerDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#eab308] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <BarChart3 className="h-5 w-5 text-yellow-400" />
+                          <BarChart3 className="h-5 w-5 text-[#eab308]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Manage Carbon Credits
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#eab308]/70">
                               Approve carbon credits for sale
                             </div>
                           </div>
@@ -489,14 +485,14 @@ export function Navbar() {
                             navigate("/withdraw-fees");
                             setShowOwnerDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-4 py-3 text-[#eab308] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                         >
-                          <Wallet className="h-5 w-5 text-yellow-400" />
+                          <Wallet className="h-5 w-5 text-[#eab308]" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-semibold">
                               Withdraw Platform Fees
                             </div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-[#eab308]/70">
                               Collect accumulated platform fees
                             </div>
                           </div>
@@ -510,7 +506,7 @@ export function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setOpen(!open)}
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all flex items-center space-x-2"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#1b4332] to-[#4a6741] text-white font-semibold hover:from-[#14532d] hover:to-[#166534] transition-all"
                   >
                     <span>
                       {account.slice(0, 6)}...{account.slice(-4)}
@@ -518,20 +514,20 @@ export function Navbar() {
                     <ChevronDown className="h-4 w-4" />
                   </button>
                   {open && (
-                    <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
-                      {isRegistered ? (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-[#3a5a40]/20 rounded-xl shadow-xl z-50">
+                      {isRegistered && (
                         <>
                           <button
                             onClick={() => {
                               navigate(`/profile/${companyId}`);
                               setOpen(false);
                             }}
-                            className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                            className="w-full text-left px-4 py-3 text-[#1b4332] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3"
                           >
-                            <User className="h-5 w-5 text-emerald-400" />
+                            <User className="h-5 w-5 text-[#4a6741]" />
                             <div>
-                              <div className="font-medium">Go to Profile</div>
-                              <div className="text-sm text-slate-400">
+                              <div className="font-semibold">Go to Profile</div>
+                              <div className="text-sm text-[#3a5a40]/70">
                                 View your company profile
                               </div>
                             </div>
@@ -541,32 +537,32 @@ export function Navbar() {
                               navigate("/register-seller");
                               setOpen(false);
                             }}
-                            className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors flex items-center space-x-3 border-t border-slate-600"
+                            className="w-full text-left px-4 py-3 text-[#1b4332] hover:bg-[#e8f1ea] transition-colors flex items-center gap-3 border-t border-[#3a5a40]/10"
                           >
-                            <TreePine className="h-5 w-5 text-emerald-400" />
+                            <TreePine className="h-5 w-5 text-[#4a6741]" />
                             <div>
-                              <div className="font-medium">
+                              <div className="font-semibold">
                                 Register as Seller
                               </div>
-                              <div className="text-sm text-slate-400">
+                              <div className="text-sm text-[#3a5a40]/70">
                                 Sell carbon credits
                               </div>
                             </div>
                           </button>
-                          <div className="border-t border-slate-600" />
+                          <div className="border-t border-[#3a5a40]/10" />
                         </>
-                      ) : null}
+                      )}
                       <button
                         onClick={() => {
                           disconnectWallet();
                           setOpen(false);
                         }}
-                        className="w-full text-left px-4 py-3 text-red-400 hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        className="w-full text-left px-4 py-3 text-red-500 hover:bg-[#fef2f2] transition-colors flex items-center gap-3"
                       >
-                        <Wallet className="h-5 w-5 text-red-400" />
+                        <Wallet className="h-5 w-5 text-red-500" />
                         <div>
-                          <div className="font-medium">Disconnect Wallet</div>
-                          <div className="text-sm text-slate-400">
+                          <div className="font-semibold">Disconnect Wallet</div>
+                          <div className="text-sm text-[#3a5a40]/70">
                             Sign out of your account
                           </div>
                         </div>
@@ -578,9 +574,9 @@ export function Navbar() {
             ) : (
               <button
                 onClick={connectWallet}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center space-x-2"
+                className="flex items-center gap-2 px-6 py-2 rounded-xl font-semibold bg-gradient-to-r from-[#1b4332] to-[#4a6741] text-white hover:from-[#14532d] hover:to-[#166534] transition-all"
               >
-                <Wallet className="h-4 w-4" />
+                <Wallet className="h-5 w-5" />
                 <span>Connect Wallet</span>
               </button>
             )}

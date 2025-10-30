@@ -227,45 +227,44 @@ export function BuyForest() {
   if (!forest) return null;
 
   return (
-    <div className="w-screen h-screen relative flex flex-col items-center justify-center bg-slate-900 text-white overflow-hidden">
+    <div className="w-screen h-screen relative flex flex-col items-center justify-center bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 text-[#1b4332] overflow-hidden">
       <img
         src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1500&q=80"
         alt="forest background"
-        className="absolute inset-0 w-full h-full object-cover opacity-20 -z-10"
+        className="absolute inset-0 w-full h-full object-cover opacity-10 -z-10"
       />
 
-      <div className="max-w-4xl w-full p-6 rounded-2xl bg-slate-800/70 backdrop-blur-md shadow-lg">
+      <div className="max-w-4xl w-full p-8 rounded-2xl bg-white/70 backdrop-blur-xl border border-[#3a5a40]/20 shadow-2xl">
         <div className="flex items-center space-x-3 mb-6">
-          <TreePine className="h-12 w-12 text-green-400" />
-          <h1 className="text-3xl font-bold">
+          <TreePine className="h-12 w-12 text-[#40916c]" />
+          <h1 className="text-3xl font-extrabold">
             Buy Forest Shares #{forest.forestId}
           </h1>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Location</p>
-            <p>{forest.location}</p>
+          <div className="p-4 bg-[#e8f1ea] rounded-xl border border-[#3a5a40]/10">
+            <p className="text-[#3a5a40]/70 text-sm">Location</p>
+            <p className="font-semibold">{forest.location}</p>
           </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Area Size</p>
-            <p>{forest.areaSize.toLocaleString()} sq. m</p>
+          <div className="p-4 bg-[#e8f1ea] rounded-xl border border-[#3a5a40]/10">
+            <p className="text-[#3a5a40]/70 text-sm">Area Size</p>
+            <p className="font-semibold">{forest.areaSize.toLocaleString()} sq. m</p>
           </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Shares Available</p>
-            <p>{maxShares.toLocaleString()}</p>
+          <div className="p-4 bg-[#e8f1ea] rounded-xl border border-[#3a5a40]/10">
+            <p className="text-[#3a5a40]/70 text-sm">Shares Available</p>
+            <p className="font-semibold">{maxShares.toLocaleString()}</p>
           </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <p className="text-slate-300 text-sm">Price per Share</p>
-            <p className="font-mono text-white">
-              {/* Format the 18-decimal "wei" price to Ether/HBAR */
-                ethers.formatEther(pricePerShare)} HBAR
+          <div className="p-4 bg-[#e8f1ea] rounded-xl border border-[#3a5a40]/10">
+            <p className="text-[#3a5a40]/70 text-sm">Price per Share</p>
+            <p className="font-mono font-bold text-[#1b4332]">
+              {ethers.formatEther(pricePerShare)} HBAR
             </p>
           </div>
         </div>
 
         <div className="mb-6 flex items-center gap-4">
-          <label htmlFor="shares" className="text-slate-300">
+          <label htmlFor="shares" className="text-[#3a5a40] font-semibold">
             Shares to Buy:
           </label>
           <input
@@ -279,16 +278,16 @@ export function BuyForest() {
                 Math.max(1, Math.min(maxShares, Number(e.target.value)))
               )
             }
-            className="w-24 px-2 py-1 rounded bg-slate-700 text-white border border-slate-600"
+            className="w-24 px-3 py-2 rounded-xl bg-white/60 border border-[#3a5a40]/20 text-[#1b4332] font-mono focus:outline-none focus:ring-2 focus:ring-[#40916c] shadow-sm"
             disabled={buying}
           />
-          <span className="text-slate-400">/ {maxShares.toLocaleString()} shares</span>
+          <span className="text-[#3a5a40]/50">/ {maxShares.toLocaleString()} shares</span>
         </div>
 
         <div className="mb-6">
           <p className="text-lg">
-            <span className="font-semibold">Total Price:</span>{" "}
-            <span className="font-mono text-emerald-400">
+            <span className="font-semibold">Total Price:</span>{' '}
+            <span className="font-mono text-[#40916c] font-bold">
               {ethers.formatEther(totalPrice)} HBAR
             </span>
           </p>
@@ -300,7 +299,7 @@ export function BuyForest() {
               href={forest.ipfsDeedHash}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-400 underline"
+              className="text-[#40916c] underline font-semibold hover:text-[#1b4332]"
             >
               View Deed on IPFS
             </a>
@@ -316,10 +315,10 @@ export function BuyForest() {
         <button
           onClick={handleBuy}
           disabled={!forest.active || buying || maxShares === 0}
-          className={`w-full py-3 text-lg font-bold rounded-lg transition-all flex justify-center items-center ${
+          className={`w-full py-3 text-lg font-bold rounded-full transition-all flex justify-center items-center shadow-lg ${
             forest.active && maxShares > 0
-              ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
-              : "bg-gray-600 cursor-not-allowed"
+              ? "bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white hover:from-[#40916c] hover:to-[#1b4332]"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
             }`}
         >
           {buying ? (
@@ -334,13 +333,13 @@ export function BuyForest() {
         </button>
 
         {txHash && (
-          <p className="mt-4 text-sm text-emerald-300">
-            Transaction Hash:{" "}
+          <p className="mt-4 text-sm text-[#40916c]">
+            Transaction Hash:{' '}
             <a
               href={`https://hashscan.io/testnet/transaction/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="underline font-semibold hover:text-[#1b4332]"
             >
               {txHash}
             </a>
@@ -350,14 +349,14 @@ export function BuyForest() {
 
       {showModal && (
         <div className="fixed inset-0 flex items-end justify-center px-4 pb-6 pointer-events-none">
-          <div className="max-w-sm w-full bg-emerald-700 text-white rounded-xl shadow-lg p-4 flex items-center space-x-3 pointer-events-auto animate-slide-up">
+          <div className="max-w-sm w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white rounded-xl shadow-lg p-4 flex items-center space-x-3 pointer-events-auto animate-slide-up">
             <CheckCircle className="h-6 w-6 text-white" />
             <div className="flex flex-col">
               <p className="font-bold">Purchase Successful!</p>
               <p className="text-sm">Your forest shares are now yours.</p>
               <button
                 onClick={() => navigate(`/forest/${forest.forestId}`)}
-                className="mt-2 py-1 px-3 bg-white text-emerald-700 rounded-lg font-medium text-sm hover:bg-gray-100 transition"
+                className="mt-2 py-1 px-3 bg-white text-[#40916c] rounded-lg font-medium text-sm hover:bg-gray-100 transition"
               >
                 View Token Details
               </button>
