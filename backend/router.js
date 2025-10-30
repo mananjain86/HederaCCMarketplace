@@ -1,6 +1,5 @@
 import express from 'express';
 import multer from 'multer';
-import {ethers} from 'ethers';
 import { getCurrentSensorData } from './hcs/iot-simulator.js';
 import { calculateRegenerationScore } from './ai/regeneration-score.js';
 import { updateForestNFT } from './services/nft-updater.js';
@@ -11,13 +10,9 @@ import {
   queryTopic,
   queryTopicWithSequenceNumber,
 } from "./hcs/consensus.js";
-import FOREST_ABI from './abi/ForestTokenMarketplace.json' assert { type: "json" }
-
+import { getData } from './oracle.js';
 
 const router = express.Router();
-
-const FOREST_ADDRESS = process.env.FOREST_CONTRACT_ADDRESS; 
-const RPC_URL = process.env.HEDERA_RPC_URL;
 
 // Configure multer for image uploads
 const storage = multer.memoryStorage();
@@ -25,54 +20,22 @@ const upload = multer({ storage });
 
 router.get("/forest-data/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!id || isNaN(parseInt(id)) || parseInt(id) <= 0) {
-      return res.status(400).json({ success: false, error: "Invalid Forest ID." });
+    const { id } = req.params; // pass the raw id string, not req.params object
+    const response = await getData(id);
+
+    // getData returns a structured object { success: true/false, ... }
+    if (!response) {
+      return res.status(500).json({ success: false, error: "No response from oracle." });
+    }
+    if (response.success === false) {
+      // forward validation/errors from getData
+      return res.status(response.statusCode || 400).json(response);
     }
 
-    if (!FOREST_ADDRESS) {
-       throw new Error("Forest contract address is not configured on the server.");
-    }
-
-    // 1. Connect to the blockchain (read-only)
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    const contract = new ethers.Contract(FOREST_ADDRESS, FOREST_ABI, provider);
-
-    // 2. Call the public 'forests' function
-    const forest = await contract.forests(id);
-
-    // 3. Check if the forest exists
-    if (forest.forestId.toString() === "0") {
-      return res.status(404).json({ success: false, error: "Forest not found." });
-    }
-
-    // 4. Format the data into clean JSON
-    const responseData = {
-      success: true,
-      forestId: Number(forest.forestId),
-      active: forest.active,
-      htsTokenId: forest.htsTokenId,
-      serial: Number(forest.serial),
-      info: {
-        location: forest.info.location,
-        gpsCoordinates: forest.info.gpsCoordinates,
-        areaSize: forest.info.areaSize.toString(),
-        ipfsDeedHash: forest.info.ipfsDeedHash,
-      },
-      totalShares: forest.totalShares.toString(),
-      regenerationScore: Number(forest.regenerationScore),
-      baselineSequestrationPerYear: forest.baselineSequestrationPerYear.toString(),
-      potentialSequestrationPerYear: forest.potentialSequestrationPerYear.toString(),
-      accumulatedYield: forest.accumulatedYield.toString(),
-      lastUpdated: new Date(Number(forest.lastUpdated) * 1000).toISOString(),
-    };
-
-    // 5. Send the JSON response
-    res.status(200).json(responseData);
-
+    return res.json(response);
   } catch (error) {
-    console.error("Error fetching forest data:", error);
-    res.status(500).json({ success: false, error: error.message || "Internal server error." });
+    console.error("❌ /forest-data/:id error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
