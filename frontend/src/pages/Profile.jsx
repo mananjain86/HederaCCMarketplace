@@ -440,57 +440,41 @@ export default function CompanyProfile() {
 
   // Render profile if company data exists
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] min-h-screen text-[#0f2d1c]">
-      {/* --- Subtle Gradient Green Backgrounds (copied from Home) --- */}
-      <div className="pointer-events-none absolute inset-0 z-0">
-        <div
-          className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
-          style={{
-            background:
-              "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)",
-          }}
-        />
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 text-[#1b4332]">
+      {/* --- Subtle Green Glassmorphism Backgrounds (Home style) --- */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)" }} />
+        <div className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
+          style={{ background: "conic-gradient(from 90deg at 50% 50%, #d8f3dc 0deg, #74c69d 120deg, #b7e4c7 240deg, #d8f3dc 360deg)" }} />
       </div>
-      {/* --- End Gradient Backgrounds --- */}
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-16">
         <button
           onClick={() => window.history.back()}
-          className="flex items-center space-x-2 text-[#4a6741] hover:text-[#1b4332] mb-6 font-bold"
+          className="flex items-center space-x-2 text-[#40916c] hover:text-[#1b4332] mb-6 font-bold"
         >
           <ArrowLeft className="h-5 w-5" />
           <span>Back</span>
         </button>
 
         {/* --- Company Header --- */}
-        <div className="bg-white/50 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-[#3a5a40]/20">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-[#b7e4c7]/40 shadow-2xl">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
             <div className="flex-1">
               <div className="flex items-center flex-wrap gap-x-3 mb-2">
-                <h1 className="text-3xl font-bold text-[#1b4332]">{company.name}</h1>
+                <h1 className="text-3xl font-extrabold text-[#1b4332] tracking-tight drop-shadow-sm">{company.name}</h1>
                 {/* Verification Status Badge */}
                 {company.verificationStatus === 1 ? (
-                  <div className="flex items-center space-x-1 text-[#4a6741] text-sm bg-[#b7e4c7]/50 px-2 py-1 rounded-full"><CheckCircle className="h-4 w-4" /> <span>Verified</span></div>
+                  <div className="flex items-center space-x-1 text-[#40916c] text-sm bg-[#b7e4c7]/60 px-2 py-1 rounded-full font-semibold"><CheckCircle className="h-4 w-4" /> <span>Verified</span></div>
                 ) : company.verificationStatus === 2 ? (
-                  <div className="flex items-center space-x-1 text-red-400 text-sm bg-red-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Rejected</span></div>
+                  <div className="flex items-center space-x-1 text-red-500 text-sm bg-red-100/70 px-2 py-1 rounded-full font-semibold"><AlertCircle className="h-4 w-4" /> <span>Rejected</span></div>
                 ) : company.verificationStatus === 3 ? (
-                  <div className="flex items-center space-x-1 text-orange-400 text-sm bg-orange-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Suspended</span></div>
+                  <div className="flex items-center space-x-1 text-orange-500 text-sm bg-orange-100/70 px-2 py-1 rounded-full font-semibold"><AlertCircle className="h-4 w-4" /> <span>Suspended</span></div>
                 ) : (
-                  <div className="flex items-center space-x-1 text-yellow-500 text-sm bg-yellow-100/50 px-2 py-1 rounded-full"><AlertCircle className="h-4 w-4" /> <span>Pending Verification</span></div>
+                  <div className="flex items-center space-x-1 text-yellow-600 text-sm bg-yellow-100/70 px-2 py-1 rounded-full font-semibold"><AlertCircle className="h-4 w-4" /> <span>Pending Verification</span></div>
                 )}
               </div>
               <div className="flex items-center text-[#3a5a40]/80 text-sm">

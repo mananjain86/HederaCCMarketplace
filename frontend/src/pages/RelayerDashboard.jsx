@@ -317,11 +317,11 @@ export default function RelayerDashboard() {
   // ... (keep the JSX for Access Denied) ...
    if (!isRelayer && account) {
      return (
-       <div className="min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] pt-20">
+       <div className="min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 pt-20 text-[#1b4332]">
          <div className="max-w-4xl mx-auto px-4">
-           <div className="bg-white/60 backdrop-blur-xl border border-red-400/30 rounded-3xl p-10 text-center shadow-xl">
+           <div className="bg-white/70 backdrop-blur-xl border border-red-400/30 rounded-3xl p-10 text-center shadow-2xl">
              <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-             <h2 className="text-2xl font-bold text-[#1b4332] mb-2">
+             <h2 className="text-2xl font-extrabold text-[#1b4332] mb-2">
                Access Denied
              </h2>
              <p className="text-[#3a5a40]">
@@ -334,7 +334,7 @@ export default function RelayerDashboard() {
    }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] pt-20 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 pt-20 overflow-hidden text-[#1b4332]">
       {/* --- Subtle Gradient Green Backgrounds (Home style) --- */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
@@ -350,18 +350,18 @@ export default function RelayerDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold text-[#1b4332] mb-2 flex items-center gap-3">
-                <Radio className="h-10 w-10 text-[#40916c]" />
+              <h1 className="text-4xl font-extrabold mb-2 flex items-center gap-3 text-[#033a0d]">
+                <Radio className="h-10 w-10 text-[#033a0d]" />
                 Relayer Dashboard
               </h1>
-              <p className="text-[#3a5a40]">
+              <p className="text-[#033a0d]">
                 Update forest regeneration scores and sync IoT data to blockchain
               </p>
             </div>
             <button
               onClick={fetchForests}
               disabled={loading}
-              className="bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white px-6 py-3 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -376,53 +376,49 @@ export default function RelayerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Forest List */}
           <div className="lg:col-span-1">
-            <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-[#1b4332] mb-4 flex items-center gap-2">
-                <TreePine className="h-6 w-6 text-[#40916c]" />
-                Registered Forests ({forests.length})
+            <div className="bg-white/90 backdrop-blur-xl border border-[#b7e4c7]/60 rounded-2xl p-6 shadow-2xl">
+              <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2 text-[#14532d] tracking-tight drop-shadow-sm">
+                <TreePine className="h-7 w-7 text-[#14532d]" />
+                <span>Registered Forests</span>
+                <span className="ml-1 text-lg font-bold text-[#40916c]">({forests.length})</span>
               </h2>
 
               {loading ? (
-                // ... (keep loading JSX) ...
-                 <div className="text-center py-8">
-                   <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto" />
-                   <p className="text-slate-400 mt-2">Loading forests...</p>
-                 </div>
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#14532d] mx-auto" />
+                  <p className="text-[#14532d] font-semibold mt-2">Loading forests...</p>
+                </div>
               ) : forests.length === 0 ? (
-                // ... (keep no forests JSX) ...
-                 <div className="text-center py-8">
-                   <TreePine className="h-12 w-12 text-slate-600 mx-auto mb-2" />
-                   <p className="text-slate-400">No active forests found</p>
-                   <p className="text-slate-500 text-sm mt-1">
-                     Forests will appear here once registered
-                   </p>
-                 </div>
+                <div className="text-center py-8">
+                  <TreePine className="h-12 w-12 text-[#40916c] mx-auto mb-2" />
+                  <p className="text-[#14532d] font-bold">No active forests found</p>
+                  <p className="text-[#14532d]/80 text-sm mt-1">
+                    Forests will appear here once registered
+                  </p>
+                </div>
               ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2"> {/* Added padding-right */}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                   {forests.map((forest) => (
                     <button
                       key={forest.id}
                       onClick={() => handleSelectForest(forest)}
-                      // Disable button while fetching data for *any* forest
                       disabled={fetchingData}
-                      className={`w-full text-left p-4 rounded-lg border transition-all disabled:opacity-70 disabled:cursor-not-allowed ${
+                      className={`w-full text-left p-4 rounded-xl border-2 font-semibold transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-[#40916c] ${
                         selectedForest?.id === forest.id
-                          ? "bg-purple-600/20 border-purple-500"
-                          : "bg-slate-700/50 border-slate-600 hover:border-purple-500/50"
+                          ? "bg-gradient-to-r from-[#b7e4c7]/80 to-[#74c69d]/80 border-[#40916c] text-[#1b4332] shadow-lg"
+                          : "bg-white/60 border-[#b7e4c7] text-[#3a5a40] hover:border-[#40916c]/60 hover:bg-[#d8f3dc]/60"
                       }`}
                     >
-                      <div className="font-medium text-white">
-                        Forest #{forest.id}
+                      <div className="flex items-center gap-2 mb-1">
+                        <TreePine className="h-5 w-5 text-[#14532d]" />
+                        <span className="font-bold text-[#14532d]">Forest #{forest.id}</span>
                       </div>
-                      <div className="text-sm text-slate-400 mt-1 truncate">
+                      <div className="text-xs text-[#14532d]/90 truncate font-medium">
                         {forest.location}
                       </div>
-                      {/* UPDATED: Display score out of 1000 */}
-                      <div className="text-xs text-emerald-400 mt-2">
-                        Score: {forest.regenerationScore}/1000
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1">
-                        Updated: {forest.lastUpdated}
+                      <div className="flex gap-2 mt-2 text-xs">
+                        <span className="text-[#40916c] font-bold">Score: {forest.regenerationScore}/1000</span>
+                        <span className="text-[#14532d]/70 font-medium">Updated: {forest.lastUpdated}</span>
                       </div>
                     </button>
                   ))}
@@ -433,127 +429,119 @@ export default function RelayerDashboard() {
 
           {/* Details & Actions */}
           <div className="lg:col-span-2 space-y-6">
-            {!selectedForest && !fetchingData && ( // Show placeholder only if nothing is selected AND not fetching
-              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-12 text-center">
-                <TreePine className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">
+            {!selectedForest && !fetchingData && (
+              <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-12 text-center shadow-2xl">
+                <TreePine className="h-16 w-16 text-[#40916c] mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2 text-[#1b4332]">
                   No Forest Selected
                 </h3>
-                <p className="text-slate-400">
+                <p className="text-[#3a5a40]/80">
                   Select a forest from the list to view details and update
                   regeneration data.
                 </p>
               </div>
             )}
 
-            {fetchingData && ( // Show loading indicator when fetching IoT/AI
-                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-12 text-center">
-                   <Loader2 className="h-12 w-12 animate-spin text-purple-400 mx-auto mb-4" />
-                   <p className="text-slate-300">Fetching latest data...</p>
+            {fetchingData && (
+                 <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-12 text-center shadow-2xl">
+                   <Loader2 className="h-12 w-12 animate-spin text-[#40916c] mx-auto mb-4" />
+                   <p className="text-[#3a5a40]/80">Fetching latest data...</p>
                  </div>
             )}
 
-            {selectedForest && !fetchingData && ( // Show details only when a forest is selected AND not fetching
+            {selectedForest && !fetchingData && (
               <>
                 {/* Forest Details */}
-                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-                   {/* ... (keep Forest Details JSX, maybe update area unit) ... */}
-                    <h2 className="text-2xl font-bold text-white mb-4">
-                      {selectedForest.location}
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div><span className="text-slate-400">Forest ID:</span><span className="text-white ml-2">#{selectedForest.id}</span></div>
-                      <div><span className="text-slate-400">HTS Token:</span><span className="text-white ml-2">{selectedForest.htsTokenId}</span></div>
-                      <div><span className="text-slate-400">Serial:</span><span className="text-white ml-2">{selectedForest.serial}</span></div>
-                      <div><span className="text-slate-400">Area:</span><span className="text-white ml-2">{selectedForest.areaSize.toLocaleString()} sq. m</span></div> {/* Updated Unit */}
-                      <div className="col-span-2"><span className="text-slate-400">Coordinates:</span><span className="text-white ml-2">{selectedForest.coordinates}</span></div>
-                       <div><span className="text-slate-400">Current Score:</span><span className="text-emerald-400 ml-2">{selectedForest.regenerationScore}/1000</span></div>
-                       <div><span className="text-slate-400">Last Update:</span><span className="text-slate-300 ml-2">{selectedForest.lastUpdated}</span></div>
-                    </div>
+                <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 shadow-2xl mb-4">
+                  <h2 className="text-2xl font-bold mb-4 text-[#1b4332]">
+                    {selectedForest.location}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="text-[#3a5a40]/70">Forest ID:</span><span className="ml-2 font-semibold">#{selectedForest.id}</span></div>
+                    <div><span className="text-[#3a5a40]/70">HTS Token:</span><span className="ml-2 font-semibold">{selectedForest.htsTokenId}</span></div>
+                    <div><span className="text-[#3a5a40]/70">Serial:</span><span className="ml-2 font-semibold">{selectedForest.serial}</span></div>
+                    <div><span className="text-[#3a5a40]/70">Area:</span><span className="ml-2 font-semibold">{selectedForest.areaSize.toLocaleString()} sq. m</span></div>
+                    <div className="col-span-2"><span className="text-[#3a5a40]/70">Coordinates:</span><span className="ml-2 font-semibold">{selectedForest.coordinates}</span></div>
+                    <div><span className="text-[#3a5a40]/70">Current Score:</span><span className="ml-2 font-semibold text-[#40916c]">{selectedForest.regenerationScore}/1000</span></div>
+                    <div><span className="text-[#3a5a40]/70">Last Update:</span><span className="ml-2 font-semibold">{selectedForest.lastUpdated}</span></div>
+                  </div>
                 </div>
 
                 {/* IoT Data */}
                 {iotData ? (
-                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-                    {/* ... (keep existing IoT Data JSX) ... */}
-                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Cloud className="h-6 w-6 text-blue-400" />Real-time IoT Sensor Data</h3>
-                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Thermometer className="h-5 w-5 text-orange-400" /><span className="text-slate-400 text-sm"> Temperature</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.temperature}°C</div></div>
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Droplets className="h-5 w-5 text-blue-400" /><span className="text-slate-400 text-sm">Humidity</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.humidity}%</div></div>
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Droplets className="h-5 w-5 text-green-400" /><span className="text-slate-400 text-sm"> Soil Moisture</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.soilMoisture}%</div></div>
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Wind className="h-5 w-5 text-purple-400" /><span className="text-slate-400 text-sm"> Air Quality</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.airQuality} AQI</div></div>
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Cloud className="h-5 w-5 text-gray-400" /><span className="text-slate-400 text-sm">CO₂ Level</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.co2Level} ppm</div></div>
-                        <div className="bg-slate-700/50 p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><TrendingUp className="h-5 w-5 text-yellow-400" /><span className="text-slate-400 text-sm"> Light Intensity</span></div><div className="text-2xl font-bold text-white">{iotData.sensors.lightIntensity} lux</div></div>
-                     </div>
+                  <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 shadow-2xl mb-4">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-[#1b4332]"><Cloud className="h-6 w-6 text-blue-400" />Real-time IoT Sensor Data</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Thermometer className="h-5 w-5 text-orange-400" /><span className="text-[#3a5a40]/70 text-sm"> Temperature</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.temperature}°C</div></div>
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Droplets className="h-5 w-5 text-blue-400" /><span className="text-[#3a5a40]/70 text-sm">Humidity</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.humidity}%</div></div>
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Droplets className="h-5 w-5 text-green-400" /><span className="text-[#3a5a40]/70 text-sm"> Soil Moisture</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.soilMoisture}%</div></div>
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Wind className="h-5 w-5 text-purple-400" /><span className="text-[#3a5a40]/70 text-sm"> Air Quality</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.airQuality} AQI</div></div>
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><Cloud className="h-5 w-5 text-gray-400" /><span className="text-[#3a5a40]/70 text-sm">CO₂ Level</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.co2Level} ppm</div></div>
+                      <div className="bg-[#e8f1ea] p-4 rounded-lg"><div className="flex items-center gap-2 mb-2"><TrendingUp className="h-5 w-5 text-yellow-400" /><span className="text-[#3a5a40]/70 text-sm"> Light Intensity</span></div><div className="text-2xl font-bold text-[#1b4332]">{iotData.sensors.lightIntensity} lux</div></div>
+                    </div>
                   </div>
                 ) : (
-                  // Optional: Show a placeholder if IoT data hasn't loaded yet for the selected forest
-                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
-                    <p className="text-slate-400">IoT data not available.</p>
+                  <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 text-center shadow-2xl mb-4">
+                    <p className="text-[#3a5a40]/80">IoT data not available.</p>
                   </div>
                 )}
 
                 {/* Regeneration Score & Update Action */}
-                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <div className="bg-white/70 backdrop-blur-xl border border-[#3a5a40]/10 rounded-2xl p-6 shadow-2xl">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-[#1b4332]">
                     <TrendingUp className="h-6 w-6 text-emerald-400" />
                     Regeneration Update
                   </h3>
 
                   {regenScore ? (
-                    <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/30 rounded-lg p-6 mb-6">
+                    <div className="bg-gradient-to-r from-[#b7e4c7]/40 to-[#d8f3dc]/60 border border-[#40916c]/20 rounded-lg p-6 mb-6">
                       <div className="text-center">
-                        <div className="text-slate-300 mb-1">Calculated AI Score</div>
-                        {/* Display the 0-100 score */}
-                        <div className="text-5xl font-bold text-emerald-400">
+                        <div className="text-[#3a5a40]/80 mb-1">Calculated AI Score</div>
+                        <div className="text-5xl font-bold text-[#40916c]">
                           {regenScore.score.overall.toFixed(1)}/100
                         </div>
-                         {/* Show the scaled score */}
-                         <div className="text-sm text-purple-300 mt-1">
-                            (Scaled for contract: {Math.round(regenScore.score.overall * 10)}/1000)
-                          </div>
+                        <div className="text-sm text-purple-700 mt-1">
+                          (Scaled for contract: {Math.round(regenScore.score.overall * 10)}/1000)
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-slate-700/30 border border-slate-600 rounded-lg p-6 mb-6 text-center">
-                       <p className="text-slate-400">AI Score not calculated yet.</p>
+                    <div className="bg-[#e8f1ea] border border-[#3a5a40]/10 rounded-lg p-6 mb-6 text-center">
+                      <p className="text-[#3a5a40]/80">AI Score not calculated yet.</p>
                     </div>
                   )}
 
-                  {/* --- NEW: Baseline and Potential Inputs --- */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="relative">
-                      <TrendingDown className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
+                      <TrendingDown className="absolute left-3 top-3.5 h-5 w-5 text-[#3a5a40]/40" />
                       <input
                         type="number"
                         value={baselineInput}
                         onChange={(e) => setBaselineInput(e.target.value)}
                         placeholder="Baseline Sequestration / Year"
                         min="0"
-                        className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-10 pr-4 py-3 bg-white/60 border border-[#3a5a40]/20 rounded-xl text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
                         disabled={updating}
                       />
                     </div>
                     <div className="relative">
-                      <TrendingUp className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
+                      <TrendingUp className="absolute left-3 top-3.5 h-5 w-5 text-[#3a5a40]/40" />
                       <input
                         type="number"
                         value={potentialInput}
                         onChange={(e) => setPotentialInput(e.target.value)}
                         placeholder="Potential Sequestration / Year"
                         min="0"
-                        className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-10 pr-4 py-3 bg-white/60 border border-[#3a5a40]/20 rounded-xl text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
                         disabled={updating}
                       />
                     </div>
                   </div>
-                  {/* --- END NEW INPUTS --- */}
 
                   <button
                     onClick={updateRegenerationOnChain}
-                    // Disable if updating, or if no score is calculated
                     disabled={updating || !regenScore || typeof regenScore.score.overall !== 'number'}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white py-4 rounded-full font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                   >
                     {updating ? (
                       <>

@@ -172,81 +172,83 @@ export function Buy() {
   const totalCost = amountToBuy * listing.pricePerCredit;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center space-x-2 text-[#40916c] hover:text-[#1b4332] mb-6 font-semibold transition-colors"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        <span>Back to Marketplace</span>
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-[#b7e4c7]/40 to-[#d8f3dc]/60 flex items-center justify-center py-12 text-[#1b4332]">
+      <div className="w-full max-w-2xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center space-x-2 text-[#40916c] hover:text-[#1b4332] mb-6 font-semibold transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>Back to Marketplace</span>
+        </button>
 
-      <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-[#3a5a40]/20 p-8 shadow-2xl text-[#1b4332]">
-        <h1 className="text-3xl font-extrabold mb-2">
-          {listing.projectName}
-        </h1>
-        <div className="flex items-center space-x-4 mb-6">
-          <span className="text-[#3a5a40]/70 text-sm font-mono">
-            Listing ID: {listing.id}
-          </span>
-          {listing.isVerified && (
-            <div className="flex items-center space-x-1 bg-[#b7e4c7]/60 px-2 py-0.5 rounded-full text-xs font-bold text-[#1b4332] border border-[#40916c]/30">
-              <Shield className="h-4 w-4 text-[#40916c]" />
-              <span>Verified</span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between items-center bg-[#e8f1ea] p-3 rounded-xl border border-[#3a5a40]/10">
-            <span className="text-[#3a5a40]/80">Price per Credit</span>
-            <span className="font-mono text-[#1b4332]">{listing.pricePerCredit.toFixed(4)} HBAR</span>
-          </div>
-          <div className="flex justify-between items-center bg-[#e8f1ea] p-3 rounded-xl border border-[#3a5a40]/10">
-            <span className="text-[#3a5a40]/80">Available Credits</span>
-            <span className="font-mono text-[#1b4332]">
-              {listing.amount.toLocaleString()}
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-[#3a5a40]/20 p-8 shadow-2xl">
+          <h1 className="text-3xl font-extrabold mb-2">
+            {listing.projectName}
+          </h1>
+          <div className="flex items-center space-x-4 mb-6">
+            <span className="text-[#3a5a40]/70 text-sm font-mono">
+              Listing ID: {listing.id}
             </span>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="amount"
-              className="block text-sm font-semibold text-[#3a5a40] mb-2"
-            >
-              Amount to Buy
-            </label>
-            <input
-              type="number"
-              id="amount"
-              min="1"
-              max={listing.amount}
-              value={amountToBuy}
-              onChange={(e) => setAmountToBuy(Number(e.target.value))}
-              className="w-full pl-4 pr-4 py-3 bg-white/60 border border-[#3a5a40]/20 rounded-xl text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
-            />
-          </div>
-
-          <div className="border-t border-[#3a5a40]/10 pt-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-[#3a5a40]/80 text-lg">Total Cost</span>
-              <span className="text-2xl font-bold text-[#40916c]">{totalCost.toFixed(4)} HBAR</span>
-            </div>
-            <button
-              onClick={handlePurchase}
-              disabled={isProcessing || amountToBuy > listing.amount}
-              className="w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white py-3 px-4 rounded-full font-bold flex items-center justify-center space-x-2 transition-all hover:from-[#40916c] hover:to-[#1b4332] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              <span>{isProcessing ? "Processing..." : "Confirm Purchase"}</span>
-            </button>
-            {isProcessing && (
-              <p className="text-center text-[#40916c] text-sm mt-3 animate-pulse">
-                {statusMessage}
-              </p>
+            {listing.isVerified && (
+              <div className="flex items-center space-x-1 bg-[#b7e4c7]/60 px-2 py-0.5 rounded-full text-xs font-bold text-[#1b4332] border border-[#40916c]/30">
+                <Shield className="h-4 w-4 text-[#40916c]" />
+                <span>Verified</span>
+              </div>
             )}
+          </div>
+
+          <div className="space-y-4 mb-6">
+            <div className="flex justify-between items-center bg-[#e8f1ea] p-3 rounded-xl border border-[#3a5a40]/10">
+              <span className="text-[#3a5a40]/80">Price per Credit</span>
+              <span className="font-mono text-[#1b4332]">{listing.pricePerCredit.toFixed(4)} HBAR</span>
+            </div>
+            <div className="flex justify-between items-center bg-[#e8f1ea] p-3 rounded-xl border border-[#3a5a40]/10">
+              <span className="text-[#3a5a40]/80">Available Credits</span>
+              <span className="font-mono text-[#1b4332]">
+                {listing.amount.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="amount"
+                className="block text-sm font-semibold text-[#3a5a40] mb-2"
+              >
+                Amount to Buy
+              </label>
+              <input
+                type="number"
+                id="amount"
+                min="1"
+                max={listing.amount}
+                value={amountToBuy}
+                onChange={(e) => setAmountToBuy(Number(e.target.value))}
+                className="w-full pl-4 pr-4 py-3 bg-white/60 border border-[#3a5a40]/20 rounded-xl text-[#1b4332] placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] font-mono shadow-sm"
+              />
+            </div>
+
+            <div className="border-t border-[#3a5a40]/10 pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[#3a5a40]/80 text-lg">Total Cost</span>
+                <span className="text-2xl font-bold text-[#40916c]">{totalCost.toFixed(4)} HBAR</span>
+              </div>
+              <button
+                onClick={handlePurchase}
+                disabled={isProcessing || amountToBuy > listing.amount}
+                className="w-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white py-3 px-4 rounded-full font-bold flex items-center justify-center space-x-2 transition-all hover:from-[#40916c] hover:to-[#1b4332] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                <span>{isProcessing ? "Processing..." : "Confirm Purchase"}</span>
+              </button>
+              {isProcessing && (
+                <p className="text-center text-[#40916c] text-sm mt-3 animate-pulse">
+                  {statusMessage}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
