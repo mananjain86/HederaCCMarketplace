@@ -150,11 +150,11 @@ export default function ForestDAO() {
   // Section 1: View Proposals
   const renderProposals = () => (
     <div className="mb-10">
-      <h2 className="text-xl text-white mb-4">Proposals</h2>
+      <h2 className="text-2xl font-bold text-[#1b4332] mb-4 tracking-tight">Proposals</h2>
       {loading ? (
-        <div className="text-slate-400">Loading proposals...</div>
+        <div className="text-[#3a5a40]/80">Loading proposals...</div>
       ) : proposals.length === 0 ? (
-        <div className="text-slate-400">No proposals found for this forest.</div>
+        <div className="text-[#3a5a40]/80">No proposals found for this forest.</div>
       ) : (
         <div className="space-y-6">
           {proposals.map((p) => {
@@ -163,30 +163,30 @@ export default function ForestDAO() {
             return (
               <div
                 key={p.proposalId}
-                className={`bg-slate-700/60 rounded-lg p-4 cursor-pointer hover:ring-2 ring-emerald-400 transition`}
+                className={`bg-white/80 backdrop-blur-xl border border-[#b7e4c7]/40 rounded-2xl p-6 shadow-lg cursor-pointer transition-all hover:ring-2 hover:ring-[#40916c] ${userShares > 0 && !p.executed && now <= p.endTime ? 'hover:scale-[1.01]' : ''}`}
                 onClick={() => userShares > 0 && !p.executed && now <= p.endTime ? (setSelectedProposal(p), setSharesToVote(1)) : null}
                 title={userShares > 0 && !p.executed && now <= p.endTime ? "Click to vote" : ""}
               >
                 <div className="flex justify-between items-center mb-2">
                   <div>
-                    <span className="text-lg font-bold text-white">#{p.proposalId}</span>
-                    <span className="ml-2 text-slate-300">{p.description}</span>
+                    <span className="text-lg font-bold text-[#1b4332]">#{p.proposalId}</span>
+                    <span className="ml-2 text-[#3a5a40]/90">{p.description}</span>
                   </div>
-                  <span className={`px-3 py-1 rounded text-xs font-bold ${p.executed ? "bg-emerald-600 text-white" : "bg-yellow-600 text-white"}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${p.executed ? "bg-gradient-to-r from-[#b7e4c7] to-[#40916c] text-[#1b4332]" : "bg-yellow-100 text-yellow-700 border border-yellow-300"}`}>
                     {p.executed ? "Executed" : "Active"}
                   </span>
                 </div>
-                <div className="flex gap-8 mb-2">
-                  <div className="text-slate-400">Yes: <span className="text-emerald-400">{p.yesVotes}</span></div>
-                  <div className="text-slate-400">No: <span className="text-red-400">{p.noVotes}</span></div>
-                  <div className="text-slate-400">Start: <span className="text-white">{new Date(p.startTime * 1000).toLocaleString()}</span></div>
-                  <div className="text-slate-400">End: <span className="text-white">{new Date(p.endTime * 1000).toLocaleString()}</span></div>
+                <div className="flex flex-wrap gap-6 mb-2">
+                  <div className="text-[#3a5a40]/80">Yes: <span className="text-[#40916c] font-bold">{p.yesVotes}</span></div>
+                  <div className="text-[#3a5a40]/80">No: <span className="text-red-700 font-bold">{p.noVotes}</span></div>
+                  <div className="text-[#3a5a40]/80">Start: <span className="text-[#1b4332]">{new Date(p.startTime * 1000).toLocaleString()}</span></div>
+                  <div className="text-[#3a5a40]/80">End: <span className="text-[#1b4332]">{new Date(p.endTime * 1000).toLocaleString()}</span></div>
                 </div>
                 {canExecute && (
                   <button
                     onClick={e => { e.stopPropagation(); handleExecute(p.proposalId); }}
                     disabled={executing}
-                    className="mt-2 px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                    className="mt-2 px-6 py-2 rounded-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:from-gray-400 disabled:to-gray-300 disabled:cursor-not-allowed"
                   >
                     {executing ? "Executing..." : "Execute Proposal"}
                   </button>
@@ -253,40 +253,41 @@ export default function ForestDAO() {
 
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-        <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full shadow-lg relative">
+        <div className="bg-white/90 backdrop-blur-xl border border-[#b7e4c7]/40 rounded-2xl p-8 max-w-md w-full shadow-2xl relative">
           <button
-            className="absolute top-2 right-2 text-slate-400 hover:text-white"
+            className="absolute top-2 right-2 text-[#3a5a40]/60 hover:text-[#1b4332] text-2xl font-bold"
             onClick={() => setSelectedProposal(null)}
+            aria-label="Close vote modal"
           >
             ✕
           </button>
-          <h3 className="text-2xl font-bold text-white mb-2">Vote on Proposal #{p.proposalId}</h3>
-          <p className="text-slate-300 mb-4">{p.description}</p>
+          <h3 className="text-2xl font-extrabold text-[#1b4332] mb-2 tracking-tight">Vote on Proposal #{p.proposalId}</h3>
+          <p className="text-[#3a5a40]/90 mb-4">{p.description}</p>
           <div className="mb-4">
-            <label className="text-slate-300 mr-2">Shares to vote:</label>
+            <label className="text-[#3a5a40] mr-2 font-semibold">Shares to vote:</label>
             <input
               type="number"
               min={1}
               max={userShares}
               value={sharesToVote}
               onChange={e => setSharesToVote(Math.max(1, Math.min(userShares, Number(e.target.value))))}
-              className="w-24 px-2 py-1 rounded bg-slate-700 text-white border border-slate-600"
+              className="w-24 px-3 py-2 rounded-xl bg-white/70 text-[#1b4332] border border-[#3a5a40]/20 placeholder-[#3a5a40]/40 focus:outline-none focus:ring-2 focus:ring-[#40916c] focus:border-[#40916c] font-mono"
               disabled={voting}
             />
-            <span className="ml-2 text-slate-400">/ {userShares} shares</span>
+            <span className="ml-2 text-[#3a5a40]/70">/ {userShares} shares</span>
           </div>
           <div className="flex gap-4">
             <button
               onClick={() => handleVote(p.proposalId, true, sharesToVote)}
               disabled={voting}
-              className="px-4 py-2 rounded bg-emerald-600 text-white font-semibold hover:bg-emerald-700"
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-[#1b4332] to-[#40916c] text-white font-bold hover:from-[#40916c] hover:to-[#1b4332] transition-all disabled:from-gray-400 disabled:to-gray-300 disabled:cursor-not-allowed"
             >
               {voting ? "Voting..." : "Vote Yes"}
             </button>
             <button
               onClick={() => handleVote(p.proposalId, false, sharesToVote)}
               disabled={voting}
-              className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-red-800 to-red-600 text-white font-bold hover:from-red-600 hover:to-red-400 transition-all disabled:from-gray-400 disabled:to-gray-300 disabled:cursor-not-allowed"
             >
               Vote No
             </button>
