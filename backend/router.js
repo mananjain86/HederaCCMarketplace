@@ -11,7 +11,7 @@ import {
   queryTopic,
   queryTopicWithSequenceNumber,
 } from "./hcs/consensus.js";
-import FOREST_ABI from './abi/ForestTokenMarketplace.json' assert { type: "json" }
+import FOREST_ABI from './abi/ForestTokenMarketplace.json'
 
 
 const router = express.Router();
