@@ -18,29 +18,39 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
 
 ## ✨ Key Features
 
-- **AI-Driven Regeneration Scoring**  
-  Uses Gemini AI to analyze IoT and satellite data, generating dynamic forest health scores and influencing pricing.
+- **AI-Driven Dynamic Regeneration Scoring**  
+  An on-chain metric (scaled 0-1000) updated by trusted oracles (Relayers) based on off-chain AI analysis using Gemini API
+  - Uses satellite imagery data (based on the forest coordinates) + Rate of Carbon Dioxide Sequestration (Planet API)
+  - Data from the IOT sensors (Temprature, Humidity, Soil Moisture, Air Quality, Light Intensity) planted at the forest.  
+  **Dynamic Pricing of Forest NFTs:** This score dynamically adjusts the price of forest shares and determines the carbon yield generated over time.
 
 - **Cross-Chain Asset Management**  
-  Ethereum smart contracts for trading and settlement; Hedera for NFT certificates and consensus.
+  Ethereum smart contracts for trading and settlement; Hedera for NFT certificates **(HTS)** and consensus **(HCS)** .
 
 - **Automated NFT Certificates**  
   Every purchase mints a unique NFT (carbon credit or forest deed) on Hedera, with metadata stored on IPFS via Pinata.
 
+  **Dynamic Forest NFTs:** The metadata for the forest nfts changes based on the regeneration score of the forest. One would be able to see different image of the NFT based   on the current regeneration scores. After changes in forest data the NFT metadata is automatically updated.  
+
 - **Transparent On-Chain Records**  
-  All transactions, purchases, and NFT mints are tracked on-chain and auditable via Hedera Consensus Service.
+  All transactions, purchases, and NFT mints are tracked on-chain and posted via Hedera Consensus Service.
+  The Metadata of the minted NFTs also contain informations such as Transaction hash, Hedera Token ID, and buyer ID.
 
 - **KYC/KYB & Compliance**  
   Company onboarding, verification, and compliance checks integrated into the registration and trading flow.
+  Off chain compliance and KYC can be done for our Carbon Credit as well as the Forest Tokens - built **ERC3643** functionalities using HTS
 
 - **Real-Time Analytics**  
   Market data, environmental impact, and portfolio dashboards for buyers, sellers, and project owners.
 
 - **DAO Governance**  
   Forest DAOs for decentralized proposal and voting on conservation actions.
+  
+  One major issue arises when native communities are displaced or banned from traditional hunting and gathering after corporations purchase forest land for so-called environmental projects. CarbonChain solves this by introducing DAO-based governance through forest tokens, giving both natives and companies an equal voice in forest conservation decisions that benefit all stakeholders.
 
 - **Multi-Wallet Support**  
-  MetaMask for Ethereum, HashConnect for Hedera.
+  MetaMask for Ethereum, HashConnect for Hedera (Token Association).
+  
 
 ---
 
@@ -60,8 +70,10 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
 
 ## 💡 How It Works
 
+### Forest NFTs
+
 1. **Company Registration & KYC**  
-   Companies onboard via a KYC/KYB form, verified on-chain and by admins.
+   Companies onboard via a KYC/KYB form, verified on-chain, off-chain compliance layer and KYC grants by admins.
 
 2. **Marketplace Listing**  
    Sellers list carbon credits or forest areas, providing documentation and compliance data.
@@ -74,8 +86,11 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
 
 5. **NFT Delivery & Audit Trail**  
    NFT certificates are delivered to the buyer’s Hedera account. All actions are recorded on-chain and via Hedera Consensus Service.
+   
+6. **Yield Generation**
+   Based on the amount of shares and the regeneration score of the forest the share holders would get yield reward as Carbon Credits getting added to their portfolio.
 
-6. **DAO Governance**  
+8. **DAO Governance**  
    Forest DAOs allow stakeholders to propose and vote on conservation actions.
 
 ---
@@ -254,11 +269,11 @@ npx hardhat run deploy.js --network sepolia
 - [x] Company registration and KYC/KYB
 - [x] Carbon credits and forest area marketplace
 - [x] NFT certificate minting on Hedera
-- [x] AI-powered forest scoring
+- [x] AI-powered forest scoring 
 - [x] MetaMask and HashConnect integration
-- [ ] Advanced analytics dashboard
-- [ ] Batch purchasing and volume discounts
-- [ ] DAO governance for forest management
+- [x] Advanced analytics dashboard
+- [x] Batch purchasing
+- [X] DAO governance for forest management
 - [ ] Cross-chain expansion (Polygon, Arbitrum)
 - [ ] Mobile and multi-language support
 
