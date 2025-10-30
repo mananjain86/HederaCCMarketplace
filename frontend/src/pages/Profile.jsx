@@ -418,7 +418,7 @@ export default function CompanyProfile() {
   if (loading && !company) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea]">
-        <LoadingSpinner /> <span className="ml-3 text-[#4a6741]">Loading profile...</span>
+        <LoadingSpinner message="Loading profile..."/>
       </div>
     );
   }
@@ -591,7 +591,7 @@ export default function CompanyProfile() {
           Forest Share Holdings
         </h2>
         {loading && ownedForestShares.length === 0 && ( // Show loading indicator if still loading shares
-           <div className="text-center py-4 flex justify-center items-center gap-2 text-slate-400"><LoadingSpinner size="sm"/> Loading shares...</div>
+           <div className="text-center py-4 flex justify-center items-center gap-2 text-slate-400"><LoadingSpinner message="Loading shares..." size="sm"/> </div>
         )}
         {!loading && ownedForestShares.length === 0 && (
           <p className="text-slate-400 text-center py-4">
