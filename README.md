@@ -56,16 +56,9 @@ The oracle streams real-time IoT data from forest sensors including metrics like
 ---
 
 ## 🏗️ Architecture
+<img width="1920" height="1080" alt="Carbon Chain Architecture" src="https://github.com/user-attachments/assets/3f1eabc5-4150-4d9b-aca3-1d03aa5df488" />
 
-```
-┌───────────────┐    ┌───────────────┐    ┌────────────────────┐
-│   Frontend    │    │   Backend     │    │   Blockchain       │
-│ (React/Vite)  │◄──►│ (Node.js/Exp) │◄──►│ Ethereum + Hedera  │
-│ • Marketplace │    │ • API Server  │    │ • Smart Contracts  │
-│ • Analytics   │    │ • NFT Minting │    │ • NFT Storage      │
-│ • Wallets     │    │ • AI Scoring  │    │ • HCS Topics       │
-└───────────────┘    └───────────────┘    └────────────────────┘
-```
+
 
 ---
 
