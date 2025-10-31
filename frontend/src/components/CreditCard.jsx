@@ -54,7 +54,11 @@ export function CreditCard({ credit }) {
   };
 
   function getDefaultImage(type) {
+    if(type === "carbon"){
+      return "https://white-generous-iguana-225.mypinata.cloud/ipfs/bafybeief5fyhdznvmo4hs2umclotujorfq33lh33rbycd5uskutt34k36i";
+    } else {
     return "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop";
+    }
   }
 
   const getPriceColor = (change) => {
