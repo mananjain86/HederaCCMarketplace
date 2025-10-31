@@ -13,8 +13,8 @@
 ## 🏆 Project Title & Track
 
 **Project Name:** CarbonChain Marketplace  
-**Track1:** Onchain Finance & Real-World Assets (RWA)
-**Track2:** AI & DePIN
+**Track1:** Onchain Finance & Real-World Assets (RWA).  
+**Track2:** AI & DePIN.
 
 ---
 
