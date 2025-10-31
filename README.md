@@ -10,6 +10,13 @@
 
 ---
 
+## 🏆 Project Title & Track
+
+**Project Name:** CarbonChain Marketplace  
+**Track:** Onchain Finance & RWA (Real-World Assets)
+
+---
+
 ## 🚀 Overview
 
 CarbonChain Marketplace is a decentralized platform that enables companies and individuals to buy, sell, and tokenize verified carbon credits and forest areas. Leveraging Ethereum smart contracts for marketplace logic and Hedera Hashgraph for NFT minting, consensus, and decentralized storage, CarbonChain brings transparency, automation, and real-world impact to environmental markets.
@@ -53,12 +60,39 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
   
 - **Forest Data Oracle**  
 The oracle streams real-time IoT data from forest sensors including metrics like soil health, humidity, and CO₂ levels directly to the blockchain. It computes a Regeneration Score that reflects the land’s ecological health and recovery potential. This enables transparent, data-backed insights into forest vitality for on-chain applications.
+
+---
+
+## 🪙 Hedera Integration Summary (Detailed)
+
+CarbonChain leverages multiple Hedera services to ensure scalability, transparency, and verifiable trust for carbon markets in Africa.
+
+### 🌿 Hedera Token Service (HTS)
+We use HTS to mint and manage both Carbon Credit and Dynamic Forest NFTs.  
+**Why:** HTS provides native tokenization with predictable, low fees (~$0.001 per mint) and finality under 5 seconds — ideal for high-volume, low-margin carbon transactions.  
+**Transaction Types:** Token creation, minting, association, and transfer.  
+**Economic Justification:** Compared to Ethereum gas fees (~$0.30–$3), HTS fees remain stable and affordable for smallholder reforestation projects, making carbon participation accessible in African markets.
+
+---
+
+### 🔗 Hedera Consensus Service (HCS)
+Used for immutable logging of purchase events, AI score updates, and oracle submissions.  
+**Why:** HCS ensures trust and auditability for critical environmental data and trading records.  
+**Transaction Types:** Topic creation, message submission, and querying topic messages.  
+**Economic Justification:** At a predictable $0.0001 per message, HCS provides a cost-stable way to maintain transparent climate audit trails, ensuring operational feasibility even in micro-scale projects.
+
+---
+
+### 🧠 Hedera Smart Contracts (EVM)
+The cross-chain Ethereum smart contracts interact with Hedera through EVM-compatible bridges for yield and DAO logic.  
+**Why:** To allow seamless interoperability while using Hedera for storage and final certification.  
+**Transaction Types:** Contract deployment, read/write state changes.  
+**Economic Justification:** Hedera’s ABFT consensus ensures secure finality while bridging low-cost operations with Ethereum’s DeFi ecosystem.
+
 ---
 
 ## 🏗️ Architecture
 <img width="1920" height="1080" alt="Carbon Chain Architecture" src="https://github.com/user-attachments/assets/3f1eabc5-4150-4d9b-aca3-1d03aa5df488" />
-
-
 
 ---
 
@@ -131,14 +165,21 @@ npm install
 # Backend setup
 cd backend
 npm install
+npm run dev
+# Backend will start running at localhost:5000
 
 # Frontend setup
 cd frontend
 npm install
+npm run dev
+# Frontend will start running at localhost:5173
 
 # Smart contract setup
 cd backend-web3
 npm install
+npx hardhat compile
+npx hardhat run deploy.js --network sepolia
+# Update .env files with deployed addresses
 ```
 
 ---
@@ -179,18 +220,6 @@ SEPOLIA_RPC_URL=https://
 SEPOLIA_PRIVATE_KEY=your-private-key
 HEDERA_RPC_URL=https://...
 HEDERA_PRIVATE_KEY=your-private-key
-```
----
-
-## 🌍 Deployment
-
-### Smart Contracts
-
-```bash
-cd backend-web3
-npx hardhat compile
-npx hardhat run deploy.js --network sepolia
-# Update .env files with deployed addresses
 ```
 
 ---
@@ -270,6 +299,19 @@ npx hardhat run deploy.js --network sepolia
 - `POST /api/consensus/submitMessage` — Submit message to Hedera Consensus Service
 - `GET /api/consensus/queryTopic/:topicId` — Query HCS topic messages
 - `GET /api/forest-data/:forestId` — Query forest data stored onchain , our oracle endpoint
+
+---
+
+## 🪪 Deployed Hedera IDs (Testnet)
+
+| Resource Type | Description | Hedera Testnet ID |
+|----------------|-------------|------------------|
+| Operator Account | Backend wallet used for token minting | 0.0.6780075 |
+| Forest NFT Token | HTS token for forest ownership certificates | 0.0.7074734 |
+| Carbon Credit NFT Token | HTS token for carbon credits | 0.0.7074735 |
+| HCS Topic | storing post-purchase transaction data for carbon credit and forest share buys | 0.0.6886610 |
+| HCS Topic | storing IoT sensor feed for forests | 0.0.6886609 |
+| HCS Topic | For storing regeneration score data | 0.0.6886616 |
 
 ---
 
