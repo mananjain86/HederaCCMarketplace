@@ -323,11 +323,11 @@ We welcome contributions!
 - Conventional commits and documentation required
 
 ---
-NOTE: Before testing the platform through below URLs make sure to call [https://carbonchain-backend.onrender.com/api/health](Health Check) to wake up the backend.
+NOTE: Before testing the platform through below URLs make sure to call https://carbonchain-backend.onrender.com/api/health to wake up the backend.
 
 **Frontend URL:** https://carbonchain-qupo.onrender.com  
 **Backend URL:**  https://carbonchain-backend.onrender.com  
-**Forest Oracle** `https://carbonchain-backend.onrender.com/api/forest-data/forest-id`  
+**Forest Oracle** `https://carbonchain-backend.onrender.com/api/forest-data/<forest-id>`  
 example: https://carbonchain-backend.onrender.com/api/forest-data/1
 
 ---
