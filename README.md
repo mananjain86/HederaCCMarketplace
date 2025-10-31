@@ -51,7 +51,8 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
 - **Multi-Wallet Support**  
   MetaMask for Ethereum, HashConnect for Hedera (Token Association).
   
-
+- **Forest Data Oracle**  
+The oracle streams real-time IoT data from forest sensors including metrics like soil health, humidity, and CO₂ levels directly to the blockchain. It computes a Regeneration Score that reflects the land’s ecological health and recovery potential. This enables transparent, data-backed insights into forest vitality for on-chain applications.
 ---
 
 ## 🏗️ Architecture
@@ -76,7 +77,7 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
    Companies onboard via a KYC/KYB form, verified on-chain, off-chain compliance layer and KYC grants by admins.
 
 2. **Marketplace Listing**  
-   Sellers list carbon credits or forest areas, providing documentation and compliance data.
+   Government list forest areas, providing documentation and compliance data.
 
 3. **AI-Powered Scoring**  
    Forest health and regeneration scores are calculated using AI, influencing pricing and yield.
@@ -90,10 +91,23 @@ CarbonChain Marketplace is a decentralized platform that enables companies and i
 6. **Yield Generation**
    Based on the amount of shares and the regeneration score of the forest the share holders would get yield reward as Carbon Credits getting added to their portfolio.
 
-8. **DAO Governance**  
+7. **DAO Governance**  
    Forest DAOs allow stakeholders to propose and vote on conservation actions.
 
----
+### Carbon Credit NFTs
+
+1. **Company Registration & KYC**  
+   Companies onboard via a KYC/KYB form, verified on-chain, off-chain compliance layer and KYC grants by admins.
+
+2. **Marketplace Listing**  
+   Sellers list carbon credits, providing documentation and compliance data.
+
+3. **Purchase & Tokenization**  
+   Buyers purchase assets using MetaMask (Ethereum). The backend mints a corresponding NFT on Hedera and stores metadata on IPFS.
+
+4. **NFT Delivery & Audit Trail**  
+   NFT certificates are delivered to the buyer’s Hedera account. All actions are recorded on-chain and via Hedera Consensus Service.
+ ---
 
 ## 🧩 Tech Stack
 
@@ -148,6 +162,10 @@ PLANET_API_KEY=your-api-key
 IOT_TOPIC_ID=0.0.XXXXXXX
 REGEN_TOPIC_ID=0.0.XXXXXXX
 GEMINI_API_KEY=your-api-key
+HCS_TOPIC_ID=0.0.XXXXXXX
+COMPLIANCE_TOPIC_ID=0.0.XXXXXXX
+HEDERA_RPC_URL=https://
+FOREST_CONTRACT_ADDRESS="0x..."
 ```
 
 ### Frontend (`frontend/.env`)
@@ -190,22 +208,18 @@ npx hardhat run deploy.js --network sepolia
 
 ```json
 {
-  "name": "Carbon Credit Certificate #123",
-  "description": "Certificate for 5 tons CO2 offset from verified forest conservation project",
-  "image": "ipfs://QmHash.../certificate.png",
-  "attributes": [
-    {"trait_type": "CO2 Offset Amount", "value": "5 tons"},
-    {"trait_type": "Project Name", "value": "Amazon Rainforest Conservation"},
-    {"trait_type": "Vintage Year", "value": "2024"},
-    {"trait_type": "Registry", "value": "Verified Carbon Standard (VCS)"},
-    {"trait_type": "Project Country", "value": "Brazil"},
-    {"trait_type": "Purchase Date", "value": "2024-10-04"}
-  ],
+  "name": "Carbon Credit #512",
+  "description": "Tradable carbon credit representing 5 tons of CO₂ offset.",
+  "image": "ipfs://",
   "properties": {
-    "ethereum_tx_hash": "0x...",
-    "buyer_hedera_id": "0.0.123456",
-    "amount": 5,
-    "total_price": "0.075 HBAR"
+    "credit_id": 512,
+    "co2_offset_tons": 5,
+    "purchase_price_hbar": "0.075",
+    "owner": "0.0.123456",
+    "asset_type": "Carbon Credit",
+    "certification_standard": "Verified Carbon Standard (VCS)",
+    "vintage_year": 2025,
+    "minted_at": "2025-10-31T10:00:00Z"
   }
 }
 ```
@@ -214,21 +228,38 @@ npx hardhat run deploy.js --network sepolia
 
 ```json
 {
-  "name": "Forest Area Deed #456",
-  "description": "Digital deed for 2.5 hectares of protected forest land",
-  "image": "ipfs://QmHash.../forest_deed.jpg",
+  "name": "Forest Shares (10) - Amazon Rainforest, Acre",
+  "description": "Fractional ownership certificate for 10 shares in Amazon Rainforest, Acre, linked to Forest ID 1023.",
+  "image": "ipfs://QmHash.../forest_image.jpg",
   "attributes": [
-    {"trait_type": "Area Size", "value": "2.5 hectares"},
-    {"trait_type": "Location", "value": "Costa Rica, Guanacaste Province"},
-    {"trait_type": "Conservation Status", "value": "Protected"},
-    {"trait_type": "Biodiversity Score", "value": "High"},
-    {"trait_type": "Purchase Date", "value": "2024-10-04"}
+    {"trait_type": "Asset Type", "value": "Forest Share Certificate"},
+    {"trait_type": "Forest ID", "value": "1023"},
+    {"trait_type": "Location", "value": "Amazon Rainforest, Acre"},
+    {"trait_type": "Shares Bought", "value": "10"},
+    {"trait_type": "Regeneration Score", "value": "725", "display_type": "number"},
+    {"trait_type": "Baseline Sequestration (CO2/yr)", "value": "3.8", "display_type": "number"},
+    {"trait_type": "Potential Sequestration (CO2/yr)", "value": "6.4", "display_type": "number"},
+    {"trait_type": "Sustainability Rating", "value": "A"},
+    {"trait_type": "Original NFT ID", "value": "9876"}
   ],
   "properties": {
-    "ethereum_tx_hash": "0x...",
-    "buyer_hedera_id": "0.0.789012",
-    "area_hectares": 2.5,
-    "deed_ipfs_hash": "QmDeedHash..."
+    "asset_type": "Forest Share Certificate",
+    "forest_id": 1023,
+    "shares_bought": 10,
+    "location": "Amazon Rainforest, Acre",
+    "total_forest_area_sq_m": 25000,
+    "original_nft_id": "9876",
+    "ipfs_deed_hash": "QmDeedHash...",
+    "owner_account_id": "0.0.345678",
+    "owner_eth_address": "0xAbc123...",
+    "price_paid_hbar": "0.082",
+    "purchase_tx_hash": "0xTxHash...",
+    "regeneration_score": 725,
+    "baseline_sequestration_c02_yr": 3.8,
+    "potential_sequestration_c02_yr": 6.4,
+    "sustainability_rating": "A",
+    "certification_status": "Verified",
+    "minted_at": "2025-10-31T10:00:00Z"
   }
 }
 ```
@@ -243,6 +274,7 @@ npx hardhat run deploy.js --network sepolia
 - `POST /api/ai/regeneration-score` — AI-powered forest health scoring
 - `POST /api/consensus/submitMessage` — Submit message to Hedera Consensus Service
 - `GET /api/consensus/queryTopic/:topicId` — Query HCS topic messages
+- `GET /api/forest-data/:forestId` — Query forest data stored onchain , our oracle endpoint
 
 ---
 
@@ -274,6 +306,7 @@ npx hardhat run deploy.js --network sepolia
 - [x] Advanced analytics dashboard
 - [x] Batch purchasing
 - [X] DAO governance for forest management
+- [X] Providing Oracle using onchain forest data
 - [ ] Cross-chain expansion (Polygon, Arbitrum)
 - [ ] Mobile and multi-language support
 
