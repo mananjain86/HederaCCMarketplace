@@ -5,7 +5,8 @@ export function DocsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f4f8f5] to-[#e8f1ea] text-[#0f2d1c] relative overflow-hidden">
       {/* --- Subtle Gradient Green Backgrounds (Home style) --- */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className="pointer-events-none absolute inset-0 z-0">
+        {/* Top left green gradient blob */}
         <div
           className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
           style={{
@@ -13,6 +14,7 @@ export function DocsPage() {
               "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
           }}
         />
+        {/* Bottom right green gradient blob */}
         <div
           className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
           style={{
@@ -20,6 +22,7 @@ export function DocsPage() {
               "radial-gradient(circle at 30% 20%, #b7e4c7 0%, #40916c 60%, transparent 100%)",
           }}
         />
+        {/* Center faint green swirl */}
         <div
           className="absolute left-1/2 top-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-20"
           style={{
@@ -28,7 +31,6 @@ export function DocsPage() {
           }}
         />
       </div>
-
       {/* Header */}
       <header className="max-w-6xl mx-auto px-6 py-16 text-center">
         <div className="flex justify-center items-center gap-3 mb-4">

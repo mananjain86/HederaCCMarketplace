@@ -1,4 +1,8 @@
-[
+import {ethers} from 'ethers';
+
+const FOREST_ADDRESS = process.env.FOREST_CONTRACT_ADDRESS; 
+const RPC_URL = "https://testnet.hashio.io/api";
+const FOREST_ABI=[
 	{
 		"inputs": [
 			{
@@ -1056,3 +1060,59 @@
 		"type": "function"
 	}
 ]
+export const getData = async (id) => {
+  try {
+    // Validate id (expect numeric string or number)
+    if (!id || isNaN(Number(id)) || Number(id) <= 0) {
+      return { success: false, error: "Invalid Forest ID.", statusCode: 400 };
+    }
+
+    if (!FOREST_ADDRESS) {
+      return { success: false, error: "Forest contract address is not configured on the server.", statusCode: 500 };
+    }
+
+    // 1. Connect to the blockchain (read-only)
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(FOREST_ADDRESS, FOREST_ABI, provider);
+
+    // Ensure id is a number when calling the contract
+    const forestIdNum = Number(id);
+
+    // 2. Call the public 'forests' function
+    const forest = await contract.forests(forestIdNum);
+
+    // 3. Check if the forest exists
+    // forest.forestId is likely a BigNumber - convert to string for comparison
+    if (!forest || forest.forestId?.toString() === "0") {
+      return { success: false, error: "Forest not found.", statusCode: 404 };
+    }
+
+    // 4. Format the data into clean JSON
+    const responseData = {
+      success: true,
+      forestId: Number(forest.forestId.toString()),
+      active: !!forest.active,
+      htsTokenId: forest.htsTokenId,
+      serial: Number(forest.serial?.toString() || 0),
+      info: {
+        location: forest.info?.location || "",
+        gpsCoordinates: forest.info?.gpsCoordinates || "",
+        areaSize: forest.info?.areaSize?.toString() || "0",
+        ipfsDeedHash: forest.info?.ipfsDeedHash || "",
+      },
+      totalShares: forest.totalShares?.toString() || "0",
+      regenerationScore: Number(forest.regenerationScore?.toString() || 0),
+      baselineSequestrationPerYear: forest.baselineSequestrationPerYear?.toString() || "0",
+      potentialSequestrationPerYear: forest.potentialSequestrationPerYear?.toString() || "0",
+      accumulatedYield: forest.accumulatedYield?.toString() || "0",
+      lastUpdated: forest.lastUpdated
+        ? new Date(Number(forest.lastUpdated.toString()) * 1000).toISOString()
+        : null,
+    };
+
+    return responseData;
+  } catch (error) {
+    console.error("Error fetching forest data:", error);
+    return { success: false, error: error.message || "Internal server error.", statusCode: 500 };
+  }
+}
