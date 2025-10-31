@@ -362,17 +362,29 @@ We welcome contributions!
 - Conventional commits and documentation required
 
 ---
-NOTE: Before testing the platform through below URLs make sure to call https://carbonchain-backend.onrender.com/api/health to wake up the backend.
+> ⚠️ **NOTE:** Before testing the platform using the URLs below, please call  
+> [https://carbonchain-backend.onrender.com/api/health](https://carbonchain-backend.onrender.com/api/health)  
+> to wake up the backend server.
 
-**Frontend URL:** https://carbonchain-qupo.onrender.com  
-**Backend URL:**  https://carbonchain-backend.onrender.com  
-**Forest Oracle** `https://carbonchain-backend.onrender.com/api/forest-data/<forest-id>`  
-example: https://carbonchain-backend.onrender.com/api/forest-data/1
+## 🌐 Frontend  
+[🔗 Open Frontend](https://carbonchain-qupo.onrender.com)
+
+## 🖥️ Backend  
+[⚙️ Open Backend](https://carbonchain-backend.onrender.com)
+
+## 🌲 Forest Oracle API  
+`GET https://carbonchain-backend.onrender.com/api/forest-data/<forest-id>`  
+**Example:** [https://carbonchain-backend.onrender.com/api/forest-data/1](https://carbonchain-backend.onrender.com/api/forest-data/1)
 
 ---
-**Hedera Certification:** https://drive.google.com/file/d/1BJx4QggGaNkC9PbP3R9jiKA58TWIeIRG/view?usp=sharing  
-**Pitch Deck** https://drive.google.com/file/d/1K8omyRfoN2R-Jl0qMRgQKEmXst187Djs/view?usp=sharing  
-**Demo Video** https://drive.google.com/file/d/1v_Z5O7vt55dxF39f7ADkaOxcNyn4AxHZ/view
+## 🎓 Hedera Certification  
+[📄 View Certificate](https://drive.google.com/file/d/1BJx4QggGaNkC9PbP3R9jiKA58TWIeIRG/view?usp=sharing)
+
+## 📊 Pitch Deck  
+[📘 View Pitch Deck](https://drive.google.com/file/d/1K8omyRfoN2R-Jl0qMRgQKEmXst187Djs/view?usp=sharing)
+
+## 🎥 Demo Video  
+[▶️ Watch Demo](https://youtu.be/SjNme2zprSE?si=_ze1RM_lGL6byq7A)
 
 ---
 ## 📄 License
