@@ -256,6 +256,8 @@ npx hardhat run deploy.js --network sepolia
   }
 }
 ```
+<img width="697" height="333" alt="image" src="https://github.com/user-attachments/assets/84a808d3-d7b7-4336-9325-d51a7d0bc7e3" />
+
 
 ---
 
@@ -321,7 +323,19 @@ We welcome contributions!
 - Conventional commits and documentation required
 
 ---
+NOTE: Before testing the platform through below URLs make sure to call [https://carbonchain-backend.onrender.com/api/health](Health Check) to wake up the backend.
 
+**Frontend URL:** https://carbonchain-qupo.onrender.com  
+**Backend URL:**  https://carbonchain-backend.onrender.com  
+**Forest Oracle** `https://carbonchain-backend.onrender.com/api/forest-data/forest-id`  
+example: https://carbonchain-backend.onrender.com/api/forest-data/1
+
+---
+**Hedera Certification:** https://drive.google.com/file/d/1BJx4QggGaNkC9PbP3R9jiKA58TWIeIRG/view?usp=sharing  
+**Pitch Deck** https://drive.google.com/file/d/1K8omyRfoN2R-Jl0qMRgQKEmXst187Djs/view?usp=sharing  
+**Demo Video** https://drive.google.com/file/d/1v_Z5O7vt55dxF39f7ADkaOxcNyn4AxHZ/view
+
+---
 ## 📄 License
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
