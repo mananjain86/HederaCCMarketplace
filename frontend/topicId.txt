@@ -1,3 +1,0 @@
-for selling transaction, topicId = 0.0.6886616 //used for compliance
-for buying transaction, topicId = 0.0.6886610 //used for transaction
-for verification transaction, topicId = 0.0.6886609 -> should be used for regeneration score or 

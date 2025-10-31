@@ -178,7 +178,7 @@ npm run dev
 cd backend-web3
 npm install
 npx hardhat compile
-npx hardhat run deploy.js --network sepolia
+npx hardhat run deploy.js --network < network-name > 
 # Update .env files with deployed addresses
 ```
 
