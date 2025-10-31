@@ -69,7 +69,7 @@ CarbonChain leverages multiple Hedera services to ensure scalability, transparen
 
 ### 🌿 Hedera Token Service (HTS)
 We use HTS to mint and manage both Carbon Credit and Dynamic Forest NFTs.  
-**Why:** HTS provides native tokenization with predictable, low fees (~$0.001 per mint) and finality under 5 seconds — ideal for high-volume, low-margin carbon transactions.  
+**Why:** HTS provides native tokenization with predictable, low fees and finality under 5 seconds - ideal for high-volume, low-margin carbon transactions.  
 **Transaction Types:** Token creation, minting, association, and transfer.  
 **Economic Justification:** Compared to Ethereum gas fees (~$0.30–$3), HTS fees remain stable and affordable for smallholder reforestation projects, making carbon participation accessible in African markets.
 
@@ -194,10 +194,8 @@ PINATA_JWT=YOUR_PINATA_JWT_TOKEN
 GATEWAY_URL=https://gateway.pinata.cloud
 PLANET_API_KEY=your-api-key
 IOT_TOPIC_ID=0.0.XXXXXXX
-REGEN_TOPIC_ID=0.0.XXXXXXX
 GEMINI_API_KEY=your-api-key
 HCS_TOPIC_ID=0.0.XXXXXXX
-COMPLIANCE_TOPIC_ID=0.0.XXXXXXX
 HEDERA_RPC_URL=https://
 FOREST_CONTRACT_ADDRESS="0x..."
 ```
@@ -311,7 +309,6 @@ HEDERA_PRIVATE_KEY=your-private-key
 | Carbon Credit NFT Token | HTS token for carbon credits | 0.0.7074735 |
 | HCS Topic | storing post-purchase transaction data for carbon credit and forest share buys | 0.0.6886610 |
 | HCS Topic | storing IoT sensor feed for forests | 0.0.6886609 |
-| HCS Topic | For storing regeneration score data | 0.0.6886616 |
 
 ---
 
